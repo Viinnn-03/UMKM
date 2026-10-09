@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pengelolaan Pesanan UMKM Multichannel</title>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Sidebar / Navigasi Utama -->
+    <aside class="sidebar">
+        <h2>UMKM Digital</h2>
+        <nav>
+            <ul>
+                <li><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')">Dashboard Utama</a></li>
+                <li><a href="#pelanggan" class="nav-link" onclick="showSection('pelanggan')">Database Pelanggan</a></li>
+                <li><a href="#stok" class="nav-link" onclick="showSection('stok')">Manajemen Stok</a></li>
+                <li><a href="#pengeluaran" class="nav-link" onclick="showSection('pengeluaran')">Laporan Pengeluaran</a></li>
+                <li><a href="#laporan" class="nav-link" onclick="showSection('laporan')">Laporan Penjualan</a></li>
+                <li><a href="index.html" class="nav-link logout-btn">Logout</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Konten Utama -->
+    <main class="content">
+
+        <!-- SECTION 1: DASHBOARD UTAMA -->
+        <section id="dashboard" class="page-section active">
+            <h1>Dashboard Utama</h1>
+            <p>Pengelolaan Pesanan Multichannel (WA, Instagram, TikTok, dll)</p>
+
+            <div class="cards-grid">
+                <div class="card">
+                    <h3>Jumlah Pesanan</h3>
+                    <p class="stat-number" id="total-pesanan">0</p>
+                </div>
+                <div class="card card-warning">
+                    <h3>Pesanan Baru</h3>
+                    <p class="stat-number" id="pesanan-baru">0</p>
+                </div>
+                <div class="card card-info">
+                    <h3>Pesanan Diproses</h3>
+                    <p class="stat-number" id="pesanan-proses">0</p>
+                </div>
+                <div class="card card-success">
+                    <h3>Pesanan Selesai</h3>
+                    <p class="stat-number" id="pesanan-selesai">0</p>
+                </div>
+                <div class="card">
+                    <h3>Total Penjualan (Omzet)</h3>
+                    <p class="stat-number" id="dashboard-omzet">Rp 0</p>
+                </div>
+                <div class="card">
+                    <h3>Produk Terlaris</h3>
+                    <p class="stat-text" id="dashboard-top-product">-</p>
+                </div>
+            </div>
+
+            <div class="form-container">
+                <h2>Input Pesanan Baru</h2>
+                <form id="order-form">
+                    <div class="form-group">
+                        <label>Nama Customer:</label>
+                        <input type="text" id="cust-name" required placeholder="Contoh: Budi Santoso">
+                    </div>
+                    <div class="form-group">
+                        <label>No HP Customer (Key):</label>
+                        <input type="text" id="cust-phone" required placeholder="Contoh: 08123456789">
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat Customer:</label>
+                        <input type="text" id="cust-address" required placeholder="Contoh: Jl. Sudirman No. 12, Jakarta">
+                    </div>
+                    <div class="form-group">
+                        <label>Pilih Produk:</label>
+                        <select id="cust-product" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah Beli:</label>
+                        <input type="number" id="cust-qty" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Channel Pemesanan:</label>
+                        <select id="cust-channel" required>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="TikTok">TikTok</option>
+                            <option value="Shopee">Shopee</option>
+                            <option value="Tokopedia">Tokopedia</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Proses Pesanan</button>
+                </form>
+            </div>
+
+            <div class="form-container" style="border-left: 5px solid #25D366;">
+                <h2>Otomatisasi Pesanan</h2>
+                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                    Tempel (paste) format pesan masuk di bawah untuk diproses otomatis oleh sistem:
+                </p>
+                <div class="form-group">
+                    <textarea id="wa-chat-input" rows="5" style="width:100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Contoh:&#10;Nama: Rian&#10;No HP: 08123456789&#10;Alamat: Medan&#10;Produk: Kaos Polos Cotton 30s&#10;Jumlah: 2"></textarea>
+                </div>
+                <button type="button" class="btn-primary" style="background-color: #25D366;" onclick="prosesAutoWA()">Proses Pesanan Otomatis</button>
+            </div>
+
+            <h2>Daftar Pesanan</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No Order</th>
+                            <th>Customer</th>
+                            <th>No HP</th>
+                            <th>Produk</th>
+                            <th>Channel</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION 2: DATABASE PELANGGAN -->
+        <section id="pelanggan" class="page-section">
+            <h1>Database Pelanggan</h1>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No HP (Key)</th>
+                            <th>Nama</th>
+                            <th>Alamat</th>
+                            <th>Riwayat Pembelian</th>
+                            <th>Total Transaksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION 3: MANAJEMEN STOK -->
+        <section id="stok" class="page-section">
+            <h1>Manajemen Stok</h1>
+            <p>Stok akan otomatis berkurang ketika pesanan baru diinput dari dashboard. Anda juga dapat memperbarui stok secara manual.</p>
+
+            <div class="form-container">
+                <h2>+ Tambah Produk Baru</h2>
+                <form id="add-product-form">
+                    <div class="form-group">
+                        <label for="prod-name">Nama Produk:</label>
+                        <input type="text" id="prod-name" required placeholder="Contoh: Jaket Denim">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-price">Harga (Rp):</label>
+                        <input type="number" id="prod-price" min="1" required placeholder="Contoh: 150000">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-stock">Jumlah Stok Awal:</label>
+                        <input type="number" id="prod-stock" min="0" value="10" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Tambah Produk</button>
+                </form>
+            </div>
+
+            <h2>Daftar Stok Produk</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Produk</th>
+                            <th>Nama Produk</th>
+                            <th>Harga</th>
+                            <th>Sisa Stok</th>
+                            <th>Status Stok</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION BARU: LAPORAN PENGELUARAN -->
+        <section id="pengeluaran" class="page-section">
+            <h1>Laporan Pengeluaran</h1>
+            <p>Pencatatan dan pemantauan pengeluaran operasional usaha Anda.</p>
+
+            <!-- FORM INPUT PENGELUARAN -->
+            <div class="form-container" style="border-left: 5px solid #e74c3c; margin-bottom: 25px;">
+                <h2>+ Input Pengeluaran Operasional</h2>
+                <form id="expense-form" onsubmit="tambahPengeluaran(event)">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="form-group">
+                            <label for="expense-name">Deskripsi Pengeluaran:</label>
+                            <input type="text" id="expense-name" required placeholder="Contoh: Beli Bahan Baku / Listrik">
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-category">Kategori:</label>
+                            <select id="expense-category" required>
+                                <option value="Bahan Baku">Bahan Baku</option>
+                                <option value="Operasional">Operasional / Keperluan Toko</option>
+                                <option value="Gaji">Gaji Karyawan</option>
+                                <option value="Pemasaran">Pemasaran / Iklan</option>
+                                <option value="Lainnya">Lain-lain</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-amount">Jumlah (Rp):</label>
+                            <input type="number" id="expense-amount" min="1" required placeholder="Contoh: 50000">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" style="background-color: #e74c3c;">Simpan Pengeluaran</button>
+                </form>
+            </div>
+
+            <!-- RINGKASAN PENGELUARAN -->
+            <div class="cards-grid" style="margin-bottom: 25px;">
+                <div class="card" style="border-left-color: #e74c3c;">
+                    <h3>Total Pengeluaran</h3>
+                    <p class="stat-number" id="total-pengeluaran-card" style="color: #e74c3c;">Rp 0</p>
+                </div>
+            </div>
+
+            <!-- TABEL DETAIL PENGELUARAN -->
+            <h2>Detail Pengeluaran Operasional</h2>
+            <div class="table-responsive">
+                <table class="bordered-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Deskripsi</th>
+                            <th>Kategori</th>
+                            <th>Nominal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-pengeluaran-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION 4: LAPORAN PENJUALAN & KEUANGAN -->
+        <section id="laporan" class="page-section">
+            <h1>Laporan Penjualan & Keuangan</h1>
+            <p>Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.</p>
+
+            <div class="filter-container" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+                <div>
+                    <label for="filter-periode">Periode Laporan:</label>
+                    <select id="filter-periode" onchange="toggleDateFilter()">
+                        <option value="semua">Semua</option>
+                        <option value="harian">Harian (Pilih Tanggal)</option>
+                        <option value="bulanan">Bulanan (Pilih Bulan)</option>
+                    </select>
+                </div>
+                <div id="date-picker-wrapper" style="display: none;">
+                    <label for="filter-tanggal">Pilih Tanggal:</label>
+                    <input type="date" id="filter-tanggal" onchange="renderLaporan()">
+                </div>
+                <div id="month-picker-wrapper" style="display: none;">
+                    <label for="filter-bulan">Pilih Bulan:</label>
+                    <input type="month" id="filter-bulan" onchange="renderLaporan()">
+                </div>
+            </div>
+
+            <!-- STATISTIK KEUANGAN & KINERJA -->
+            <div class="cards-grid" style="margin-bottom: 30px;">
+                <div class="card card-success">
+                    <h3>Total Omzet (Pendapatan)</h3>
+                    <p class="stat-number" id="report-omzet">Rp 0</p>
+                </div>
+                <div class="card" style="border-left-color: #e74c3c;">
+                    <h3>Total Pengeluaran</h3>
+                    <p class="stat-number" id="report-pengeluaran" style="color: #e74c3c;">Rp 0</p>
+                </div>
+                <div class="card" style="border-left-color: #27ae60;">
+                    <h3>Laba Bersih (Omzet - Pengeluaran)</h3>
+                    <p class="stat-number" id="report-laba" style="color: #27ae60;">Rp 0</p>
+                </div>
+                <div class="card">
+                    <h3>Channel Paling Banyak Orderan</h3>
+                    <p class="stat-text" id="report-top-channel">-</p>
+                </div>
+                <div class="card">
+                    <h3>Produk Terlaris</h3>
+                    <p class="stat-text" id="report-top-product">-</p>
+                </div>
+            </div>
+
+            <!-- TABEL DETAIL TRANSAKSI PENJUALAN DENGAN FILTER DROPDOWN PRODUK -->
+            <div class="laporan-detail">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                    <h2>Detail Transaksi Penjualan</h2>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label for="filter-produk" style="font-weight: 600; font-size: 14px;">Pilih Jenis Produk:</label>
+                        <select id="filter-produk" onchange="renderLaporan()" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="semua">Semua Produk</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="bordered-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Produk</th>
+                                <th>PCS</th>
+                                <th>Member</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-transaksi-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="script.js"></script>
+</body>
+</html>

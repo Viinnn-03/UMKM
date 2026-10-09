@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Akun UMKM</title>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f6f9;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        .register-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .register-card h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-submit:hover {
+            background-color: #218838;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .login-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-card">
+        <h2>Daftar Akun UMKM Baru</h2>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="reg-nama">Nama Pemilik / Usaha:</label>
+                <input type="text" id="reg-nama" required placeholder="Contoh: Toko Berkah / Budi">
+            </div>
+            <div class="form-group">
+                <label for="reg-username">Username:</label>
+                <input type="text" id="reg-username" required placeholder="Buat Username">
+            </div>
+            <div class="form-group">
+                <label for="reg-password">Password:</label>
+                <input type="password" id="reg-password" required placeholder="Buat Password">
+            </div>
+            <div class="form-group">
+                <label for="reg-confirm">Konfirmasi Password:</label>
+                <input type="password" id="reg-confirm" required placeholder="Ulangi Password">
+            </div>
+            <button type="submit" class="btn-submit">Daftar Sekarang</button>
+        </form>
+        <div class="login-link">
+            Sudah punya akun? <a href="index.html">Login di sini</a>
+        </div>
+    </div>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="auth.js"></script>
+</body>
+</html>
