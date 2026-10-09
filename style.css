@@ -6,9 +6,12 @@
 }
 
 body {
+    body {
     display: flex;
     background-color: #f4f6f9;
     color: #333;
+    min-width: 1024px;
+}
 }
 
 /* Sidebar Styling */
@@ -204,53 +207,4 @@ th {
     background: #fff;
     padding: 15px;
     border-radius: 8px;
-}
-
-/* --- TAMPILAN RESPONSIF KHUSUS HP (MOBILE) --- */
-@media screen and (max-width: 768px) {
-    body {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        width: 100% !important;
-        height: auto !important;
-        position: relative !important;
-        padding: 15px !important;
-    }
-
-    .sidebar h2 {
-        margin-bottom: 15px;
-    }
-
-    .sidebar nav ul {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .sidebar nav ul li {
-        flex: 1 1 calc(50% - 8px);
-        margin-bottom: 0;
-    }
-
-    .sidebar nav ul li a {
-        text-align: center;
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-
-    .content {
-        margin-left: 0 !important;
-        width: 100% !important;
-        padding: 15px !important;
-    }
-
-    .cards-grid {
-        grid-template-columns: 1fr !important;
-    }
-
-    .laporan-wrapper {
-        grid-template-columns: 1fr !important;
-    }
 }
