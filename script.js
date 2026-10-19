@@ -17,18 +17,29 @@ function saveData() {
     localStorage.setItem('umkm_expenses', JSON.stringify(expenses));
 }
 
-// --- FUNGSI NAVIGASI SIDEBAR ---
+// --- FUNGSI NAVIGASI SIDEBAR & BOTTOM NAV MOBILE ---
 function showSection(sectionId) {
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+    
+    // Reset status aktif di Sidebar & Bottom Navigation
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    document.querySelectorAll('.bottom-nav-item').forEach(btn => btn.classList.remove('active'));
 
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
     }
     
-    if (typeof event !== 'undefined' && event && event.target) {
-        event.target.classList.add('active');
+    // Tandai link sidebar yang aktif
+    const activeSidebarLink = document.querySelector(`.sidebar a[href="#${sectionId}"]`);
+    if (activeSidebarLink) {
+        activeSidebarLink.classList.add('active');
+    }
+
+    // Tandai bottom nav mobile yang aktif
+    const activeBottomNav = document.querySelector(`.bottom-nav-item[onclick*="${sectionId}"]`);
+    if (activeBottomNav) {
+        activeBottomNav.classList.add('active');
     }
 
     renderDashboard();
@@ -62,7 +73,19 @@ function populateProductDropdown() {
     calculateTotalOrder();
 }
 
-// 3. Tambah Baris Menu Baru (Bersih dari Inline Style agar CSS Mobile Bekerja Fit In)
+// 3. FUNGSI MENGUBAH QTY (+/-)
+function changeQty(btn, delta) {
+    const qtyInput = btn.parentElement.querySelector('.item-qty-input');
+    if (qtyInput) {
+        let currentVal = parseInt(qtyInput.value) || 1;
+        currentVal += delta;
+        if (currentVal < 1) currentVal = 1;
+        qtyInput.value = currentVal;
+        calculateTotalOrder();
+    }
+}
+
+// 4. Tambah Baris Menu Baru
 function addOrderItemRow() {
     const container = document.getElementById('order-items-container');
     if (!container) return;
@@ -74,7 +97,11 @@ function addOrderItemRow() {
         <select class="item-product-select" required onchange="calculateTotalOrder()">
             ${getProductOptionsHTML()}
         </select>
-        <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+        <div class="qty-control">
+            <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
+            <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+            <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+        </div>
         <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
         <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
     `;
@@ -83,7 +110,7 @@ function addOrderItemRow() {
     calculateTotalOrder();
 }
 
-// 4. Hapus Baris Menu
+// 5. Hapus Baris Menu
 function removeOrderItemRow(btn) {
     const rows = document.querySelectorAll('.order-item-row');
     if (rows.length > 1) {
@@ -94,7 +121,7 @@ function removeOrderItemRow(btn) {
     }
 }
 
-// 5. Kalkulasi Estimasi Pembayaran Otomatis
+// 6. Kalkulasi Estimasi Pembayaran Otomatis
 function calculateTotalOrder() {
     let total = 0;
     document.querySelectorAll('.order-item-row').forEach(row => {
@@ -129,7 +156,7 @@ function populateReportProductFilter() {
     filterProductSelect.value = currentVal;
 }
 
-// --- AUTO-FILL NAMA & ALAMAT DARI NO HP ---
+// --- AUTO-FILL NAMA DARI NO HP ---
 const phoneInput = document.getElementById('cust-phone');
 if (phoneInput) {
     phoneInput.addEventListener('input', function () {
@@ -337,7 +364,11 @@ if (orderForm) {
             container.innerHTML = `
                 <div class="order-item-row">
                     <select class="item-product-select" required onchange="calculateTotalOrder()"></select>
-                    <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+                    <div class="qty-control">
+                        <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
+                        <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+                        <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+                    </div>
                     <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
                     <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
                 </div>

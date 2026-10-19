@@ -10,7 +10,13 @@
 </head>
 <body>
 
-    <!-- Sidebar / Navigasi Utama -->
+    <!-- Header Mobile (Hanya Tampil di Layar HP) -->
+    <header class="mobile-header">
+        <h2>UMKM Digital</h2>
+        <a href="index.html" class="mobile-logout">Keluar</a>
+    </header>
+
+    <!-- Sidebar / Navigasi Desktop -->
     <aside class="sidebar">
         <h2>UMKM Digital</h2>
         <nav>
@@ -60,7 +66,7 @@
                 </div>
             </div>
 
-            <!-- FORM INPUT PESANAN OPERASIONAL KULINER (MULTI-MENU RESPONSIF FIT IN HP) -->
+            <!-- FORM INPUT PESANAN OPERASIONAL KULINER -->
             <div class="form-container" style="border-top: 4px solid #27ae60;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0; color: #2c3e50;">+ Input Pesanan Baru (Multi-Menu)</h2>
@@ -68,7 +74,7 @@
                 </div>
 
                 <form id="order-form">
-                    <!-- Baris 1: Informasi Pelanggan & Tipe Pesanan -->
+                    <!-- Informasi Pelanggan -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="cust-phone">No HP Pelanggan (Key):</label>
@@ -96,15 +102,19 @@
                         </div>
                     </div>
 
-                    <!-- Baris 2: Container Multi-Item Menu (Bersih dari Inline Style Kaku) -->
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <!-- Multi-Item Menu Container -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
                         <label style="font-weight: 700; display: block; margin-bottom: 10px; color: #2c3e50;">Daftar Menu Dipesan:</label>
                         
                         <div id="order-items-container">
-                            <!-- Baris Item Pertama (Default) -->
+                            <!-- Baris Item Pertama -->
                             <div class="order-item-row">
                                 <select class="item-product-select" required onchange="calculateTotalOrder()"></select>
-                                <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+                                <div class="qty-control">
+                                    <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
+                                    <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+                                    <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+                                </div>
                                 <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
                                 <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
                             </div>
@@ -113,8 +123,8 @@
                         <button type="button" class="btn-sm" style="background: #3498db; color: white; margin-top: 10px; padding: 10px 15px; width: 100%; max-width: 200px;" onclick="addOrderItemRow()">+ Tambah Menu Lain</button>
                     </div>
 
-                    <!-- Baris 3: Kalkulasi Ringkasan & Tombol Simpan -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #eef6ff; padding: 15px; border-radius: 6px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <!-- Ringkasan & Tombol Simpan -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #eef6ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <span style="font-size: 14px; color: #555;">Estimasi Total Pembayaran:</span>
                             <h2 id="order-total-preview" style="margin: 0; color: #27ae60;">Rp 0</h2>
@@ -126,7 +136,7 @@
                 </form>
             </div>
 
-            <!-- OTOMATISASI PARSER WA -->
+            <!-- Otomatisasi Pesanan WA -->
             <div class="form-container" style="border-left: 5px solid #25D366;">
                 <h2>Otomatisasi Pesanan (Otomatis & Fleksibel)</h2>
                 <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
@@ -289,7 +299,6 @@
             <h1>Laporan Penjualan & Keuangan</h1>
             <p>Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.</p>
 
-            <!-- MANAJEMEN BACKUP DATA (EXCEL / JSON) -->
             <div class="form-container" style="background: #eef6ff; border-left: 5px solid #3498db; margin-bottom: 20px;">
                 <h3 style="margin-bottom: 10px; font-size: 16px;">Backup & Export Data Toko</h3>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -373,6 +382,30 @@
         </section>
 
     </main>
+
+    <!-- Bottom Navigation Bar (Hanya Tampil di Layar HP) -->
+    <nav class="bottom-nav">
+        <button class="bottom-nav-item active" onclick="showSection('dashboard')">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </button>
+        <button class="bottom-nav-item" onclick="showSection('pelanggan')">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Pelanggan</span>
+        </button>
+        <button class="bottom-nav-item" onclick="showSection('stok')">
+            <span class="nav-icon">📦</span>
+            <span class="nav-label">Stok</span>
+        </button>
+        <button class="bottom-nav-item" onclick="showSection('pengeluaran')">
+            <span class="nav-icon">💸</span>
+            <span class="nav-label">Pengeluaran</span>
+        </button>
+        <button class="bottom-nav-item" onclick="showSection('laporan')">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Laporan</span>
+        </button>
+    </nav>
 
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

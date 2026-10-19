@@ -11,7 +11,12 @@ body {
     color: #333;
 }
 
-/* Sidebar Styling */
+/* Header & Bottom Nav (Sembunyi di Desktop) */
+.mobile-header, .bottom-nav {
+    display: none;
+}
+
+/* Sidebar Styling (Desktop) */
 .sidebar {
     width: 250px;
     height: 100vh;
@@ -42,7 +47,7 @@ body {
     text-decoration: none;
     display: block;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 6px;
     transition: 0.3s;
 }
 
@@ -137,7 +142,7 @@ p {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 6px;
 }
 
 .btn-primary {
@@ -145,7 +150,7 @@ p {
     color: white;
     padding: 10px 15px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
 }
@@ -203,46 +208,62 @@ th {
     padding: 6px 10px;
     font-size: 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
 }
 
 .btn-status { background-color: #3498db; color: white; }
 
-.filter-container {
-    margin-bottom: 20px;
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
+/* Control Qty (+/-) */
+.qty-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-/* Layout Default Multi-Item Menu (Desktop) */
+.btn-qty {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ccc;
+    background: #e2e8f0;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-qty:active {
+    background: #cbd5e1;
+}
+
+.item-qty-input {
+    width: 50px !important;
+    text-align: center;
+    padding: 5px !important;
+}
+
+/* Multi-Item Row Desktop */
 .order-item-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 2fr auto;
+    grid-template-columns: 2fr auto 2fr auto;
     gap: 10px;
     margin-bottom: 10px;
     align-items: center;
-}
-
-.order-item-row input, 
-.order-item-row select {
-    padding: 8px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
 }
 
 .btn-remove-item {
     background: #e74c3c;
     color: white;
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
 }
 
-/* --- PERBAIKAN RESPONSIF 100% FIT IN HP (MOBILE) --- */
+/* --- TAMPILAN KHUSUS HP (MOBILE <= 768px) --- */
 @media screen and (max-width: 768px) {
     html, body {
         max-width: 100vw !important;
@@ -251,45 +272,86 @@ th {
 
     body {
         flex-direction: column;
+        padding-bottom: 70px; /* Memberikan ruang untuk Bottom Nav */
     }
 
+    /* Sembunyikan Sidebar Desktop di HP */
     .sidebar {
-        width: 100% !important;
-        height: auto !important;
-        position: relative !important;
-        padding: 15px !important;
+        display: none !important;
     }
 
-    .sidebar h2 {
-        margin-bottom: 15px;
-    }
-
-    .sidebar nav ul {
+    /* Tampilkan Header Mobile */
+    .mobile-header {
         display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
+        justify-content: space-between;
+        align-items: center;
+        background: #2c3e50;
+        color: white;
+        padding: 12px 15px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .sidebar nav ul li {
-        flex: 1 1 calc(50% - 5px);
-        margin-bottom: 0;
+    .mobile-header h2 {
+        font-size: 16px;
+        color: #3498db;
     }
 
-    .sidebar nav ul li a {
-        text-align: center;
-        padding: 8px 10px;
+    .mobile-logout {
+        color: #e74c3c;
+        text-decoration: none;
         font-size: 12px;
+        font-weight: bold;
     }
 
+    /* Tampilkan Bottom Nav Bar */
+    .bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border-top: 1px solid #e2e8f0;
+        padding: 8px 0;
+        z-index: 1000;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+
+    .bottom-nav-item {
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #718096;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .bottom-nav-item.active {
+        color: #3498db;
+    }
+
+    .nav-icon {
+        font-size: 18px;
+        margin-bottom: 2px;
+    }
+
+    .nav-label {
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    /* Konten Memenuhi Layar HP */
     .content {
         margin-left: 0 !important;
         width: 100% !important;
-        padding: 10px !important;
-    }
-
-    .form-container {
         padding: 12px !important;
-        width: 100% !important;
     }
 
     .cards-grid {
@@ -297,23 +359,33 @@ th {
         gap: 10px !important;
     }
 
-    /* Penyesuaian Baris Menu di HP agar Menyesuaikan Lebar Layar */
+    /* Baris Menu Bertumpuk Rapi di HP */
     .order-item-row {
         display: flex !important;
         flex-direction: column !important;
         gap: 8px !important;
         background: #ffffff;
-        padding: 10px;
-        border-radius: 6px;
+        padding: 12px;
+        border-radius: 8px;
         border: 1px solid #cbd5e1;
     }
 
     .order-item-row .item-product-select,
-    .order-item-row .item-note-input,
-    .order-item-row .item-qty-input,
+    .order-item-row .item-note-input {
+        width: 100% !important;
+    }
+
+    .order-item-row .qty-control {
+        width: 100% !important;
+        justify-content: space-between;
+    }
+
+    .order-item-row .item-qty-input {
+        flex: 1;
+    }
+
     .order-item-row .btn-remove-item {
         width: 100% !important;
-        box-sizing: border-box !important;
     }
 
     #search-order, #search-customer, #search-stock {
