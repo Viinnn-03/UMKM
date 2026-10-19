@@ -4,9 +4,10 @@
     --sidebar-hover: #1e293b;
     --primary: #059669;
     --primary-hover: #047857;
-    --accent-blue: #3b82f6;
+    --accent-blue: #2563eb;
     --accent-amber: #f59e0b;
     --accent-red: #ef4444;
+    --accent-purple: #7c3aed;
     --text-main: #1e293b;
     --text-muted: #64748b;
     --border-color: #e2e8f0;
@@ -343,7 +344,50 @@ p {
     font-size: 22px;
 }
 
-/* Buttons */
+/* --- TAMPILAN TOMBOL BACKUP & EXPORT DATA TERBARU --- */
+.backup-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+    width: 100%;
+}
+
+.btn-backup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    text-align: center;
+    box-sizing: border-box;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+.btn-backup:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+.btn-backup-excel {
+    background-color: var(--primary);
+}
+
+.btn-backup-json {
+    background-color: var(--accent-blue);
+}
+
+.btn-backup-restore {
+    background-color: var(--accent-purple);
+}
+
+/* Buttons General */
 .btn-primary {
     background-color: var(--primary);
     color: white;
@@ -362,8 +406,6 @@ p {
 .btn-lg { padding: 12px 24px; font-size: 15px; }
 .btn-wa { background-color: #25D366; }
 .btn-danger { background-color: var(--accent-red); }
-.btn-info { background-color: var(--accent-blue); }
-.btn-purple { background-color: #8b5cf6; cursor: pointer; display: inline-block; }
 
 .btn-sm {
     padding: 6px 12px;
@@ -427,13 +469,6 @@ th {
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
-}
-
-.backup-btn-group {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 10px;
 }
 
 .filter-container {
@@ -600,5 +635,19 @@ th {
         margin-top: 10px;
         padding-top: 8px;
         border-top: 1px solid var(--border-color);
+    }
+}
+
+/* Penyesuaian Tombol Backup di Layar Komputer/Desktop */
+@media screen and (min-width: 769px) {
+    .backup-btn-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .btn-backup {
+        width: auto;
+        flex: 1;
+        min-width: 200px;
     }
 }

@@ -791,7 +791,10 @@ function checkEmptyTable(elem, length, colSpan, message) {
 }
 
 function exportToCSV() {
-    if (orders.length === 0) return;
+    if (orders.length === 0) {
+        Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Belum ada transaksi untuk di-export.' });
+        return;
+    }
     let csvContent = "sep=,\nNo Order,Tanggal,Customer,No HP,Produk,Total Harga,Channel,Status\n";
     orders.forEach(o => {
         let row = `"${o.id}","${o.date}","${o.customer}","${o.phone}","${o.product}",${o.price},"${o.channel}","${o.status}"`;

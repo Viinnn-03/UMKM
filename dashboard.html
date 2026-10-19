@@ -317,13 +317,18 @@
             <h1>Laporan Penjualan & Keuangan</h1>
             <p>Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.</p>
 
+            <!-- BAGIAN BACKUP & EXPORT DATA DENGAN TAMPILAN TERBARU -->
             <div class="form-container form-accent-info">
                 <h3>Backup & Export Data Toko</h3>
                 <div class="backup-btn-group">
-                    <button class="btn-primary btn-success" onclick="exportToCSV()">Download Laporan Transaksi (Excel/CSV)</button>
-                    <button class="btn-primary btn-info" onclick="backupDataJSON()">Backup Semua Data (JSON)</button>
-                    <label class="btn-primary btn-purple">
-                        Restore Data (Upload File)
+                    <button type="button" class="btn-backup btn-backup-excel" onclick="exportToCSV()">
+                        📥 Download Laporan Transaksi (Excel/CSV)
+                    </button>
+                    <button type="button" class="btn-backup btn-backup-json" onclick="backupDataJSON()">
+                        💾 Backup Semua Data (JSON)
+                    </button>
+                    <label class="btn-backup btn-backup-restore">
+                        📂 Restore Data (Upload File)
                         <input type="file" id="import-file" accept=".json" onchange="restoreDataJSON(event)" style="display: none;">
                     </label>
                 </div>
