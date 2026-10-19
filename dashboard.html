@@ -10,23 +10,29 @@
 </head>
 <body>
 
-    <!-- Header Mobile (Hanya Tampil di Layar HP) -->
+    <!-- Header Mobile -->
     <header class="mobile-header">
-        <h2>UMKM Digital</h2>
+        <div class="mobile-brand">
+            <span class="brand-badge">PRO</span>
+            <h2>UMKM Digital</h2>
+        </div>
         <a href="index.html" class="mobile-logout">Keluar</a>
     </header>
 
     <!-- Sidebar / Navigasi Desktop -->
     <aside class="sidebar">
-        <h2>UMKM Digital</h2>
+        <div class="sidebar-brand">
+            <h2>UMKM Digital</h2>
+            <span class="brand-subtitle">Panel Operasional Kuliner</span>
+        </div>
         <nav>
             <ul>
-                <li><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')">Dashboard Utama</a></li>
-                <li><a href="#pelanggan" class="nav-link" onclick="showSection('pelanggan')">Database Pelanggan</a></li>
-                <li><a href="#stok" class="nav-link" onclick="showSection('stok')">Manajemen Stok</a></li>
-                <li><a href="#pengeluaran" class="nav-link" onclick="showSection('pengeluaran')">Laporan Pengeluaran</a></li>
-                <li><a href="#laporan" class="nav-link" onclick="showSection('laporan')">Laporan Penjualan</a></li>
-                <li><a href="index.html" class="nav-link logout-btn">Logout</a></li>
+                <li><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i>📊</i> Dashboard Utama</a></li>
+                <li><a href="#pelanggan" class="nav-link" onclick="showSection('pelanggan')"><i>👥</i> Database Pelanggan</a></li>
+                <li><a href="#stok" class="nav-link" onclick="showSection('stok')"><i>📦</i> Manajemen Stok</a></li>
+                <li><a href="#pengeluaran" class="nav-link" onclick="showSection('pengeluaran')"><i>💸</i> Laporan Pengeluaran</a></li>
+                <li><a href="#laporan" class="nav-link" onclick="showSection('laporan')"><i>📈</i> Laporan Penjualan</a></li>
+                <li><a href="index.html" class="nav-link logout-btn"><i>🚪</i> Logout</a></li>
             </ul>
         </nav>
     </aside>
@@ -36,8 +42,12 @@
 
         <!-- SECTION 1: DASHBOARD UTAMA -->
         <section id="dashboard" class="page-section active">
-            <h1>Dashboard Utama</h1>
-            <p>Pengelolaan Pesanan Multichannel (WA, Instagram, TikTok, dll)</p>
+            <div class="section-header">
+                <div>
+                    <h1>Dashboard Utama</h1>
+                    <p>Pengelolaan Pesanan Multichannel (WA, Instagram, TikTok, Kasir)</p>
+                </div>
+            </div>
 
             <div class="cards-grid">
                 <div class="card">
@@ -56,8 +66,8 @@
                     <h3>Pesanan Selesai</h3>
                     <p class="stat-number" id="pesanan-selesai">0</p>
                 </div>
-                <div class="card">
-                    <h3>Total Penjualan (Omzet)</h3>
+                <div class="card card-emerald">
+                    <h3>Total Omzet</h3>
                     <p class="stat-number" id="dashboard-omzet">Rp 0</p>
                 </div>
                 <div class="card">
@@ -66,25 +76,24 @@
                 </div>
             </div>
 
-            <!-- FORM INPUT PESANAN OPERASIONAL KULINER -->
-            <div class="form-container" style="border-top: 4px solid #27ae60;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="margin: 0; color: #2c3e50;">+ Input Pesanan Baru (Multi-Menu)</h2>
-                    <a href="#stok" onclick="showSection('stok')" style="font-size: 13px; color: #3498db; text-decoration: none; font-weight: 600;">+ Kelola Menu & Stok</a>
+            <!-- FORM INPUT PESANAN MULTI-MENU MODERN -->
+            <div class="form-container form-accent-emerald">
+                <div class="form-header-flex">
+                    <h2>+ Input Pesanan Baru (Multi-Menu)</h2>
+                    <a href="#stok" onclick="showSection('stok')" class="link-action">+ Kelola Menu & Stok</a>
                 </div>
 
                 <form id="order-form">
-                    <!-- Informasi Pelanggan -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
-                        <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-grid-4">
+                        <div class="form-group">
                             <label for="cust-phone">No HP Pelanggan (Key):</label>
                             <input type="tel" id="cust-phone" pattern="[0-9]*" placeholder="Contoh: 08123456789">
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group">
                             <label for="cust-name">Nama Pelanggan / Meja:</label>
                             <input type="text" id="cust-name" required placeholder="Contoh: Meja 05 / Budi">
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group">
                             <label for="order-type">Tipe Pesanan:</label>
                             <select id="order-type" required>
                                 <option value="Dine-In">Makan di Tempat (Dine-In)</option>
@@ -92,7 +101,7 @@
                                 <option value="Delivery">Pesanan Antar (Delivery)</option>
                             </select>
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group">
                             <label for="cust-channel">Saluran Masuk:</label>
                             <select id="cust-channel" required>
                                 <option value="Kasir / On-Site">Kasir / On-Site</option>
@@ -103,11 +112,10 @@
                     </div>
 
                     <!-- Multi-Item Menu Container -->
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
-                        <label style="font-weight: 700; display: block; margin-bottom: 10px; color: #2c3e50;">Daftar Menu Dipesan:</label>
+                    <div class="menu-items-box">
+                        <label class="menu-box-label">Daftar Menu Dipesan:</label>
                         
                         <div id="order-items-container">
-                            <!-- Baris Item Pertama -->
                             <div class="order-item-row">
                                 <select class="item-product-select" required onchange="calculateTotalOrder()"></select>
                                 <div class="qty-control">
@@ -120,16 +128,16 @@
                             </div>
                         </div>
 
-                        <button type="button" class="btn-sm" style="background: #3498db; color: white; margin-top: 10px; padding: 10px 15px; width: 100%; max-width: 200px;" onclick="addOrderItemRow()">+ Tambah Menu Lain</button>
+                        <button type="button" class="btn-add-menu" onclick="addOrderItemRow()">+ Tambah Menu Lain</button>
                     </div>
 
-                    <!-- Ringkasan & Tombol Simpan -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #eef6ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <!-- Summary & Submit -->
+                    <div class="order-summary-bar">
                         <div>
-                            <span style="font-size: 14px; color: #555;">Estimasi Total Pembayaran:</span>
-                            <h2 id="order-total-preview" style="margin: 0; color: #27ae60;">Rp 0</h2>
+                            <span class="summary-label">Estimasi Total Pembayaran:</span>
+                            <h2 id="order-total-preview" class="summary-amount">Rp 0</h2>
                         </div>
-                        <button type="submit" class="btn-primary" style="padding: 12px 25px; font-size: 15px; font-weight: bold; background-color: #2ecc71;">
+                        <button type="submit" class="btn-primary btn-lg">
                             ✓ Simpan & Diproses Dapur
                         </button>
                     </div>
@@ -137,20 +145,20 @@
             </div>
 
             <!-- Otomatisasi Pesanan WA -->
-            <div class="form-container" style="border-left: 5px solid #25D366;">
-                <h2>Otomatisasi Pesanan (Otomatis & Fleksibel)</h2>
-                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
+            <div class="form-container form-accent-wa">
+                <h2>Otomatisasi Pesanan WA (Flexi-Parser)</h2>
+                <p class="form-desc">
                     Tempel format pesan WA. Sistem mendukung format Nama, No HP/WA, Alamat, Produk, & Jumlah:
                 </p>
                 <div class="form-group">
-                    <textarea id="wa-chat-input" rows="5" style="width:100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Contoh:&#10;Nama: Rian&#10;No WA: 08123456789&#10;Alamat: Medan&#10;Produk: Kopi&#10;Qty: 2"></textarea>
+                    <textarea id="wa-chat-input" rows="4" placeholder="Contoh:&#10;Nama: Rian&#10;No WA: 08123456789&#10;Alamat: Medan&#10;Produk: Kopi&#10;Qty: 2"></textarea>
                 </div>
-                <button type="button" class="btn-primary" style="background-color: #25D366;" onclick="prosesAutoWA()">Proses Pesanan Otomatis</button>
+                <button type="button" class="btn-primary btn-wa" onclick="prosesAutoWA()">Proses Pesanan Otomatis</button>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                <h2>Daftar Pesanan</h2>
-                <input type="text" id="search-order" onkeyup="renderDashboard()" placeholder="Cari No Order / Customer..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 250px;">
+            <div class="table-header-flex">
+                <h2>Daftar Pesanan Active</h2>
+                <input type="text" id="search-order" onkeyup="renderDashboard()" placeholder="Cari No Order / Customer..." class="input-search">
             </div>
 
             <div class="table-responsive">
@@ -169,13 +177,18 @@
                     <tbody id="order-table-body"></tbody>
                 </table>
             </div>
+            <!-- Mobile Cards List Container -->
+            <div id="order-cards-mobile" class="mobile-cards-container"></div>
         </section>
 
         <!-- SECTION 2: DATABASE PELANGGAN -->
         <section id="pelanggan" class="page-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                <h1>Database Pelanggan</h1>
-                <input type="text" id="search-customer" onkeyup="renderCustomers()" placeholder="Cari Nama / No HP..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 250px;">
+            <div class="table-header-flex">
+                <div>
+                    <h1>Database Pelanggan</h1>
+                    <p>Riwayat pembeli otomatis tersimpan dari orderan masuk.</p>
+                </div>
+                <input type="text" id="search-customer" onkeyup="renderCustomers()" placeholder="Cari Nama / No HP..." class="input-search">
             </div>
             <div class="table-responsive">
                 <table>
@@ -184,42 +197,45 @@
                             <th>No HP (Key)</th>
                             <th>Nama</th>
                             <th>Alamat</th>
-                            <th>Riwayat Pembelian</th>
+                            <th>Riwayat Pemesanan</th>
                             <th>Total Transaksi</th>
                         </tr>
                     </thead>
                     <tbody id="customer-table-body"></tbody>
                 </table>
             </div>
+            <div id="customer-cards-mobile" class="mobile-cards-container"></div>
         </section>
 
         <!-- SECTION 3: MANAJEMEN STOK -->
         <section id="stok" class="page-section">
             <h1>Manajemen Stok</h1>
-            <p>Stok akan otomatis berkurang ketika pesanan baru diinput dari dashboard. Anda juga dapat memperbarui stok secara manual.</p>
+            <p>Stok berkurang otomatis saat order masuk. Anda juga dapat memperbarui stok secara manual.</p>
 
             <div class="form-container">
                 <h2>+ Tambah Produk Baru</h2>
                 <form id="add-product-form">
-                    <div class="form-group">
-                        <label for="prod-name">Nama Produk:</label>
-                        <input type="text" id="prod-name" required placeholder="Contoh: Jaket Denim">
-                    </div>
-                    <div class="form-group">
-                        <label for="prod-price">Harga (Rp):</label>
-                        <input type="number" id="prod-price" min="1" required placeholder="Contoh: 150000">
-                    </div>
-                    <div class="form-group">
-                        <label for="prod-stock">Jumlah Stok Awal:</label>
-                        <input type="number" id="prod-stock" min="0" value="10" required>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="prod-name">Nama Produk:</label>
+                            <input type="text" id="prod-name" required placeholder="Contoh: Nasi Goreng Spesial">
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-price">Harga (Rp):</label>
+                            <input type="number" id="prod-price" min="1" required placeholder="Contoh: 25000">
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-stock">Jumlah Stok Awal:</label>
+                            <input type="number" id="prod-stock" min="0" value="10" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn-primary">Tambah Produk</button>
                 </form>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div class="table-header-flex">
                 <h2>Daftar Stok Produk</h2>
-                <input type="text" id="search-stock" onkeyup="renderStock()" placeholder="Cari Produk..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 250px;">
+                <input type="text" id="search-stock" onkeyup="renderStock()" placeholder="Cari Produk..." class="input-search">
             </div>
 
             <div class="table-responsive">
@@ -237,6 +253,7 @@
                     <tbody id="stock-table-body"></tbody>
                 </table>
             </div>
+            <div id="stock-cards-mobile" class="mobile-cards-container"></div>
         </section>
 
         <!-- SECTION 4: LAPORAN PENGELUARAN -->
@@ -244,10 +261,10 @@
             <h1>Laporan Pengeluaran</h1>
             <p>Pencatatan dan pemantauan pengeluaran operasional usaha Anda.</p>
 
-            <div class="form-container" style="border-left: 5px solid #e74c3c; margin-bottom: 25px;">
+            <div class="form-container form-accent-danger">
                 <h2>+ Input Pengeluaran Operasional</h2>
                 <form id="expense-form" onsubmit="tambahPengeluaran(event)">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label for="expense-name">Deskripsi Pengeluaran:</label>
                             <input type="text" id="expense-name" required placeholder="Contoh: Beli Bahan Baku / Listrik">
@@ -267,20 +284,20 @@
                             <input type="number" id="expense-amount" min="1" required placeholder="Contoh: 50000">
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary" style="background-color: #e74c3c;">Simpan Pengeluaran</button>
+                    <button type="submit" class="btn-primary btn-danger">Simpan Pengeluaran</button>
                 </form>
             </div>
 
-            <div class="cards-grid" style="margin-bottom: 25px;">
-                <div class="card" style="border-left-color: #e74c3c;">
+            <div class="cards-grid">
+                <div class="card card-danger">
                     <h3>Total Pengeluaran</h3>
-                    <p class="stat-number" id="total-pengeluaran-card" style="color: #e74c3c;">Rp 0</p>
+                    <p class="stat-number stat-danger" id="total-pengeluaran-card">Rp 0</p>
                 </div>
             </div>
 
             <h2>Detail Pengeluaran Operasional</h2>
             <div class="table-responsive">
-                <table class="bordered-table">
+                <table>
                     <thead>
                         <tr>
                             <th>Tanggal</th>
@@ -292,6 +309,7 @@
                     <tbody id="detail-pengeluaran-body"></tbody>
                 </table>
             </div>
+            <div id="expense-cards-mobile" class="mobile-cards-container"></div>
         </section>
 
         <!-- SECTION 5: LAPORAN PENJUALAN & KEUANGAN -->
@@ -299,20 +317,20 @@
             <h1>Laporan Penjualan & Keuangan</h1>
             <p>Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.</p>
 
-            <div class="form-container" style="background: #eef6ff; border-left: 5px solid #3498db; margin-bottom: 20px;">
-                <h3 style="margin-bottom: 10px; font-size: 16px;">Backup & Export Data Toko</h3>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn-primary" onclick="exportToCSV()" style="background-color: #27ae60;">Download Laporan Transaksi (Excel/CSV)</button>
-                    <button class="btn-primary" onclick="backupDataJSON()" style="background-color: #2980b9;">Backup Semua Data (JSON)</button>
-                    <label class="btn-primary" style="background-color: #8e44ad; cursor: pointer; display: inline-block;">
+            <div class="form-container form-accent-info">
+                <h3>Backup & Export Data Toko</h3>
+                <div class="backup-btn-group">
+                    <button class="btn-primary btn-success" onclick="exportToCSV()">Download Laporan Transaksi (Excel/CSV)</button>
+                    <button class="btn-primary btn-info" onclick="backupDataJSON()">Backup Semua Data (JSON)</button>
+                    <label class="btn-primary btn-purple">
                         Restore Data (Upload File)
                         <input type="file" id="import-file" accept=".json" onchange="restoreDataJSON(event)" style="display: none;">
                     </label>
                 </div>
             </div>
 
-            <div class="filter-container" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
-                <div>
+            <div class="filter-container">
+                <div class="filter-group">
                     <label for="filter-periode">Periode Laporan:</label>
                     <select id="filter-periode" onchange="toggleDateFilter()">
                         <option value="semua">Semua</option>
@@ -330,18 +348,18 @@
                 </div>
             </div>
 
-            <div class="cards-grid" style="margin-bottom: 30px;">
+            <div class="cards-grid">
                 <div class="card card-success">
                     <h3>Total Omzet (Pendapatan)</h3>
                     <p class="stat-number" id="report-omzet">Rp 0</p>
                 </div>
-                <div class="card" style="border-left-color: #e74c3c;">
+                <div class="card card-danger">
                     <h3>Total Pengeluaran</h3>
-                    <p class="stat-number" id="report-pengeluaran" style="color: #e74c3c;">Rp 0</p>
+                    <p class="stat-number stat-danger" id="report-pengeluaran">Rp 0</p>
                 </div>
-                <div class="card" style="border-left-color: #27ae60;">
+                <div class="card card-emerald">
                     <h3>Laba Bersih (Omzet - Pengeluaran)</h3>
-                    <p class="stat-number" id="report-laba" style="color: #27ae60;">Rp 0</p>
+                    <p class="stat-number" id="report-laba">Rp 0</p>
                 </div>
                 <div class="card">
                     <h3>Channel Paling Banyak Orderan</h3>
@@ -354,18 +372,18 @@
             </div>
 
             <div class="laporan-detail">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px; gap: 10px;">
+                <div class="table-header-flex">
                     <h2>Detail Transaksi Penjualan</h2>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <label for="filter-produk" style="font-weight: 600; font-size: 14px;">Pilih Jenis Produk:</label>
-                        <select id="filter-produk" onchange="renderLaporan()" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px;">
+                    <div class="filter-inline">
+                        <label for="filter-produk">Pilih Jenis Produk:</label>
+                        <select id="filter-produk" onchange="renderLaporan()">
                             <option value="semua">Semua Produk</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="bordered-table">
+                    <table>
                         <thead>
                             <tr>
                                 <th>Tanggal</th>
@@ -378,12 +396,13 @@
                         <tbody id="detail-transaksi-body"></tbody>
                     </table>
                 </div>
+                <div id="report-cards-mobile" class="mobile-cards-container"></div>
             </div>
         </section>
 
     </main>
 
-    <!-- Bottom Navigation Bar (Hanya Tampil di Layar HP) -->
+    <!-- Bottom Navigation Bar (HP Only) -->
     <nav class="bottom-nav">
         <button class="bottom-nav-item active" onclick="showSection('dashboard')">
             <span class="nav-icon">📊</span>

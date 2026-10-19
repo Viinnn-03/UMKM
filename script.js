@@ -1,4 +1,4 @@
-// --- DATA AWAL BERSIH DARI LOCALSTORAGE ---
+// --- DATA AWAL LOCALSTORAGE ---
 let defaultProducts = [];
 let defaultCustomers = [];
 let defaultOrders = [];
@@ -9,7 +9,6 @@ let customers = JSON.parse(localStorage.getItem('umkm_customers')) || defaultCus
 let orders = JSON.parse(localStorage.getItem('umkm_orders')) || defaultOrders;
 let expenses = JSON.parse(localStorage.getItem('umkm_expenses')) || defaultExpenses;
 
-// FUNGSI UNTUK MENYIMPAN SETIAP PERUBAHAN KE LOCALSTORAGE
 function saveData() {
     localStorage.setItem('umkm_products', JSON.stringify(products));
     localStorage.setItem('umkm_customers', JSON.stringify(customers));
@@ -17,30 +16,20 @@ function saveData() {
     localStorage.setItem('umkm_expenses', JSON.stringify(expenses));
 }
 
-// --- FUNGSI NAVIGASI SIDEBAR & BOTTOM NAV MOBILE ---
+// --- NAVIGASI MULTI-PLATFORM ---
 function showSection(sectionId) {
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
-    
-    // Reset status aktif di Sidebar & Bottom Navigation
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
     document.querySelectorAll('.bottom-nav-item').forEach(btn => btn.classList.remove('active'));
 
     const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.classList.add('active');
-    }
+    if (targetSection) targetSection.classList.add('active');
     
-    // Tandai link sidebar yang aktif
     const activeSidebarLink = document.querySelector(`.sidebar a[href="#${sectionId}"]`);
-    if (activeSidebarLink) {
-        activeSidebarLink.classList.add('active');
-    }
+    if (activeSidebarLink) activeSidebarLink.classList.add('active');
 
-    // Tandai bottom nav mobile yang aktif
     const activeBottomNav = document.querySelector(`.bottom-nav-item[onclick*="${sectionId}"]`);
-    if (activeBottomNav) {
-        activeBottomNav.classList.add('active');
-    }
+    if (activeBottomNav) activeBottomNav.classList.add('active');
 
     renderDashboard();
     renderCustomers();
@@ -49,12 +38,10 @@ function showSection(sectionId) {
     renderLaporan();
 }
 
-// --- FUNGSI MULTI-ITEM UNTUK UMKM KULINER ---
-
-// 1. Opsi Populate Dropdown untuk Setiap Baris Item Menu
+// --- MULTI-MENU OPERASIONAL KULINER ---
 function getProductOptionsHTML() {
     if (products.length === 0) {
-        return `<option value="">-- Belum Ada Menu (Tambah di Manajemen Stok) --</option>`;
+        return `<option value="">-- Belum Ada Menu (Tambah di Stok) --</option>`;
     }
     let html = '<option value="">-- Pilih Menu Kuliner --</option>';
     products.forEach(p => {
@@ -63,7 +50,6 @@ function getProductOptionsHTML() {
     return html;
 }
 
-// 2. Populate Dropdown Produk pada Seluruh Form
 function populateProductDropdown() {
     document.querySelectorAll('.item-product-select').forEach(select => {
         const currentVal = select.value;
@@ -73,7 +59,6 @@ function populateProductDropdown() {
     calculateTotalOrder();
 }
 
-// 3. FUNGSI MENGUBAH QTY (+/-)
 function changeQty(btn, delta) {
     const qtyInput = btn.parentElement.querySelector('.item-qty-input');
     if (qtyInput) {
@@ -85,14 +70,12 @@ function changeQty(btn, delta) {
     }
 }
 
-// 4. Tambah Baris Menu Baru
 function addOrderItemRow() {
     const container = document.getElementById('order-items-container');
     if (!container) return;
 
     const newRow = document.createElement('div');
     newRow.className = 'order-item-row';
-    
     newRow.innerHTML = `
         <select class="item-product-select" required onchange="calculateTotalOrder()">
             ${getProductOptionsHTML()}
@@ -105,23 +88,20 @@ function addOrderItemRow() {
         <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
         <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
     `;
-    
     container.appendChild(newRow);
     calculateTotalOrder();
 }
 
-// 5. Hapus Baris Menu
 function removeOrderItemRow(btn) {
     const rows = document.querySelectorAll('.order-item-row');
     if (rows.length > 1) {
         btn.closest('.order-item-row').remove();
         calculateTotalOrder();
     } else {
-        Swal.fire({ icon: 'warning', title: 'Minimal 1 Menu', text: 'Pesanan harus berisi minimal satu menu kuliner.' });
+        Swal.fire({ icon: 'warning', title: 'Minimal 1 Menu', text: 'Pesanan harus berisi minimal satu menu.' });
     }
 }
 
-// 6. Kalkulasi Estimasi Pembayaran Otomatis
 function calculateTotalOrder() {
     let total = 0;
     document.querySelectorAll('.order-item-row').forEach(row => {
@@ -137,9 +117,7 @@ function calculateTotalOrder() {
     });
 
     const previewElem = document.getElementById('order-total-preview');
-    if (previewElem) {
-        previewElem.innerText = 'Rp ' + total.toLocaleString('id-ID');
-    }
+    if (previewElem) previewElem.innerText = 'Rp ' + total.toLocaleString('id-ID');
 }
 
 function populateReportProductFilter() {
@@ -156,34 +134,14 @@ function populateReportProductFilter() {
     filterProductSelect.value = currentVal;
 }
 
-// --- AUTO-FILL NAMA DARI NO HP ---
-const phoneInput = document.getElementById('cust-phone');
-if (phoneInput) {
-    phoneInput.addEventListener('input', function () {
-        const inputPhone = this.value.trim();
-        const nameInput = document.getElementById('cust-name');
-
-        const foundCustomer = customers.find(c => c.phone && c.phone.trim() === inputPhone);
-
-        if (foundCustomer) {
-            if (nameInput) nameInput.value = foundCustomer.name;
-        }
-    });
-}
-
-function checkEmptyTable(elem, length, colSpan, message) {
-    if (length === 0 && elem) {
-        elem.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#999; padding: 20px;">${message}</td></tr>`;
-        return true;
-    }
-    return false;
-}
-
-// --- RENDER DASHBOARD UTAMA + FITUR SEARCH & BATAL PESANAN ---
+// --- RENDER DASHBOARD & MOBILE CARDS ---
 function renderDashboard() {
     const tableBody = document.getElementById('order-table-body');
+    const mobileCards = document.getElementById('order-cards-mobile');
     if (!tableBody) return;
+    
     tableBody.innerHTML = '';
+    if (mobileCards) mobileCards.innerHTML = '';
 
     const searchQuery = document.getElementById('search-order') ? document.getElementById('search-order').value.toLowerCase() : '';
 
@@ -215,6 +173,7 @@ function renderDashboard() {
 
         let badgeClass = o.status === 'Baru' ? 'badge-baru' : (o.status === 'Diproses' ? 'badge-proses' : 'badge-selesai');
 
+        // Render Desktop Table
         tableBody.innerHTML += `
             <tr>
                 <td><b>${o.id}</b></td>
@@ -224,14 +183,35 @@ function renderDashboard() {
                 <td><span class="channel-tag">${o.channel}</span></td>
                 <td><span class="badge ${badgeClass}">${o.status}</span></td>
                 <td>
-                    ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')">Ubah Status</button>` : '<span style="color:#27ae60; font-weight:bold;">Selesai</span>'}
-                    <button class="btn-sm" style="background-color:#e74c3c; color:white; margin-left:5px;" onclick="cancelOrder('${o.id}')">Batal</button>
+                    ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')">Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
+                    <button class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="cancelOrder('${o.id}')">Batal</button>
                 </td>
             </tr>
         `;
+
+        // Render Mobile Cards View
+        if (mobileCards) {
+            mobileCards.innerHTML += `
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <span class="mobile-card-title">${o.id} - ${o.customer}</span>
+                        <span class="badge ${badgeClass}">${o.status}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div><b>Produk:</b> ${o.product}</div>
+                        <div><b>Channel:</b> ${o.channel} | <b>HP:</b> ${o.phone || '-'}</div>
+                        <div><b>Total:</b> Rp ${o.price.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="mobile-card-footer">
+                        ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')">Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
+                        <button class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${o.id}')">Batal</button>
+                    </div>
+                </div>
+            `;
+        }
     });
 
-    checkEmptyTable(tableBody, filteredOrders.length, 7, 'Tidak ada pesanan yang sesuai.');
+    checkEmptyTable(tableBody, filteredOrders.length, 7, 'Tidak ada pesanan.');
 
     if (document.getElementById('total-pesanan')) document.getElementById('total-pesanan').innerText = totalOrders;
     if (document.getElementById('pesanan-baru')) document.getElementById('pesanan-baru').innerText = newOrders;
@@ -245,7 +225,7 @@ function renderDashboard() {
     if (document.getElementById('dashboard-top-product')) document.getElementById('dashboard-top-product').innerText = topProduct;
 }
 
-// --- INPUT PESANAN MULTI-MENU (FORM SUBMIT) ---
+// --- FORM SUBMIT PESANAN ---
 const orderForm = document.getElementById('order-form');
 if (orderForm) {
     orderForm.addEventListener('submit', function (e) {
@@ -284,13 +264,7 @@ if (orderForm) {
                         isStockEnough = false;
                         errorMessage = `Stok "${product.name}" kurang! Tersisa ${product.stock} pcs.`;
                     } else {
-                        orderItems.push({
-                            productId: productId,
-                            productName: productName,
-                            price: price,
-                            qty: qty,
-                            note: note
-                        });
+                        orderItems.push({ productId, productName, price, qty, note });
                         totalOrderPrice += (price * qty);
                     }
                 }
@@ -303,16 +277,13 @@ if (orderForm) {
         }
 
         if (orderItems.length === 0) {
-            Swal.fire({ icon: 'warning', title: 'Pilih Menu', text: 'Silakan pilih minimal satu menu kuliner.' });
+            Swal.fire({ icon: 'warning', title: 'Pilih Menu', text: 'Pilih minimal satu menu.' });
             return;
         }
 
-        // Potong Stok
         orderItems.forEach(item => {
             const product = products.find(p => p.id === item.productId);
-            if (product) {
-                product.stock -= item.qty;
-            }
+            if (product) product.stock -= item.qty;
         });
 
         const now = new Date();
@@ -328,7 +299,7 @@ if (orderForm) {
             product: summaryProductText,
             items: orderItems,
             qty: orderItems.reduce((acc, curr) => acc + curr.qty, 0),
-            channel: channel,
+            channel,
             status: 'Baru',
             price: totalOrderPrice,
             date: formattedDate
@@ -355,7 +326,7 @@ if (orderForm) {
             icon: 'success',
             title: 'Pesanan Diteruskan ke Dapur!',
             html: `No Order: <b>${newOrderId}</b><br>Total Pembayaran: <b>Rp ${totalOrderPrice.toLocaleString('id-ID')}</b>`,
-            confirmButtonColor: '#2ecc71'
+            confirmButtonColor: '#059669'
         });
 
         document.getElementById('order-form').reset();
@@ -382,15 +353,14 @@ if (orderForm) {
     });
 }
 
-// --- OTOMATISASI PARSER WA FLEKSIBEL ---
+// --- OTOMATISASI PARSER WA ---
 function prosesAutoWA() {
     const inputElem = document.getElementById('wa-chat-input');
     if (!inputElem) return;
 
     const chatText = inputElem.value;
-
     if (!chatText.trim()) {
-        Swal.fire({ icon: 'info', title: 'Teks WA Kosong', text: 'Tempel teks pesan WhatsApp terlebih dahulu!' });
+        Swal.fire({ icon: 'info', title: 'Teks WA Kosong', text: 'Tempel pesan WA terlebih dahulu!' });
         return;
     }
 
@@ -404,7 +374,7 @@ function prosesAutoWA() {
         Swal.fire({
             icon: 'error',
             title: 'Format Tidak Sesuai',
-            html: 'Gunakan kata kunci seperti Nama:, No HP/WA:, Alamat:, Produk:, dan Qty/Jumlah:'
+            html: 'Gunakan kata kunci Nama:, No WA:, Produk:, dan Qty:'
         });
         return;
     }
@@ -418,12 +388,12 @@ function prosesAutoWA() {
     const product = products.find(p => p.name.toLowerCase().includes(productNameInput));
 
     if (!product) {
-        Swal.fire({ icon: 'warning', title: 'Produk Tidak Ditemukan', text: `Produk "${productMatch[1]}" tidak ada di stok.` });
+        Swal.fire({ icon: 'warning', title: 'Produk Tidak Ada', text: `Produk "${productMatch[1]}" tidak ditemukan.` });
         return;
     }
 
     if (product.stock < qty) {
-        Swal.fire({ icon: 'error', title: 'Stok Tidak Cukup', text: `Stok tersisa: ${product.stock} pcs.` });
+        Swal.fire({ icon: 'error', title: 'Stok Kurang', text: `Stok tersisa: ${product.stock} pcs.` });
         return;
     }
 
@@ -431,15 +401,15 @@ function prosesAutoWA() {
 
     const now = new Date();
     const formattedDate = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}.${String(now.getSeconds()).padStart(2, '0')}`;
-
     const newOrderId = 'ORD-00' + (orders.length + 1);
+
     orders.push({
         id: newOrderId,
         customer: `${custName} (Delivery WA)`,
         phone: custPhone,
         product: `${product.name} (${qty}x)`,
-        items: [{ productId: product.id, productName: product.name, price: product.price, qty: qty, note: 'Order WA' }],
-        qty: qty,
+        items: [{ productId: product.id, productName: product.name, price: product.price, qty, note: 'Order WA' }],
+        qty,
         channel: 'WhatsApp',
         status: 'Baru',
         price: product.price * qty,
@@ -450,13 +420,7 @@ function prosesAutoWA() {
     if (existingCust) {
         existingCust.name = custName;
     } else {
-        customers.push({
-            phone: custPhone,
-            name: custName,
-            address: custAddress,
-            history: 1,
-            totalSpent: (product.price * qty)
-        });
+        customers.push({ phone: custPhone, name: custName, address: custAddress, history: 1, totalSpent: (product.price * qty) });
     }
 
     saveData();
@@ -475,39 +439,28 @@ function prosesAutoWA() {
     renderStock();
 }
 
-// --- FUNGSI BATAL PESANAN & ROLLBACK STOK ---
 function cancelOrder(orderId) {
     Swal.fire({
         title: 'Pembatalan Pesanan',
-        text: 'Apakah Anda yakin ingin membatalkan pesanan ini? Stok produk akan dikembalikan.',
+        text: 'Apakah Anda yakin? Stok produk akan dikembalikan.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#e74c3c',
+        confirmButtonColor: '#ef4444',
         confirmButtonText: 'Ya, Batalkan'
     }).then((result) => {
         if (result.isConfirmed) {
             const index = orders.findIndex(o => o.id === orderId);
             if (index !== -1) {
                 const order = orders[index];
-                
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
                         const product = products.find(p => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase());
-                        if (product) {
-                            product.stock += item.qty;
-                        }
+                        if (product) product.stock += item.qty;
                     });
-                } else {
-                    const product = products.find(p => p.name.toLowerCase() === order.product.toLowerCase());
-                    if (product) {
-                        product.stock += order.qty;
-                    }
                 }
-
                 orders.splice(index, 1);
                 saveData();
-
-                Swal.fire('Dibatalkan!', 'Pesanan telah dibatalkan dan stok dikembalikan.', 'success');
+                Swal.fire('Dibatalkan!', 'Pesanan dibatalkan.', 'success');
                 renderDashboard();
                 renderStock();
                 renderLaporan();
@@ -518,32 +471,18 @@ function cancelOrder(orderId) {
 
 function tambahPengeluaran(e) {
     e.preventDefault();
-
     const name = document.getElementById('expense-name').value.trim();
     const category = document.getElementById('expense-category').value;
     const amount = parseInt(document.getElementById('expense-amount').value);
 
     const now = new Date();
     const formattedDate = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}.${String(now.getSeconds()).padStart(2, '0')}`;
-
     const newExpId = 'EXP-00' + (expenses.length + 1);
 
-    expenses.push({
-        id: newExpId,
-        name: name,
-        category: category,
-        amount: amount,
-        date: formattedDate
-    });
-
+    expenses.push({ id: newExpId, name, category, amount, date: formattedDate });
     saveData();
 
-    Swal.fire({
-        icon: 'success',
-        title: 'Pengeluaran Dicatat!',
-        confirmButtonColor: '#e74c3c'
-    });
-
+    Swal.fire({ icon: 'success', title: 'Pengeluaran Dicatat!', confirmButtonColor: '#ef4444' });
     document.getElementById('expense-form').reset();
     renderPengeluaran();
     renderLaporan();
@@ -551,9 +490,11 @@ function tambahPengeluaran(e) {
 
 function renderPengeluaran() {
     const expenseBody = document.getElementById('detail-pengeluaran-body');
+    const mobileCards = document.getElementById('expense-cards-mobile');
     if (!expenseBody) return;
 
     expenseBody.innerHTML = '';
+    if (mobileCards) mobileCards.innerHTML = '';
     let totalExp = 0;
 
     expenses.forEach(exp => {
@@ -563,16 +504,29 @@ function renderPengeluaran() {
                 <td>${exp.date || '-'}</td>
                 <td>${exp.name}</td>
                 <td>${exp.category}</td>
-                <td style="color:#e74c3c; font-weight:bold;">Rp ${exp.amount.toLocaleString('id-ID')}</td>
+                <td style="color:#ef4444; font-weight:bold;">Rp ${exp.amount.toLocaleString('id-ID')}</td>
             </tr>
         `;
+        if (mobileCards) {
+            mobileCards.innerHTML += `
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <span class="mobile-card-title">${exp.name}</span>
+                        <span class="badge badge-baru">${exp.category}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div><b>Tanggal:</b> ${exp.date || '-'}</div>
+                        <div style="color:#ef4444; font-weight:bold;"><b>Nominal:</b> Rp ${exp.amount.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+            `;
+        }
     });
 
     if (document.getElementById('total-pengeluaran-card')) {
         document.getElementById('total-pengeluaran-card').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
     }
-
-    checkEmptyTable(expenseBody, expenses.length, 4, 'Belum ada catatan pengeluaran.');
+    checkEmptyTable(expenseBody, expenses.length, 4, 'Belum ada pengeluaran.');
 }
 
 function nextStatus(orderId) {
@@ -587,19 +541,17 @@ function nextStatus(orderId) {
 
 function renderCustomers() {
     const tableBody = document.getElementById('customer-table-body');
+    const mobileCards = document.getElementById('customer-cards-mobile');
     if (!tableBody) return;
+    
     tableBody.innerHTML = '';
+    if (mobileCards) mobileCards.innerHTML = '';
 
     const searchQuery = document.getElementById('search-customer') ? document.getElementById('search-customer').value.toLowerCase() : '';
-
-    let filteredCust = customers.filter(c => 
-        c.name.toLowerCase().includes(searchQuery) || 
-        (c.phone && c.phone.includes(searchQuery))
-    );
+    let filteredCust = customers.filter(c => c.name.toLowerCase().includes(searchQuery) || (c.phone && c.phone.includes(searchQuery)));
 
     filteredCust.forEach(c => {
         let custOrders = orders.filter(o => o.phone && c.phone && o.phone.trim() === c.phone.trim());
-
         c.history = custOrders.length;
         c.totalSpent = custOrders.reduce((total, o) => total + o.price, 0);
 
@@ -612,18 +564,36 @@ function renderCustomers() {
                 <td>Rp ${c.totalSpent.toLocaleString('id-ID')}</td>
             </tr>
         `;
+
+        if (mobileCards) {
+            mobileCards.innerHTML += `
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <span class="mobile-card-title">${c.name}</span>
+                        <span class="channel-tag">${c.phone}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div><b>Alamat:</b> ${c.address || '-'}</div>
+                        <div><b>Total Order:</b> ${c.history} Kali Pemesanan</div>
+                        <div><b>Total Belanja:</b> Rp ${c.totalSpent.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+            `;
+        }
     });
 
-    checkEmptyTable(tableBody, filteredCust.length, 5, 'Belum ada data pelanggan.');
+    checkEmptyTable(tableBody, filteredCust.length, 5, 'Belum ada pelanggan.');
 }
 
 function renderStock() {
     const tableBody = document.getElementById('stock-table-body');
+    const mobileCards = document.getElementById('stock-cards-mobile');
     if (!tableBody) return;
+
     tableBody.innerHTML = '';
+    if (mobileCards) mobileCards.innerHTML = '';
 
     const searchQuery = document.getElementById('search-stock') ? document.getElementById('search-stock').value.toLowerCase() : '';
-
     let filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery) || p.id.toLowerCase().includes(searchQuery));
 
     filteredProducts.forEach(p => {
@@ -642,9 +612,27 @@ function renderStock() {
                 </td>
             </tr>
         `;
+
+        if (mobileCards) {
+            mobileCards.innerHTML += `
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <span class="mobile-card-title">${p.name}</span>
+                        <span class="badge ${badgeColorClass}">${statusStok}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div><b>Harga:</b> Rp ${p.price.toLocaleString('id-ID')}</div>
+                        <div><b>Sisa Stok:</b> ${p.stock} pcs</div>
+                    </div>
+                    <div class="mobile-card-footer">
+                        <button class="btn-sm btn-status" onclick="updateProductStock('${p.id}')">Update Stok</button>
+                    </div>
+                </div>
+            `;
+        }
     });
 
-    checkEmptyTable(tableBody, filteredProducts.length, 6, 'Belum ada produk terdaftar.');
+    checkEmptyTable(tableBody, filteredProducts.length, 6, 'Belum ada produk.');
 }
 
 async function updateProductStock(productId) {
@@ -670,16 +658,11 @@ async function updateProductStock(productId) {
     if (formValues) {
         const newStock = parseInt(formValues[0]);
         const newPrice = parseInt(formValues[1]);
-
-        if (isNaN(newStock) || newStock < 0 || isNaN(newPrice) || newPrice <= 0) {
-            Swal.fire({ icon: 'error', title: 'Data Tidak Valid' });
-            return;
-        }
+        if (isNaN(newStock) || newStock < 0 || isNaN(newPrice) || newPrice <= 0) return;
 
         product.stock = newStock;
         product.price = newPrice;
         saveData();
-
         renderStock();
         populateProductDropdown();
     }
@@ -689,19 +672,15 @@ const addProductForm = document.getElementById('add-product-form');
 if (addProductForm) {
     addProductForm.addEventListener('submit', function (e) {
         e.preventDefault();
-
         const name = document.getElementById('prod-name').value.trim();
         const price = parseInt(document.getElementById('prod-price').value);
         const stock = parseInt(document.getElementById('prod-stock').value);
 
-        const nextIdNumber = products.length + 1;
-        const newId = 'PRD' + String(nextIdNumber).padStart(2, '0');
-
-        products.push({ id: newId, name: name, price: price, stock: stock });
+        const newId = 'PRD' + String(products.length + 1).padStart(2, '0');
+        products.push({ id: newId, name, price, stock });
         saveData();
 
         Swal.fire({ icon: 'success', title: 'Produk Ditambahkan!' });
-
         addProductForm.reset();
         renderStock();
         populateProductDropdown();
@@ -712,44 +691,33 @@ function toggleDateFilter() {
     const periodeSelect = document.getElementById('filter-periode');
     const datePickerWrapper = document.getElementById('date-picker-wrapper');
     const monthPickerWrapper = document.getElementById('month-picker-wrapper');
-    const dateInput = document.getElementById('filter-tanggal');
-    const monthInput = document.getElementById('filter-bulan');
-
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
 
     if (periodeSelect && periodeSelect.value === 'harian') {
         if (datePickerWrapper) datePickerWrapper.style.display = 'inline-block';
         if (monthPickerWrapper) monthPickerWrapper.style.display = 'none';
-        if (dateInput && !dateInput.value) dateInput.value = `${yyyy}-${mm}-${dd}`;
     } else if (periodeSelect && periodeSelect.value === 'bulanan') {
         if (datePickerWrapper) datePickerWrapper.style.display = 'none';
         if (monthPickerWrapper) monthPickerWrapper.style.display = 'inline-block';
-        if (monthInput && !monthInput.value) monthInput.value = `${yyyy}-${mm}`;
     } else {
         if (datePickerWrapper) datePickerWrapper.style.display = 'none';
         if (monthPickerWrapper) monthPickerWrapper.style.display = 'none';
     }
-
     renderLaporan();
 }
 
 function renderLaporan() {
     populateReportProductFilter();
-
-    let totalOmzet = 0;
-    let totalPengeluaran = 0;
-    let channelCount = {};
+    let totalOmzet = 0, totalPengeluaran = 0, channelCount = {};
 
     const detailBody = document.getElementById('detail-transaksi-body');
+    const mobileCards = document.getElementById('report-cards-mobile');
     const periodeVal = document.getElementById('filter-periode') ? document.getElementById('filter-periode').value : 'semua';
     const tanggalVal = document.getElementById('filter-tanggal') ? document.getElementById('filter-tanggal').value : '';
     const bulanVal = document.getElementById('filter-bulan') ? document.getElementById('filter-bulan').value : '';
     const produkVal = document.getElementById('filter-produk') ? document.getElementById('filter-produk').value.toLowerCase() : 'semua';
 
     if (detailBody) detailBody.innerHTML = '';
+    if (mobileCards) mobileCards.innerHTML = '';
 
     const isDateMatch = (dateStr) => {
         if (!dateStr) return false;
@@ -758,23 +726,16 @@ function renderLaporan() {
             const day = parts[0].padStart(2, '0');
             const month = parts[1].padStart(2, '0');
             const year = parts[2];
-
             if (periodeVal === 'harian' && tanggalVal) return `${year}-${month}-${day}` === tanggalVal;
             if (periodeVal === 'bulanan' && bulanVal) return `${year}-${month}` === bulanVal;
         }
         return periodeVal === 'semua';
     };
 
-    let filteredOrders = orders.filter(o => {
-        const dateMatches = isDateMatch(o.date);
-        const productMatches = (produkVal === 'semua') || (o.product.toLowerCase().includes(produkVal) || produkVal.includes(o.product.toLowerCase()));
-        return dateMatches && productMatches;
-    });
+    let filteredOrders = orders.filter(o => isDateMatch(o.date) && (produkVal === 'semua' || o.product.toLowerCase().includes(produkVal)));
 
     filteredOrders.forEach(o => {
-        let totalHarga = o.price;
-        totalOmzet += totalHarga;
-
+        totalOmzet += o.price;
         channelCount[o.channel] = (channelCount[o.channel] || 0) + 1;
 
         if (detailBody) {
@@ -784,21 +745,31 @@ function renderLaporan() {
                     <td>${o.product.toLowerCase()}</td>
                     <td>${o.qty || 1}</td>
                     <td>${o.customer.toLowerCase()}</td>
-                    <td>Rp ${totalHarga.toLocaleString('id-ID')}</td>
+                    <td>Rp ${o.price.toLocaleString('id-ID')}</td>
                 </tr>
             `;
         }
-    });
 
-    if (detailBody && filteredOrders.length === 0) {
-        detailBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding: 20px;">Tidak ada transaksi untuk filter ini.</td></tr>`;
-    }
+        if (mobileCards) {
+            mobileCards.innerHTML += `
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <span class="mobile-card-title">${o.product}</span>
+                        <span class="badge badge-selesai">Rp ${o.price.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div><b>Tanggal:</b> ${o.date || '-'} | <b>Qty:</b> ${o.qty || 1}</div>
+                        <div><b>Customer:</b> ${o.customer}</div>
+                    </div>
+                </div>
+            `;
+        }
+    });
 
     let filteredExpenses = expenses.filter(exp => isDateMatch(exp.date));
     filteredExpenses.forEach(exp => { totalPengeluaran += exp.amount; });
 
     let labaBersih = totalOmzet - totalPengeluaran;
-
     let topChannel = Object.keys(channelCount).length > 0 ? Object.keys(channelCount).reduce((a, b) => channelCount[a] > channelCount[b] ? a : b) : '-';
 
     if (document.getElementById('report-omzet')) document.getElementById('report-omzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
@@ -806,34 +777,31 @@ function renderLaporan() {
     if (document.getElementById('report-laba')) {
         const labaElem = document.getElementById('report-laba');
         labaElem.innerText = 'Rp ' + labaBersih.toLocaleString('id-ID');
-        labaElem.style.color = labaBersih >= 0 ? '#27ae60' : '#e74c3c';
+        labaElem.style.color = labaBersih >= 0 ? '#059669' : '#ef4444';
     }
     if (document.getElementById('report-top-channel')) document.getElementById('report-top-channel').innerText = topChannel;
 }
 
-// --- FUNGSI EXPORT & BACKUP DATA (EXCEL RAPI / JSON) ---
-function exportToCSV() {
-    if (orders.length === 0) {
-        Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Belum ada data transaksi untuk di-export.' });
-        return;
+function checkEmptyTable(elem, length, colSpan, message) {
+    if (length === 0 && elem) {
+        elem.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding: 20px;">${message}</td></tr>`;
+        return true;
     }
+    return false;
+}
 
+function exportToCSV() {
+    if (orders.length === 0) return;
     let csvContent = "sep=,\nNo Order,Tanggal,Customer,No HP,Produk,Total Harga,Channel,Status\n";
-
     orders.forEach(o => {
-        let cleanProduct = (o.product || '').replace(/"/g, '""');
-        let cleanCustomer = (o.customer || '').replace(/"/g, '""');
-
-        let row = `"${o.id}","${o.date}","${cleanCustomer}","${o.phone}","${cleanProduct}",${o.price},"${o.channel}","${o.status}"`;
+        let row = `"${o.id}","${o.date}","${o.customer}","${o.phone}","${o.product}",${o.price},"${o.channel}","${o.status}"`;
         csvContent += row + "\n";
     });
-
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Laporan_Transaksi_UMKM_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `Laporan_Transaksi_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -844,7 +812,7 @@ function backupDataJSON() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Backup_Toko_UMKM_${new Date().toISOString().slice(0,10)}.json`);
+    downloadAnchor.setAttribute("download", `Backup_Toko_${new Date().toISOString().slice(0,10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -856,25 +824,15 @@ function restoreDataJSON(event) {
         try {
             const data = JSON.parse(e.target.result);
             if (data.products && data.orders) {
-                products = data.products;
-                customers = data.customers || [];
-                orders = data.orders;
-                expenses = data.expenses || [];
+                products = data.products; customers = data.customers || []; orders = data.orders; expenses = data.expenses || [];
                 saveData();
-                Swal.fire({ icon: 'success', title: 'Restore Berhasil!', text: 'Data toko telah diperbarui dari file backup.' });
+                Swal.fire({ icon: 'success', title: 'Restore Berhasil!' });
                 showSection('dashboard');
-            } else {
-                Swal.fire({ icon: 'error', title: 'Format Salah', text: 'File backup JSON tidak valid.' });
             }
-        } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal membaca file JSON.' });
-        }
+        } catch (err) { Swal.fire({ icon: 'error', title: 'Gagal' }); }
     };
-    if (event.target.files[0]) {
-        fileReader.readAsText(event.target.files[0]);
-    }
+    if (event.target.files[0]) fileReader.readAsText(event.target.files[0]);
 }
 
-// --- INISIALISASI AWAL ---
 populateProductDropdown();
 renderDashboard();
