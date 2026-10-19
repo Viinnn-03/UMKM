@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1024">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Pengelolaan Pesanan UMKM Multichannel</title>
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -98,17 +98,21 @@
             </div>
 
             <div class="form-container" style="border-left: 5px solid #25D366;">
-                <h2>Otomatisasi Pesanan</h2>
+                <h2>Otomatisasi Pesanan (Otomatis & Fleksibel)</h2>
                 <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
-                    Tempel (paste) format pesan masuk di bawah untuk diproses otomatis oleh sistem:
+                    Tempel format pesan WA. Sistem mendukung format Nama, No HP/WA, Alamat, Produk, & Jumlah:
                 </p>
                 <div class="form-group">
-                    <textarea id="wa-chat-input" rows="5" style="width:100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Contoh:&#10;Nama: Rian&#10;No HP: 08123456789&#10;Alamat: Medan&#10;Produk: Kaos Polos Cotton 30s&#10;Jumlah: 2"></textarea>
+                    <textarea id="wa-chat-input" rows="5" style="width:100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Contoh:&#10;Nama: Rian&#10;No WA: 08123456789&#10;Alamat: Medan&#10;Produk: Kopi&#10;Qty: 2"></textarea>
                 </div>
                 <button type="button" class="btn-primary" style="background-color: #25D366;" onclick="prosesAutoWA()">Proses Pesanan Otomatis</button>
             </div>
 
-            <h2>Daftar Pesanan</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h2>Daftar Pesanan</h2>
+                <input type="text" id="search-order" onkeyup="renderDashboard()" placeholder="Cari No Order / Customer..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 250px;">
+            </div>
+
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -129,7 +133,10 @@
 
         <!-- SECTION 2: DATABASE PELANGGAN -->
         <section id="pelanggan" class="page-section">
-            <h1>Database Pelanggan</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h1>Database Pelanggan</h1>
+                <input type="text" id="search-customer" onkeyup="renderCustomers()" placeholder="Cari Nama / No HP..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 250px;">
+            </div>
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -170,7 +177,11 @@
                 </form>
             </div>
 
-            <h2>Daftar Stok Produk</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h2>Daftar Stok Produk</h2>
+                <input type="text" id="search-stock" onkeyup="renderStock()" placeholder="Cari Produk..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 250px;">
+            </div>
+
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -188,12 +199,11 @@
             </div>
         </section>
 
-        <!-- SECTION BARU: LAPORAN PENGELUARAN -->
+        <!-- SECTION 4: LAPORAN PENGELUARAN -->
         <section id="pengeluaran" class="page-section">
             <h1>Laporan Pengeluaran</h1>
             <p>Pencatatan dan pemantauan pengeluaran operasional usaha Anda.</p>
 
-            <!-- FORM INPUT PENGELUARAN -->
             <div class="form-container" style="border-left: 5px solid #e74c3c; margin-bottom: 25px;">
                 <h2>+ Input Pengeluaran Operasional</h2>
                 <form id="expense-form" onsubmit="tambahPengeluaran(event)">
@@ -221,7 +231,6 @@
                 </form>
             </div>
 
-            <!-- RINGKASAN PENGELUARAN -->
             <div class="cards-grid" style="margin-bottom: 25px;">
                 <div class="card" style="border-left-color: #e74c3c;">
                     <h3>Total Pengeluaran</h3>
@@ -229,7 +238,6 @@
                 </div>
             </div>
 
-            <!-- TABEL DETAIL PENGELUARAN -->
             <h2>Detail Pengeluaran Operasional</h2>
             <div class="table-responsive">
                 <table class="bordered-table">
@@ -246,10 +254,23 @@
             </div>
         </section>
 
-        <!-- SECTION 4: LAPORAN PENJUALAN & KEUANGAN -->
+        <!-- SECTION 5: LAPORAN PENJUALAN & KEUANGAN -->
         <section id="laporan" class="page-section">
             <h1>Laporan Penjualan & Keuangan</h1>
             <p>Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.</p>
+
+            <!-- MANAJEMEN BACKUP DATA (EXCEL / JSON) -->
+            <div class="form-container" style="background: #eef6ff; border-left: 5px solid #3498db; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 10px; font-size: 16px;">Backup & Export Data Toko</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-primary" onclick="exportToCSV()" style="background-color: #27ae60;">Download Laporan Transaksi (Excel/CSV)</button>
+                    <button class="btn-primary" onclick="backupDataJSON()" style="background-color: #2980b9;">Backup Semua Data (JSON)</button>
+                    <label class="btn-primary" style="background-color: #8e44ad; cursor: pointer; display: inline-block;">
+                        Restore Data (Upload File)
+                        <input type="file" id="import-file" accept=".json" onchange="restoreDataJSON(event)" style="display: none;">
+                    </label>
+                </div>
+            </div>
 
             <div class="filter-container" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
                 <div>
@@ -270,7 +291,6 @@
                 </div>
             </div>
 
-            <!-- STATISTIK KEUANGAN & KINERJA -->
             <div class="cards-grid" style="margin-bottom: 30px;">
                 <div class="card card-success">
                     <h3>Total Omzet (Pendapatan)</h3>
@@ -294,9 +314,8 @@
                 </div>
             </div>
 
-            <!-- TABEL DETAIL TRANSAKSI PENJUALAN DENGAN FILTER DROPDOWN PRODUK -->
             <div class="laporan-detail">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px; gap: 10px;">
                     <h2>Detail Transaksi Penjualan</h2>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <label for="filter-produk" style="font-weight: 600; font-size: 14px;">Pilih Jenis Produk:</label>

@@ -6,12 +6,9 @@
 }
 
 body {
-    body {
     display: flex;
     background-color: #f4f6f9;
     color: #333;
-    min-width: 1024px;
-}
 }
 
 /* Sidebar Styling */
@@ -22,6 +19,7 @@ body {
     color: #fff;
     position: fixed;
     padding: 20px;
+    z-index: 100;
 }
 
 .sidebar h2 {
@@ -193,10 +191,10 @@ th {
 .badge-selesai { background-color: #2ecc71; }
 
 .btn-sm {
-    padding: 4px 8px;
+    padding: 6px 10px;
     font-size: 12px;
     border: none;
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
 }
 
@@ -207,4 +205,53 @@ th {
     background: #fff;
     padding: 15px;
     border-radius: 8px;
+}
+
+/* --- TAMPILAN RESPONSIF UNTUK HP (MOBILE) --- */
+@media screen and (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100% !important;
+        height: auto !important;
+        position: relative !important;
+        padding: 15px !important;
+    }
+
+    .sidebar h2 {
+        margin-bottom: 15px;
+    }
+
+    .sidebar nav ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .sidebar nav ul li {
+        flex: 1 1 calc(50% - 5px);
+        margin-bottom: 0;
+    }
+
+    .sidebar nav ul li a {
+        text-align: center;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px !important;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .laporan-wrapper {
+        grid-template-columns: 1fr !important;
+    }
 }
