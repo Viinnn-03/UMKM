@@ -60,43 +60,71 @@
                 </div>
             </div>
 
-            <div class="form-container">
-                <h2>Input Pesanan Baru</h2>
-                <form id="order-form">
-                    <div class="form-group">
-                        <label>Nama Customer:</label>
-                        <input type="text" id="cust-name" required placeholder="Contoh: Budi Santoso">
-                    </div>
-                    <div class="form-group">
-                        <label>No HP Customer (Key):</label>
-                        <input type="text" id="cust-phone" required placeholder="Contoh: 08123456789">
-                    </div>
-                    <div class="form-group">
-                        <label>Alamat Customer:</label>
-                        <input type="text" id="cust-address" required placeholder="Contoh: Jl. Sudirman No. 12, Jakarta">
-                    </div>
-                    <div class="form-group">
-                        <label>Pilih Produk:</label>
-                        <select id="cust-product" required></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Jumlah Beli:</label>
-                        <input type="number" id="cust-qty" min="1" value="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Channel Pemesanan:</label>
-                        <select id="cust-channel" required>
-                            <option value="WhatsApp">WhatsApp</option>
-                            <option value="Instagram">Instagram</option>
-                            <option value="TikTok">TikTok</option>
-                            <option value="Shopee">Shopee</option>
-                            <option value="Tokopedia">Tokopedia</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-primary">Proses Pesanan</button>
-                </form>
+           <!-- FORM INPUT PESANAN OPERASIONAL KULINER (MULTI-MENU) -->
+<div class="form-container" style="border-top: 4px solid #27ae60;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <h2 style="margin: 0; color: #2c3e50;">+ Input Pesanan Baru (Multi-Menu)</h2>
+        <a href="#stok" onclick="showSection('stok')" style="font-size: 13px; color: #3498db; text-decoration: none; font-weight: 600;">+ Kelola Menu & Stok</a>
+    </div>
+
+    <form id="order-form">
+        <!-- Baris 1: Informasi Pelanggan & Tipe Pesanan -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cust-phone">No HP Pelanggan (Key):</label>
+                <input type="tel" id="cust-phone" pattern="[0-9]*" placeholder="Contoh: 08123456789">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cust-name">Nama Pelanggan / Meja:</label>
+                <input type="text" id="cust-name" required placeholder="Contoh: Meja 05 / Budi">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="order-type">Tipe Pesanan:</label>
+                <select id="order-type" required>
+                    <option value="Dine-In">Makan di Tempat (Dine-In)</option>
+                    <option value="Takeaway">Bawa Pulang (Takeaway)</option>
+                    <option value="Delivery">Pesanan Antar (Delivery)</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cust-channel">Saluran Masuk:</label>
+                <select id="cust-channel" required>
+                    <option value="Kasir / On-Site">Kasir / On-Site</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="GoFood/GrabFood">GoFood / GrabFood / ShopeeFood</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Baris 2: Container Multi-Item Menu -->
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+            <label style="font-weight: 700; display: block; margin-bottom: 10px; color: #2c3e50;">Daftar Menu Dipesan:</label>
+            
+            <div id="order-items-container">
+                <!-- Baris Item Pertama (Default) -->
+                <div class="order-item-row" style="display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; margin-bottom: 10px; align-items: center;">
+                    <select class="item-product-select" required onchange="calculateTotalOrder()"></select>
+                    <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+                    <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+                    <button type="button" class="btn-sm" style="background: #e74c3c; color: white; padding: 8px 12px;" onclick="removeOrderItemRow(this)">✕</button>
+                </div>
             </div>
 
+            <button type="button" class="btn-sm" style="background: #3498db; color: white; margin-top: 5px; padding: 8px 12px;" onclick="addOrderItemRow()">+ Tambah Menu Lain</button>
+        </div>
+
+        <!-- Baris 3: Kalkulasi Ringkasan & Tombol Simpan -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #eef6ff; padding: 15px; border-radius: 6px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <span style="font-size: 14px; color: #555;">Estimasi Total Pembayaran:</span>
+                <h2 id="order-total-preview" style="margin: 0; color: #27ae60;">Rp 0</h2>
+            </div>
+            <button type="submit" class="btn-primary" style="padding: 12px 25px; font-size: 15px; font-weight: bold; background-color: #2ecc71;">
+                ✓ Simpan & Diproses Dapur
+            </button>
+        </div>
+    </form>
+</div>
             <div class="form-container" style="border-left: 5px solid #25D366;">
                 <h2>Otomatisasi Pesanan (Otomatis & Fleksibel)</h2>
                 <p style="font-size: 13px; color: #666; margin-bottom: 10px;">

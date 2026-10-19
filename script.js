@@ -38,20 +38,82 @@ function showSection(sectionId) {
     renderLaporan();
 }
 
-// --- POPULATE OPTION PRODUK PADA FORM ---
-function populateProductDropdown() {
-    const select = document.getElementById('cust-product');
-    if (!select) return;
-    select.innerHTML = '';
+// --- FUNGSI MULTI-ITEM UNTUK UMKM KULINER ---
 
+// 1. Opsi Populate Dropdown untuk Setiap Baris Item Menu
+function getProductOptionsHTML() {
     if (products.length === 0) {
-        select.innerHTML = `<option value="">-- Belum ada produk (Tambah di Manajemen Stok) --</option>`;
-        return;
+        return `<option value="">-- Belum Ada Menu (Tambah di Manajemen Stok) --</option>`;
     }
-
+    let html = '<option value="">-- Pilih Menu Kuliner --</option>';
     products.forEach(p => {
-        select.innerHTML += `<option value="${p.id}">${p.name} (Stok: ${p.stock}) - Rp ${p.price.toLocaleString('id-ID')}</option>`;
+        html += `<option value="${p.id}" data-price="${p.price}" data-name="${p.name}" data-stock="${p.stock}">${p.name} (Stok: ${p.stock}) - Rp ${p.price.toLocaleString('id-ID')}</option>`;
     });
+    return html;
+}
+
+// 2. Populate Dropdown Produk pada Seluruh Form
+function populateProductDropdown() {
+    document.querySelectorAll('.item-product-select').forEach(select => {
+        const currentVal = select.value;
+        select.innerHTML = getProductOptionsHTML();
+        select.value = currentVal;
+    });
+    calculateTotalOrder();
+}
+
+// 3. Tambah Baris Menu Baru
+function addOrderItemRow() {
+    const container = document.getElementById('order-items-container');
+    if (!container) return;
+
+    const newRow = document.createElement('div');
+    newRow.className = 'order-item-row';
+    newRow.style = 'display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; margin-bottom: 10px; align-items: center;';
+    
+    newRow.innerHTML = `
+        <select class="item-product-select" required onchange="calculateTotalOrder()">
+            ${getProductOptionsHTML()}
+        </select>
+        <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+        <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+        <button type="button" class="btn-sm" style="background: #e74c3c; color: white; padding: 8px 12px;" onclick="removeOrderItemRow(this)">✕</button>
+    `;
+    
+    container.appendChild(newRow);
+    calculateTotalOrder();
+}
+
+// 4. Hapus Baris Menu
+function removeOrderItemRow(btn) {
+    const rows = document.querySelectorAll('.order-item-row');
+    if (rows.length > 1) {
+        btn.closest('.order-item-row').remove();
+        calculateTotalOrder();
+    } else {
+        Swal.fire({ icon: 'warning', title: 'Minimal 1 Menu', text: 'Pesanan harus berisi minimal satu menu kuliner.' });
+    }
+}
+
+// 5. Kalkulasi Estimasi Pembayaran Otomatis
+function calculateTotalOrder() {
+    let total = 0;
+    document.querySelectorAll('.order-item-row').forEach(row => {
+        const select = row.querySelector('.item-product-select');
+        const qtyInput = row.querySelector('.item-qty-input');
+        
+        if (select && select.selectedIndex > 0) {
+            const selectedOption = select.options[select.selectedIndex];
+            const price = parseInt(selectedOption.getAttribute('data-price')) || 0;
+            const qty = parseInt(qtyInput ? qtyInput.value : 1) || 0;
+            total += (price * qty);
+        }
+    });
+
+    const previewElem = document.getElementById('order-total-preview');
+    if (previewElem) {
+        previewElem.innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
 }
 
 function populateReportProductFilter() {
@@ -74,13 +136,11 @@ if (phoneInput) {
     phoneInput.addEventListener('input', function () {
         const inputPhone = this.value.trim();
         const nameInput = document.getElementById('cust-name');
-        const addressInput = document.getElementById('cust-address');
 
         const foundCustomer = customers.find(c => c.phone && c.phone.trim() === inputPhone);
 
         if (foundCustomer) {
             if (nameInput) nameInput.value = foundCustomer.name;
-            if (addressInput) addressInput.value = foundCustomer.address;
         }
     });
 }
@@ -116,10 +176,17 @@ function renderDashboard() {
         if (o.status === 'Diproses') processOrders++;
         if (o.status === 'Selesai') {
             doneOrders++;
-            totalOmzet += o.price * o.qty;
+            totalOmzet += o.price;
         }
 
-        productSalesCount[o.product] = (productSalesCount[o.product] || 0) + o.qty;
+        // Menghitung produk terlaris
+        if (o.items && Array.isArray(o.items)) {
+            o.items.forEach(item => {
+                productSalesCount[item.productName] = (productSalesCount[item.productName] || 0) + item.qty;
+            });
+        } else {
+            productSalesCount[o.product] = (productSalesCount[o.product] || 0) + o.qty;
+        }
 
         let badgeClass = o.status === 'Baru' ? 'badge-baru' : (o.status === 'Diproses' ? 'badge-proses' : 'badge-selesai');
 
@@ -128,7 +195,7 @@ function renderDashboard() {
                 <td><b>${o.id}</b></td>
                 <td>${o.customer}</td>
                 <td>${o.phone || '-'}</td>
-                <td>${o.product} (${o.qty}x)</td>
+                <td>${o.product}</td>
                 <td><span class="channel-tag">${o.channel}</span></td>
                 <td><span class="badge ${badgeClass}">${o.status}</span></td>
                 <td>
@@ -153,74 +220,135 @@ function renderDashboard() {
     if (document.getElementById('dashboard-top-product')) document.getElementById('dashboard-top-product').innerText = topProduct;
 }
 
-// --- INPUT PESANAN MANUAL ---
+// --- INPUT PESANAN MULTI-MENU (FORM SUBMIT) ---
 const orderForm = document.getElementById('order-form');
 if (orderForm) {
     orderForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
+        const custPhoneInput = document.getElementById('cust-phone').value.trim() || '-';
         const custNameInput = document.getElementById('cust-name').value.trim();
-        const custPhoneInput = document.getElementById('cust-phone').value.trim();
-        const custAddressElem = document.getElementById('cust-address');
-        const custAddress = custAddressElem ? custAddressElem.value.trim() : 'Alamat Tidak Diisi';
-        const productId = document.getElementById('cust-product').value;
-        const qty = parseInt(document.getElementById('cust-qty').value);
-        const channel = document.getElementById('cust-channel').value;
+        const orderTypeSelect = document.getElementById('order-type');
+        const orderType = orderTypeSelect ? orderTypeSelect.value : 'Dine-In';
+        const channelSelect = document.getElementById('cust-channel');
+        const channel = channelSelect ? channelSelect.value : 'Kasir / On-Site';
 
-        const product = products.find(p => p.id === productId);
+        const itemRows = document.querySelectorAll('.order-item-row');
+        let orderItems = [];
+        let totalOrderPrice = 0;
+        let isStockEnough = true;
+        let errorMessage = '';
 
-        if (!product) {
-            Swal.fire({ icon: 'warning', title: 'Produk Belum Dipilih', text: 'Tambah produk terlebih dahulu.' });
+        // Validasi & Iterasi Baris Menu
+        itemRows.forEach(row => {
+            const select = row.querySelector('.item-product-select');
+            const qtyInput = row.querySelector('.item-qty-input');
+            const noteInput = row.querySelector('.item-note-input');
+
+            if (select && select.value) {
+                const selectedOption = select.options[select.selectedIndex];
+                const productId = select.value;
+                const productName = selectedOption.getAttribute('data-name');
+                const price = parseInt(selectedOption.getAttribute('data-price')) || 0;
+                const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+                const note = noteInput ? noteInput.value.trim() : '';
+
+                const product = products.find(p => p.id === productId);
+
+                if (product) {
+                    if (product.stock < qty) {
+                        isStockEnough = false;
+                        errorMessage = `Stok "${product.name}" kurang! Tersisa ${product.stock} pcs.`;
+                    } else {
+                        orderItems.push({
+                            productId: productId,
+                            productName: productName,
+                            price: price,
+                            qty: qty,
+                            note: note
+                        });
+                        totalOrderPrice += (price * qty);
+                    }
+                }
+            }
+        });
+
+        if (!isStockEnough) {
+            Swal.fire({ icon: 'error', title: 'Stok Tidak Cukup', text: errorMessage });
             return;
         }
 
-        if (product.stock < qty) {
-            Swal.fire({ icon: 'error', title: 'Stok Tidak Cukup', text: `Sisa stok ${product.name}: ${product.stock} pcs.` });
+        if (orderItems.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'Pilih Menu', text: 'Silakan pilih minimal satu menu kuliner.' });
             return;
         }
 
-        product.stock -= qty;
+        // Potong Stok
+        orderItems.forEach(item => {
+            const product = products.find(p => p.id === item.productId);
+            if (product) {
+                product.stock -= item.qty;
+            }
+        });
 
         const now = new Date();
         const formattedDate = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}.${String(now.getSeconds()).padStart(2, '0')}`;
-
         const newOrderId = 'ORD-00' + (orders.length + 1);
+
+        const summaryProductText = orderItems.map(i => `${i.productName} (${i.qty}x)${i.note ? ` [${i.note}]` : ''}`).join(', ');
+
         orders.push({
             id: newOrderId,
-            customer: custNameInput,
+            customer: `${custNameInput} (${orderType})`,
             phone: custPhoneInput,
-            product: product.name,
-            qty: qty,
+            product: summaryProductText,
+            items: orderItems,
+            qty: orderItems.reduce((acc, curr) => acc + curr.qty, 0),
             channel: channel,
             status: 'Baru',
-            price: product.price,
+            price: totalOrderPrice,
             date: formattedDate
         });
 
-        let existingCust = customers.find(c => c.phone && c.phone.trim() === custPhoneInput);
-        if (existingCust) {
-            existingCust.name = custNameInput;
-            if (custAddress) existingCust.address = custAddress;
-        } else {
-            customers.push({
-                phone: custPhoneInput,
-                name: custNameInput,
-                address: custAddress,
-                history: 1,
-                totalSpent: (product.price * qty)
-            });
+        // Simpan ke Database Pelanggan
+        if (custPhoneInput !== '-') {
+            let existingCust = customers.find(c => c.phone && c.phone.trim() === custPhoneInput);
+            if (existingCust) {
+                existingCust.name = custNameInput;
+            } else {
+                customers.push({
+                    phone: custPhoneInput,
+                    name: custNameInput,
+                    address: 'Toko Kuliner (On-Site)',
+                    history: 1,
+                    totalSpent: totalOrderPrice
+                });
+            }
         }
 
         saveData();
 
         Swal.fire({
             icon: 'success',
-            title: 'Pesanan Berhasil Dibuat!',
-            html: `Order ID: <b>${newOrderId}</b>`,
-            confirmButtonColor: '#3b82f6'
+            title: 'Pesanan Diteruskan ke Dapur!',
+            html: `No Order: <b>${newOrderId}</b><br>Total Pembayaran: <b>Rp ${totalOrderPrice.toLocaleString('id-ID')}</b>`,
+            confirmButtonColor: '#2ecc71'
         });
 
+        // Reset Form & Kembalikan ke Baris Pertama
         document.getElementById('order-form').reset();
+        const container = document.getElementById('order-items-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="order-item-row" style="display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; margin-bottom: 10px; align-items: center;">
+                    <select class="item-product-select" required onchange="calculateTotalOrder()"></select>
+                    <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+                    <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+                    <button type="button" class="btn-sm" style="background: #e74c3c; color: white; padding: 8px 12px;" onclick="removeOrderItemRow(this)">✕</button>
+                </div>
+            `;
+        }
+
         populateProductDropdown();
         renderDashboard();
         renderCustomers();
@@ -281,20 +409,20 @@ function prosesAutoWA() {
     const newOrderId = 'ORD-00' + (orders.length + 1);
     orders.push({
         id: newOrderId,
-        customer: custName,
+        customer: `${custName} (Delivery WA)`,
         phone: custPhone,
-        product: product.name,
+        product: `${product.name} (${qty}x)`,
+        items: [{ productId: product.id, productName: product.name, price: product.price, qty: qty, note: 'Order WA' }],
         qty: qty,
         channel: 'WhatsApp',
         status: 'Baru',
-        price: product.price,
+        price: product.price * qty,
         date: formattedDate
     });
 
     let existingCust = customers.find(c => c.phone && c.phone.trim() === custPhone);
     if (existingCust) {
         existingCust.name = custName;
-        if (addressMatch) existingCust.address = custAddress;
     } else {
         customers.push({
             phone: custPhone,
@@ -335,11 +463,22 @@ function cancelOrder(orderId) {
             const index = orders.findIndex(o => o.id === orderId);
             if (index !== -1) {
                 const order = orders[index];
+                
                 // Rollback stok
-                const product = products.find(p => p.name.toLowerCase() === order.product.toLowerCase());
-                if (product) {
-                    product.stock += order.qty;
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        const product = products.find(p => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase());
+                        if (product) {
+                            product.stock += item.qty;
+                        }
+                    });
+                } else {
+                    const product = products.find(p => p.name.toLowerCase() === order.product.toLowerCase());
+                    if (product) {
+                        product.stock += order.qty;
+                    }
                 }
+
                 orders.splice(index, 1);
                 saveData();
 
@@ -437,13 +576,13 @@ function renderCustomers() {
         let custOrders = orders.filter(o => o.phone && c.phone && o.phone.trim() === c.phone.trim());
 
         c.history = custOrders.length;
-        c.totalSpent = custOrders.reduce((total, o) => total + (o.price * o.qty), 0);
+        c.totalSpent = custOrders.reduce((total, o) => total + o.price, 0);
 
         tableBody.innerHTML += `
             <tr>
                 <td><b>${c.phone}</b></td>
                 <td>${c.name}</td>
-                <td>${c.address}</td>
+                <td>${c.address || '-'}</td>
                 <td>${c.history} Kali Pemesanan</td>
                 <td>Rp ${c.totalSpent.toLocaleString('id-ID')}</td>
             </tr>
@@ -609,18 +748,17 @@ function renderLaporan() {
     });
 
     filteredOrders.forEach(o => {
-        let totalHarga = o.price * o.qty;
+        let totalHarga = o.price;
         totalOmzet += totalHarga;
 
-        channelCount[o.channel] = (channelCount[o.channel] || 0) + o.qty;
-        productCount[o.product] = (productCount[o.product] || 0) + o.qty;
+        channelCount[o.channel] = (channelCount[o.channel] || 0) + 1;
 
         if (detailBody) {
             detailBody.innerHTML += `
                 <tr>
                     <td>${o.date || '-'}</td>
                     <td>${o.product.toLowerCase()}</td>
-                    <td>${o.qty}</td>
+                    <td>${o.qty || 1}</td>
                     <td>${o.customer.toLowerCase()}</td>
                     <td>Rp ${totalHarga.toLocaleString('id-ID')}</td>
                 </tr>
@@ -638,7 +776,6 @@ function renderLaporan() {
     let labaBersih = totalOmzet - totalPengeluaran;
 
     let topChannel = Object.keys(channelCount).length > 0 ? Object.keys(channelCount).reduce((a, b) => channelCount[a] > channelCount[b] ? a : b) : '-';
-    let topProduct = Object.keys(productCount).length > 0 ? Object.keys(productCount).reduce((a, b) => productCount[a] > productCount[b] ? a : b) : '-';
 
     if (document.getElementById('report-omzet')) document.getElementById('report-omzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
     if (document.getElementById('report-pengeluaran')) document.getElementById('report-pengeluaran').innerText = 'Rp ' + totalPengeluaran.toLocaleString('id-ID');
@@ -648,7 +785,6 @@ function renderLaporan() {
         labaElem.style.color = labaBersih >= 0 ? '#27ae60' : '#e74c3c';
     }
     if (document.getElementById('report-top-channel')) document.getElementById('report-top-channel').innerText = topChannel;
-    if (document.getElementById('report-top-product')) document.getElementById('report-top-product').innerText = topProduct;
 }
 
 // --- FUNGSI EXPORT & BACKUP DATA (EXCEL / JSON) ---
@@ -658,10 +794,10 @@ function exportToCSV() {
         return;
     }
 
-    let csvContent = "data:text/csv;charset=utf-8,No Order,Tanggal,Customer,No HP,Produk,Jumlah,Harga,Channel,Status\n";
+    let csvContent = "data:text/csv;charset=utf-8,No Order,Tanggal,Customer,No HP,Produk,Total Harga,Channel,Status\n";
 
     orders.forEach(o => {
-        let row = `"${o.id}","${o.date}","${o.customer}","${o.phone}","${o.product}",${o.qty},${o.price},"${o.channel}","${o.status}"`;
+        let row = `"${o.id}","${o.date}","${o.customer}","${o.phone}","${o.product}",${o.price},"${o.channel}","${o.status}"`;
         csvContent += row + "\n";
     });
 
