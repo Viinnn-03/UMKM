@@ -62,7 +62,7 @@ function populateProductDropdown() {
     calculateTotalOrder();
 }
 
-// 3. Tambah Baris Menu Baru
+// 3. Tambah Baris Menu Baru (Bersih dari Inline Style agar CSS Mobile Bekerja Fit In)
 function addOrderItemRow() {
     const container = document.getElementById('order-items-container');
     if (!container) return;
@@ -178,7 +178,6 @@ function renderDashboard() {
             totalOmzet += o.price;
         }
 
-        // Menghitung produk terlaris
         if (o.items && Array.isArray(o.items)) {
             o.items.forEach(item => {
                 productSalesCount[item.productName] = (productSalesCount[item.productName] || 0) + item.qty;
@@ -238,7 +237,6 @@ if (orderForm) {
         let isStockEnough = true;
         let errorMessage = '';
 
-        // Validasi & Iterasi Baris Menu
         itemRows.forEach(row => {
             const select = row.querySelector('.item-product-select');
             const qtyInput = row.querySelector('.item-qty-input');
@@ -309,7 +307,6 @@ if (orderForm) {
             date: formattedDate
         });
 
-        // Simpan ke Database Pelanggan
         if (custPhoneInput !== '-') {
             let existingCust = customers.find(c => c.phone && c.phone.trim() === custPhoneInput);
             if (existingCust) {
@@ -334,7 +331,6 @@ if (orderForm) {
             confirmButtonColor: '#2ecc71'
         });
 
-        // Reset Form & Kembalikan ke Baris Pertama
         document.getElementById('order-form').reset();
         const container = document.getElementById('order-items-container');
         if (container) {
@@ -463,7 +459,6 @@ function cancelOrder(orderId) {
             if (index !== -1) {
                 const order = orders[index];
                 
-                // Rollback stok
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
                         const product = products.find(p => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase());
@@ -792,7 +787,6 @@ function exportToCSV() {
         return;
     }
 
-    // "sep=,\n" memberitahu Excel bahwa pemisah antar kolom adalah koma
     let csvContent = "sep=,\nNo Order,Tanggal,Customer,No HP,Produk,Total Harga,Channel,Status\n";
 
     orders.forEach(o => {
@@ -803,7 +797,6 @@ function exportToCSV() {
         csvContent += row + "\n";
     });
 
-    // Menggunakan \uFEFF (BOM) agar Excel membaca karakter dan koma secara terpisah tiap kolom
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 

@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Pengelolaan Pesanan UMKM Multichannel</title>
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <!-- FORM INPUT PESANAN OPERASIONAL KULINER (MULTI-MENU RESPONSIF) -->
+            <!-- FORM INPUT PESANAN OPERASIONAL KULINER (MULTI-MENU RESPONSIF FIT IN HP) -->
             <div class="form-container" style="border-top: 4px solid #27ae60;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0; color: #2c3e50;">+ Input Pesanan Baru (Multi-Menu)</h2>
@@ -96,7 +96,7 @@
                         </div>
                     </div>
 
-                    <!-- Baris 2: Container Multi-Item Menu -->
+                    <!-- Baris 2: Container Multi-Item Menu (Bersih dari Inline Style Kaku) -->
                     <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
                         <label style="font-weight: 700; display: block; margin-bottom: 10px; color: #2c3e50;">Daftar Menu Dipesan:</label>
                         
@@ -110,7 +110,7 @@
                             </div>
                         </div>
 
-                        <button type="button" class="btn-sm" style="background: #3498db; color: white; margin-top: 5px; padding: 8px 12px; width: 100%; max-width: 200px;" onclick="addOrderItemRow()">+ Tambah Menu Lain</button>
+                        <button type="button" class="btn-sm" style="background: #3498db; color: white; margin-top: 10px; padding: 10px 15px; width: 100%; max-width: 200px;" onclick="addOrderItemRow()">+ Tambah Menu Lain</button>
                     </div>
 
                     <!-- Baris 3: Kalkulasi Ringkasan & Tombol Simpan -->
@@ -126,6 +126,7 @@
                 </form>
             </div>
 
+            <!-- OTOMATISASI PARSER WA -->
             <div class="form-container" style="border-left: 5px solid #25D366;">
                 <h2>Otomatisasi Pesanan (Otomatis & Fleksibel)</h2>
                 <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
