@@ -69,7 +69,6 @@ function addOrderItemRow() {
 
     const newRow = document.createElement('div');
     newRow.className = 'order-item-row';
-    newRow.style = 'display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; margin-bottom: 10px; align-items: center;';
     
     newRow.innerHTML = `
         <select class="item-product-select" required onchange="calculateTotalOrder()">
@@ -77,7 +76,7 @@ function addOrderItemRow() {
         </select>
         <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
         <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-        <button type="button" class="btn-sm" style="background: #e74c3c; color: white; padding: 8px 12px;" onclick="removeOrderItemRow(this)">✕</button>
+        <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
     `;
     
     container.appendChild(newRow);
@@ -340,11 +339,11 @@ if (orderForm) {
         const container = document.getElementById('order-items-container');
         if (container) {
             container.innerHTML = `
-                <div class="order-item-row" style="display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; margin-bottom: 10px; align-items: center;">
+                <div class="order-item-row">
                     <select class="item-product-select" required onchange="calculateTotalOrder()"></select>
                     <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
                     <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-                    <button type="button" class="btn-sm" style="background: #e74c3c; color: white; padding: 8px 12px;" onclick="removeOrderItemRow(this)">✕</button>
+                    <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
                 </div>
             `;
         }
@@ -717,7 +716,6 @@ function renderLaporan() {
     let totalOmzet = 0;
     let totalPengeluaran = 0;
     let channelCount = {};
-    let productCount = {};
 
     const detailBody = document.getElementById('detail-transaksi-body');
     const periodeVal = document.getElementById('filter-periode') ? document.getElementById('filter-periode').value : 'semua';
@@ -787,23 +785,30 @@ function renderLaporan() {
     if (document.getElementById('report-top-channel')) document.getElementById('report-top-channel').innerText = topChannel;
 }
 
-// --- FUNGSI EXPORT & BACKUP DATA (EXCEL / JSON) ---
+// --- FUNGSI EXPORT & BACKUP DATA (EXCEL RAPI / JSON) ---
 function exportToCSV() {
     if (orders.length === 0) {
         Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Belum ada data transaksi untuk di-export.' });
         return;
     }
 
-    let csvContent = "data:text/csv;charset=utf-8,No Order,Tanggal,Customer,No HP,Produk,Total Harga,Channel,Status\n";
+    // "sep=,\n" memberitahu Excel bahwa pemisah antar kolom adalah koma
+    let csvContent = "sep=,\nNo Order,Tanggal,Customer,No HP,Produk,Total Harga,Channel,Status\n";
 
     orders.forEach(o => {
-        let row = `"${o.id}","${o.date}","${o.customer}","${o.phone}","${o.product}",${o.price},"${o.channel}","${o.status}"`;
+        let cleanProduct = (o.product || '').replace(/"/g, '""');
+        let cleanCustomer = (o.customer || '').replace(/"/g, '""');
+
+        let row = `"${o.id}","${o.date}","${cleanCustomer}","${o.phone}","${cleanProduct}",${o.price},"${o.channel}","${o.status}"`;
         csvContent += row + "\n";
     });
 
-    const encodedUri = encodeURI(csvContent);
+    // Menggunakan \uFEFF (BOM) agar Excel membaca karakter dan koma secara terpisah tiap kolom
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `Laporan_Transaksi_UMKM_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
