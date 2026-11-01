@@ -15,11 +15,10 @@
 </head>
 <body>
 
-    <!-- Header Mobile dengan Logo Brand -->
+    <!-- Header Mobile -->
     <header class="mobile-header">
         <div class="mobile-brand">
-            <!-- Ganti src logo dengan file logo toko Anda -->
-            <img src="logo.png" alt="Logo Brand" class="brand-logo">
+            <img src="logo.png" alt="Logo Brand" class="brand-logo" onerror="this.style.display='none'">
             <div class="brand-text">
                 <h2>UMKM Digital</h2>
                 <!-- <span class="brand-badge">PRO</span> -->
@@ -28,10 +27,10 @@
         <a href="index.html" class="mobile-logout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
     </header>
 
-    <!-- Sidebar / Navigasi Desktop dengan Logo Brand -->
+    <!-- Sidebar / Navigasi Desktop -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="logo.png" alt="Logo Brand" class="brand-logo-desktop">
+            <img src="logo.png" alt="Logo Brand" class="brand-logo-desktop" onerror="this.style.display='none'">
             <div>
                 <h2>UMKM Digital</h2>
                 <span class="brand-subtitle">Panel Operasional Kuliner</span>
@@ -57,7 +56,7 @@
             <div class="section-header">
                 <div>
                     <h1>Dashboard Utama</h1>
-                    <p>Pengelolaan Pesanan Multichannel (WA, Instagram, TikTok, Kasir)</p>
+                    <p>Pengelolaan Pesanan Operasional Toko Kuliner</p>
                 </div>
             </div>
 
@@ -91,19 +90,21 @@
             <!-- FORM INPUT PESANAN MULTI-MENU MODERN -->
             <div class="form-container form-accent-emerald">
                 <div class="form-header-flex">
-                    <h2><i class="fa-solid fa-circle-plus"></i> Input Pesanan Baru (Multi-Menu)</h2>
-                    <a href="#stok" onclick="showSection('stok')" class="link-action">+ Kelola Menu & Stok</a>
+                    <h2 class="form-title"><i class="fa-solid fa-circle-plus"></i> Input Pesanan Baru (Multi-Menu)</h2>
+                    <a href="#stok" onclick="showSection('stok')" class="btn-manage-stock">
+                        <i class="fa-solid fa-boxes-stacked"></i> + Kelola Menu & Stok
+                    </a>
                 </div>
 
                 <form id="order-form">
                     <div class="form-grid-4">
                         <div class="form-group">
-                            <label for="cust-phone">No HP Pelanggan (Key):</label>
-                            <input type="tel" id="cust-phone" pattern="[0-9]*" placeholder="Contoh: 08123456789" class="styled-input">
+                            <label for="cust-phone">ID Pelanggan / No. Meja (Unik):</label>
+                            <input type="text" id="cust-phone" placeholder="Contoh: MEJA-05 / Kosongkan (Auto ID)" class="styled-input">
                         </div>
                         <div class="form-group">
-                            <label for="cust-name">Nama Pelanggan / Meja:</label>
-                            <input type="text" id="cust-name" required placeholder="Contoh: Meja 05 / Budi" class="styled-input">
+                            <label for="cust-name">Nama Pelanggan / Pemesan:</label>
+                            <input type="text" id="cust-name" required placeholder="Contoh: Budi / Meja 05" class="styled-input">
                         </div>
                         <div class="form-group">
                             <label for="order-type">Tipe Pesanan:</label>
@@ -156,18 +157,6 @@
                 </form>
             </div>
 
-            <!-- Otomatisasi Pesanan WA
-            <div class="form-container form-accent-wa">
-                <h2><i class="fa-brands fa-whatsapp"></i> Otomatisasi Pesanan WA (Flexi-Parser)</h2>
-                <p class="form-desc">
-                    Tempel format pesan WA. Sistem mendukung format Nama, No HP/WA, Alamat, Produk, & Jumlah:
-                </p>
-                <div class="form-group">
-                    <textarea id="wa-chat-input" rows="4" placeholder="Contoh:&#10;Nama: Rian&#10;No WA: 08123456789&#10;Alamat: Medan&#10;Produk: Kopi&#10;Qty: 2" class="styled-input styled-textarea"></textarea>
-                </div>
-                <button type="button" class="btn-primary btn-wa" onclick="prosesAutoWA()"><i class="fa-solid fa-bolt"></i> Proses Pesanan Otomatis</button>
-            </div> -->
-
             <div class="table-header-flex">
                 <h2>Daftar Pesanan Active</h2>
                 <input type="text" id="search-order" onkeyup="renderDashboard()" placeholder="Cari No Order / Customer..." class="input-search styled-input">
@@ -179,7 +168,7 @@
                         <tr>
                             <th>No Order</th>
                             <th>Customer</th>
-                            <th>No HP</th>
+                            <th>ID / No. Meja</th>
                             <th>Produk</th>
                             <th>Channel</th>
                             <th>Status</th>
@@ -199,15 +188,15 @@
                     <h1>Database Pelanggan</h1>
                     <p>Riwayat pembeli otomatis tersimpan dari orderan masuk.</p>
                 </div>
-                <input type="text" id="search-customer" onkeyup="renderCustomers()" placeholder="Cari Nama / No HP..." class="input-search styled-input">
+                <input type="text" id="search-customer" onkeyup="renderCustomers()" placeholder="Cari Nama / ID Pelanggan..." class="input-search styled-input">
             </div>
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
-                            <th>No HP (Key)</th>
+                            <th>ID Unik / Ref</th>
                             <th>Nama</th>
-                            <th>Alamat</th>
+                            <th>Alamat / Tipe</th>
                             <th>Riwayat Pemesanan</th>
                             <th>Total Transaksi</th>
                         </tr>
@@ -404,7 +393,7 @@
                                 <th>Tanggal</th>
                                 <th>Produk</th>
                                 <th>PCS</th>
-                                <th>Member</th>
+                                <th>Customer / Ref</th>
                                 <th>Total</th>
                             </tr>
                         </thead>

@@ -77,16 +77,16 @@ function addOrderItemRow() {
     const newRow = document.createElement('div');
     newRow.className = 'order-item-row';
     newRow.innerHTML = `
-        <select class="item-product-select" required onchange="calculateTotalOrder()">
+        <select class="item-product-select styled-input" required onchange="calculateTotalOrder()">
             ${getProductOptionsHTML()}
         </select>
         <div class="qty-control">
             <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
-            <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+            <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
             <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
         </div>
-        <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-        <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
+        <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+        <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)"><i class="fa-solid fa-xmark"></i></button>
     `;
     container.appendChild(newRow);
     calculateTotalOrder();
@@ -152,7 +152,7 @@ function renderDashboard() {
     let filteredOrders = orders.filter(o => 
         o.id.toLowerCase().includes(searchQuery) || 
         o.customer.toLowerCase().includes(searchQuery) ||
-        (o.phone && o.phone.includes(searchQuery))
+        (o.phone && o.phone.toLowerCase().includes(searchQuery))
     );
 
     filteredOrders.forEach(o => {
@@ -178,13 +178,13 @@ function renderDashboard() {
             <tr>
                 <td><b>${o.id}</b></td>
                 <td>${o.customer}</td>
-                <td>${o.phone || '-'}</td>
+                <td><span class="channel-tag">${o.phone || '-'}</span></td>
                 <td>${o.product}</td>
                 <td><span class="channel-tag">${o.channel}</span></td>
                 <td><span class="badge ${badgeClass}">${o.status}</span></td>
                 <td>
-                    ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')">Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
-                    <button class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="cancelOrder('${o.id}')">Batal</button>
+                    ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
+                    <button class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
                 </td>
             </tr>
         `;
@@ -199,12 +199,12 @@ function renderDashboard() {
                     </div>
                     <div class="mobile-card-body">
                         <div><b>Produk:</b> ${o.product}</div>
-                        <div><b>Channel:</b> ${o.channel} | <b>HP:</b> ${o.phone || '-'}</div>
+                        <div><b>Channel:</b> ${o.channel} | <b>Ref/Meja:</b> ${o.phone || '-'}</div>
                         <div><b>Total:</b> Rp ${o.price.toLocaleString('id-ID')}</div>
                     </div>
                     <div class="mobile-card-footer">
-                        ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')">Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
-                        <button class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${o.id}')">Batal</button>
+                        ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
+                        <button class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
                     </div>
                 </div>
             `;
@@ -225,13 +225,18 @@ function renderDashboard() {
     if (document.getElementById('dashboard-top-product')) document.getElementById('dashboard-top-product').innerText = topProduct;
 }
 
-// --- FORM SUBMIT PESANAN ---
+// --- FORM SUBMIT PESANAN DENGAN AUTO-GENERATE CUSTOMER ID ---
 const orderForm = document.getElementById('order-form');
 if (orderForm) {
     orderForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        const custPhoneInput = document.getElementById('cust-phone').value.trim() || '-';
+        // JIKA FIELD DIKOSONGKAN, OTOMATIS BUAT ID UNIK (Contoh: CUST-4829)
+        let custPhoneInput = document.getElementById('cust-phone').value.trim();
+        if (!custPhoneInput) {
+            custPhoneInput = 'CUST-' + Math.floor(1000 + Math.random() * 9000);
+        }
+
         const custNameInput = document.getElementById('cust-name').value.trim();
         const orderTypeSelect = document.getElementById('order-type');
         const orderType = orderTypeSelect ? orderTypeSelect.value : 'Dine-In';
@@ -305,19 +310,17 @@ if (orderForm) {
             date: formattedDate
         });
 
-        if (custPhoneInput !== '-') {
-            let existingCust = customers.find(c => c.phone && c.phone.trim() === custPhoneInput);
-            if (existingCust) {
-                existingCust.name = custNameInput;
-            } else {
-                customers.push({
-                    phone: custPhoneInput,
-                    name: custNameInput,
-                    address: 'Toko Kuliner (On-Site)',
-                    history: 1,
-                    totalSpent: totalOrderPrice
-                });
-            }
+        let existingCust = customers.find(c => c.phone && c.phone.trim().toLowerCase() === custPhoneInput.toLowerCase());
+        if (existingCust) {
+            existingCust.name = custNameInput;
+        } else {
+            customers.push({
+                phone: custPhoneInput,
+                name: custNameInput,
+                address: orderType,
+                history: 1,
+                totalSpent: totalOrderPrice
+            });
         }
 
         saveData();
@@ -325,7 +328,7 @@ if (orderForm) {
         Swal.fire({
             icon: 'success',
             title: 'Pesanan Diteruskan ke Dapur!',
-            html: `No Order: <b>${newOrderId}</b><br>Total Pembayaran: <b>Rp ${totalOrderPrice.toLocaleString('id-ID')}</b>`,
+            html: `No Order: <b>${newOrderId}</b><br>Ref ID: <b>${custPhoneInput}</b><br>Total Pembayaran: <b>Rp ${totalOrderPrice.toLocaleString('id-ID')}</b>`,
             confirmButtonColor: '#059669'
         });
 
@@ -334,14 +337,14 @@ if (orderForm) {
         if (container) {
             container.innerHTML = `
                 <div class="order-item-row">
-                    <select class="item-product-select" required onchange="calculateTotalOrder()"></select>
+                    <select class="item-product-select styled-input" required onchange="calculateTotalOrder()"></select>
                     <div class="qty-control">
                         <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
-                        <input type="number" class="item-qty-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
+                        <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
                         <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
                     </div>
-                    <input type="text" class="item-note-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-                    <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)">✕</button>
+                    <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+                    <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             `;
         }
@@ -351,92 +354,6 @@ if (orderForm) {
         renderCustomers();
         renderStock();
     });
-}
-
-// --- OTOMATISASI PARSER WA ---
-function prosesAutoWA() {
-    const inputElem = document.getElementById('wa-chat-input');
-    if (!inputElem) return;
-
-    const chatText = inputElem.value;
-    if (!chatText.trim()) {
-        Swal.fire({ icon: 'info', title: 'Teks WA Kosong', text: 'Tempel pesan WA terlebih dahulu!' });
-        return;
-    }
-
-    const nameMatch = chatText.match(/Nama:\s*(.*)/i);
-    const phoneMatch = chatText.match(/(?:No HP|No WA|HP|WA|Telepon):\s*(.*)/i);
-    const addressMatch = chatText.match(/Alamat:\s*(.*)/i);
-    const productMatch = chatText.match(/(?:Produk|Pesanan|Pesan):\s*(.*)/i);
-    const qtyMatch = chatText.match(/(?:Jumlah|Qty|Pcs):\s*(\d+)/i);
-
-    if (!nameMatch || !productMatch || !qtyMatch) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Format Tidak Sesuai',
-            html: 'Gunakan kata kunci Nama:, No WA:, Produk:, dan Qty:'
-        });
-        return;
-    }
-
-    const custName = nameMatch[1].trim();
-    const custPhone = phoneMatch ? phoneMatch[1].trim() : '08' + Math.floor(100000000 + Math.random() * 900000000);
-    const custAddress = addressMatch ? addressMatch[1].trim() : 'Order via WA';
-    const productNameInput = productMatch[1].trim().toLowerCase();
-    const qty = parseInt(qtyMatch[1].trim());
-
-    const product = products.find(p => p.name.toLowerCase().includes(productNameInput));
-
-    if (!product) {
-        Swal.fire({ icon: 'warning', title: 'Produk Tidak Ada', text: `Produk "${productMatch[1]}" tidak ditemukan.` });
-        return;
-    }
-
-    if (product.stock < qty) {
-        Swal.fire({ icon: 'error', title: 'Stok Kurang', text: `Stok tersisa: ${product.stock} pcs.` });
-        return;
-    }
-
-    product.stock -= qty;
-
-    const now = new Date();
-    const formattedDate = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}.${String(now.getSeconds()).padStart(2, '0')}`;
-    const newOrderId = 'ORD-00' + (orders.length + 1);
-
-    orders.push({
-        id: newOrderId,
-        customer: `${custName} (Delivery WA)`,
-        phone: custPhone,
-        product: `${product.name} (${qty}x)`,
-        items: [{ productId: product.id, productName: product.name, price: product.price, qty, note: 'Order WA' }],
-        qty,
-        channel: 'WhatsApp',
-        status: 'Baru',
-        price: product.price * qty,
-        date: formattedDate
-    });
-
-    let existingCust = customers.find(c => c.phone && c.phone.trim() === custPhone);
-    if (existingCust) {
-        existingCust.name = custName;
-    } else {
-        customers.push({ phone: custPhone, name: custName, address: custAddress, history: 1, totalSpent: (product.price * qty) });
-    }
-
-    saveData();
-
-    Swal.fire({
-        icon: 'success',
-        title: 'Otomatisasi Berhasil!',
-        html: `Order ID: <b>${newOrderId}</b><br>Customer: <b>${custName}</b>`,
-        confirmButtonColor: '#25D366'
-    });
-
-    inputElem.value = '';
-    populateProductDropdown();
-    renderDashboard();
-    renderCustomers();
-    renderStock();
 }
 
 function cancelOrder(orderId) {
@@ -548,10 +465,10 @@ function renderCustomers() {
     if (mobileCards) mobileCards.innerHTML = '';
 
     const searchQuery = document.getElementById('search-customer') ? document.getElementById('search-customer').value.toLowerCase() : '';
-    let filteredCust = customers.filter(c => c.name.toLowerCase().includes(searchQuery) || (c.phone && c.phone.includes(searchQuery)));
+    let filteredCust = customers.filter(c => c.name.toLowerCase().includes(searchQuery) || (c.phone && c.phone.toLowerCase().includes(searchQuery)));
 
     filteredCust.forEach(c => {
-        let custOrders = orders.filter(o => o.phone && c.phone && o.phone.trim() === c.phone.trim());
+        let custOrders = orders.filter(o => o.phone && c.phone && o.phone.trim().toLowerCase() === c.phone.trim().toLowerCase());
         c.history = custOrders.length;
         c.totalSpent = custOrders.reduce((total, o) => total + o.price, 0);
 
@@ -573,7 +490,7 @@ function renderCustomers() {
                         <span class="channel-tag">${c.phone}</span>
                     </div>
                     <div class="mobile-card-body">
-                        <div><b>Alamat:</b> ${c.address || '-'}</div>
+                        <div><b>Tipe/Alamat:</b> ${c.address || '-'}</div>
                         <div><b>Total Order:</b> ${c.history} Kali Pemesanan</div>
                         <div><b>Total Belanja:</b> Rp ${c.totalSpent.toLocaleString('id-ID')}</div>
                     </div>
@@ -597,7 +514,7 @@ function renderStock() {
     let filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery) || p.id.toLowerCase().includes(searchQuery));
 
     filteredProducts.forEach(p => {
-        let statusStok = p.stock > 10 ? 'Stok banyak' : (p.stock > 0 ? 'Stok Sedikit' : 'Stok Habis');
+        let statusStokText = p.stock > 10 ? 'Stok Banyak' : (p.stock > 0 ? 'Stok Sedikit' : 'Stok Habis');
         let badgeColorClass = p.stock > 10 ? 'badge-selesai' : (p.stock > 0 ? 'badge-proses' : 'badge-baru');
 
         tableBody.innerHTML += `
@@ -605,10 +522,10 @@ function renderStock() {
                 <td>${p.id}</td>
                 <td><b>${p.name}</b></td>
                 <td>Rp ${p.price.toLocaleString('id-ID')}</td>
-                <td><b>${p.stock}</b></td>
-                <td><span class="badge ${badgeColorClass}">${statusStok}</span></td>
+                <td><b>${p.stock} pcs</b></td>
+                <td><span class="badge ${badgeColorClass}">${statusStokText}</span></td>
                 <td>
-                    <button class="btn-sm btn-status" onclick="updateProductStock('${p.id}')">Update Stok</button>
+                    <button class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
                 </td>
             </tr>
         `;
@@ -618,14 +535,14 @@ function renderStock() {
                 <div class="mobile-card">
                     <div class="mobile-card-header">
                         <span class="mobile-card-title">${p.name}</span>
-                        <span class="badge ${badgeColorClass}">${statusStok}</span>
+                        <span class="badge ${badgeColorClass}">${statusStokText}</span>
                     </div>
                     <div class="mobile-card-body">
                         <div><b>Harga:</b> Rp ${p.price.toLocaleString('id-ID')}</div>
                         <div><b>Sisa Stok:</b> ${p.stock} pcs</div>
                     </div>
                     <div class="mobile-card-footer">
-                        <button class="btn-sm btn-status" onclick="updateProductStock('${p.id}')">Update Stok</button>
+                        <button class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
                     </div>
                 </div>
             `;
@@ -795,7 +712,7 @@ function exportToCSV() {
         Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Belum ada transaksi untuk di-export.' });
         return;
     }
-    let csvContent = "sep=,\nNo Order,Tanggal,Customer,No HP,Produk,Total Harga,Channel,Status\n";
+    let csvContent = "sep=,\nNo Order,Tanggal,Customer,ID/No Meja,Produk,Total Harga,Channel,Status\n";
     orders.forEach(o => {
         let row = `"${o.id}","${o.date}","${o.customer}","${o.phone}","${o.product}",${o.price},"${o.channel}","${o.status}"`;
         csvContent += row + "\n";
