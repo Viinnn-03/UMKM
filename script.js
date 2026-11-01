@@ -267,7 +267,7 @@ if (orderForm) {
                 if (product) {
                     if (product.stock < qty) {
                         isStockEnough = false;
-                        errorMessage = `Stok "${product.name}" kurang! Tersisa ${product.stock} pcs.`;
+                        errorMessage = `Stok "${product.name}" kurang! Tersisa ${product.stock} pcs. Silakan tambah stok terlebih dahulu.`;
                     } else {
                         orderItems.push({ productId, productName, price, qty, note });
                         totalOrderPrice += (price * qty);
@@ -277,7 +277,7 @@ if (orderForm) {
         });
 
         if (!isStockEnough) {
-            Swal.fire({ icon: 'error', title: 'Stok Tidak Cukup', text: errorMessage });
+            Swal.fire({ icon: 'error', title: 'Stok Tidak Cukup', text: errorMessage, confirmButtonColor: '#ef4444' });
             return;
         }
 
@@ -514,7 +514,7 @@ function renderStock() {
     let filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery) || p.id.toLowerCase().includes(searchQuery));
 
     filteredProducts.forEach(p => {
-        let statusStokText = p.stock > 10 ? 'Stok Banyak' : (p.stock > 0 ? 'Stok Sedikit' : 'Stok Habis');
+        let statusStokText = p.stock > 10 ? 'Stok Melimpah' : (p.stock > 0 ? 'Stok Menipis' : 'Stok Habis');
         let badgeColorClass = p.stock > 10 ? 'badge-selesai' : (p.stock > 0 ? 'badge-proses' : 'badge-baru');
 
         tableBody.innerHTML += `
@@ -622,6 +622,7 @@ function toggleDateFilter() {
     renderLaporan();
 }
 
+// --- RENDER LAPORAN (Hanya Menampilkan Menu yang Difilter) ---
 function renderLaporan() {
     populateReportProductFilter();
     let totalOmzet = 0, totalPengeluaran = 0, channelCount = {};
@@ -649,37 +650,79 @@ function renderLaporan() {
         return periodeVal === 'semua';
     };
 
-    let filteredOrders = orders.filter(o => isDateMatch(o.date) && (produkVal === 'semua' || o.product.toLowerCase().includes(produkVal)));
+    let filteredOrders = orders.filter(o => isDateMatch(o.date));
 
     filteredOrders.forEach(o => {
-        totalOmzet += o.price;
         channelCount[o.channel] = (channelCount[o.channel] || 0) + 1;
 
-        if (detailBody) {
-            detailBody.innerHTML += `
-                <tr>
-                    <td>${o.date || '-'}</td>
-                    <td>${o.product.toLowerCase()}</td>
-                    <td>${o.qty || 1}</td>
-                    <td>${o.customer.toLowerCase()}</td>
-                    <td>Rp ${o.price.toLocaleString('id-ID')}</td>
-                </tr>
-            `;
-        }
+        if (o.items && Array.isArray(o.items)) {
+            o.items.forEach(item => {
+                const nameMatch = (produkVal === 'semua' || item.productName.toLowerCase() === produkVal);
+                if (nameMatch) {
+                    const itemTotal = item.price * item.qty;
+                    totalOmzet += itemTotal;
 
-        if (mobileCards) {
-            mobileCards.innerHTML += `
-                <div class="mobile-card">
-                    <div class="mobile-card-header">
-                        <span class="mobile-card-title">${o.product}</span>
-                        <span class="badge badge-selesai">Rp ${o.price.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div class="mobile-card-body">
-                        <div><b>Tanggal:</b> ${o.date || '-'} | <b>Qty:</b> ${o.qty || 1}</div>
-                        <div><b>Customer:</b> ${o.customer}</div>
-                    </div>
-                </div>
-            `;
+                    if (detailBody) {
+                        detailBody.innerHTML += `
+                            <tr>
+                                <td>${o.date || '-'}</td>
+                                <td><b>${item.productName}</b> ${item.note ? `<br><small style="color:#64748b;">[${item.note}]</small>` : ''}</td>
+                                <td>${item.qty} pcs</td>
+                                <td>${o.customer}</td>
+                                <td>Rp ${itemTotal.toLocaleString('id-ID')}</td>
+                            </tr>
+                        `;
+                    }
+
+                    if (mobileCards) {
+                        mobileCards.innerHTML += `
+                            <div class="mobile-card">
+                                <div class="mobile-card-header">
+                                    <span class="mobile-card-title">${item.productName}</span>
+                                    <span class="badge badge-selesai">Rp ${itemTotal.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div class="mobile-card-body">
+                                    <div><b>Tanggal:</b> ${o.date || '-'} | <b>Qty:</b> ${item.qty} pcs</div>
+                                    <div><b>Customer:</b> ${o.customer}</div>
+                                    ${item.note ? `<div><b>Catatan:</b> ${item.note}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            });
+        } else {
+            const nameMatch = (produkVal === 'semua' || o.product.toLowerCase().includes(produkVal));
+            if (nameMatch) {
+                totalOmzet += o.price;
+
+                if (detailBody) {
+                    detailBody.innerHTML += `
+                        <tr>
+                            <td>${o.date || '-'}</td>
+                            <td><b>${o.product}</b></td>
+                            <td>${o.qty || 1} pcs</td>
+                            <td>${o.customer}</td>
+                            <td>Rp ${o.price.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `;
+                }
+
+                if (mobileCards) {
+                    mobileCards.innerHTML += `
+                        <div class="mobile-card">
+                            <div class="mobile-card-header">
+                                <span class="mobile-card-title">${o.product}</span>
+                                <span class="badge badge-selesai">Rp ${o.price.toLocaleString('id-ID')}</span>
+                            </div>
+                            <div class="mobile-card-body">
+                                <div><b>Tanggal:</b> ${o.date || '-'} | <b>Qty:</b> ${o.qty || 1} pcs</div>
+                                <div><b>Customer:</b> ${o.customer}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
         }
     });
 
