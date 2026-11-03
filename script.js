@@ -77,16 +77,26 @@ function addOrderItemRow() {
     const newRow = document.createElement('div');
     newRow.className = 'order-item-row';
     newRow.innerHTML = `
-        <select class="item-product-select styled-input" required onchange="calculateTotalOrder()">
-            ${getProductOptionsHTML()}
-        </select>
-        <div class="qty-control">
-            <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
-            <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
-            <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+        <div class="item-row-header">
+            <select class="item-product-select styled-input" required onchange="calculateTotalOrder()">
+                ${getProductOptionsHTML()}
+            </select>
+            <button type="button" class="btn-remove-item-card" onclick="removeOrderItemRow(this)" title="Hapus Item">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
         </div>
-        <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-        <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)"><i class="fa-solid fa-xmark"></i></button>
+        
+        <div class="item-row-details">
+            <div class="qty-control">
+                <span class="qty-label">Qty:</span>
+                <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
+                <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="1" onchange="calculateTotalOrder()">
+                <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+            </div>
+            <div class="note-control">
+                <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+            </div>
+        </div>
     `;
     container.appendChild(newRow);
     calculateTotalOrder();
@@ -231,7 +241,6 @@ if (orderForm) {
     orderForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        // JIKA FIELD DIKOSONGKAN, OTOMATIS BUAT ID UNIK (Contoh: CUST-4829)
         let custPhoneInput = document.getElementById('cust-phone').value.trim();
         if (!custPhoneInput) {
             custPhoneInput = 'CUST-' + Math.floor(1000 + Math.random() * 9000);
@@ -337,14 +346,24 @@ if (orderForm) {
         if (container) {
             container.innerHTML = `
                 <div class="order-item-row">
-                    <select class="item-product-select styled-input" required onchange="calculateTotalOrder()"></select>
-                    <div class="qty-control">
-                        <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
-                        <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
-                        <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+                    <div class="item-row-header">
+                        <select class="item-product-select styled-input" required onchange="calculateTotalOrder()"></select>
+                        <button type="button" class="btn-remove-item-card" onclick="removeOrderItemRow(this)" title="Hapus Item">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </div>
-                    <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-                    <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)"><i class="fa-solid fa-xmark"></i></button>
+                    
+                    <div class="item-row-details">
+                        <div class="qty-control">
+                            <span class="qty-label">Qty:</span>
+                            <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
+                            <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="1" onchange="calculateTotalOrder()">
+                            <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+                        </div>
+                        <div class="note-control">
+                            <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -552,20 +571,31 @@ function renderStock() {
     checkEmptyTable(tableBody, filteredProducts.length, 6, 'Belum ada produk.');
 }
 
+// --- DESAIN MODAL SWEETALERT UPDATE STOK KEREN & PRESISI ---
 async function updateProductStock(productId) {
     let product = products.find(p => p.id === productId);
     if (!product) return;
 
     const { value: formValues } = await Swal.fire({
-        title: `Update "${product.name}"`,
+        title: `<div class="swal-custom-title"><i class="fa-solid fa-pen-to-square" style="color:#059669;"></i> Update "${product.name}"</div>`,
         html:
-            `<label style="display:block;text-align:left;margin-bottom:5px;">Sisa Stok Baru:</label>` +
-            `<input id="swal-input-stock" type="number" min="0" class="swal2-input" value="${product.stock}">` +
-            `<label style="display:block;text-align:left;margin-top:10px;margin-bottom:5px;">Harga Produk (Rp):</label>` +
-            `<input id="swal-input-price" type="number" min="1" class="swal2-input" value="${product.price}">`,
+            `<div class="swal-form-group">` +
+            `  <label><i class="fa-solid fa-boxes-stacked"></i> Sisa Stok Baru:</label>` +
+            `  <input id="swal-input-stock" type="number" min="0" class="swal2-input styled-swal-input" value="${product.stock}" placeholder="Stok Pcs">` +
+            `</div>` +
+            `<div class="swal-form-group">` +
+            `  <label><i class="fa-solid fa-tag"></i> Harga Produk (Rp):</label>` +
+            `  <input id="swal-input-price" type="number" min="1" class="swal2-input styled-swal-input" value="${product.price}" placeholder="Harga (Rp)">` +
+            `</div>`,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonText: 'Simpan',
+        confirmButtonText: '<i class="fa-solid fa-floppy-disk"></i> Simpan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#64748b',
+        customClass: {
+            popup: 'swal2-popup-modern'
+        },
         preConfirm: () => [
             document.getElementById('swal-input-stock').value,
             document.getElementById('swal-input-price').value
@@ -622,10 +652,10 @@ function toggleDateFilter() {
     renderLaporan();
 }
 
-// --- RENDER LAPORAN (Hanya Menampilkan Menu yang Difilter) ---
+// --- RENDER LAPORAN (PERBAIKAN PRODUK TERLARIS LENGKAP) ---
 function renderLaporan() {
     populateReportProductFilter();
-    let totalOmzet = 0, totalPengeluaran = 0, channelCount = {};
+    let totalOmzet = 0, totalPengeluaran = 0, channelCount = {}, productSalesCount = {};
 
     const detailBody = document.getElementById('detail-transaksi-body');
     const mobileCards = document.getElementById('report-cards-mobile');
@@ -657,6 +687,9 @@ function renderLaporan() {
 
         if (o.items && Array.isArray(o.items)) {
             o.items.forEach(item => {
+                // Hitung kuantitas produk terlaris
+                productSalesCount[item.productName] = (productSalesCount[item.productName] || 0) + item.qty;
+
                 const nameMatch = (produkVal === 'semua' || item.productName.toLowerCase() === produkVal);
                 if (nameMatch) {
                     const itemTotal = item.price * item.qty;
@@ -692,6 +725,7 @@ function renderLaporan() {
                 }
             });
         } else {
+            productSalesCount[o.product] = (productSalesCount[o.product] || 0) + (o.qty || 1);
             const nameMatch = (produkVal === 'semua' || o.product.toLowerCase().includes(produkVal));
             if (nameMatch) {
                 totalOmzet += o.price;
@@ -731,6 +765,9 @@ function renderLaporan() {
 
     let labaBersih = totalOmzet - totalPengeluaran;
     let topChannel = Object.keys(channelCount).length > 0 ? Object.keys(channelCount).reduce((a, b) => channelCount[a] > channelCount[b] ? a : b) : '-';
+    
+    // Perbaikan Produk Terlaris
+    let topProduct = Object.keys(productSalesCount).length > 0 ? Object.keys(productSalesCount).reduce((a, b) => productSalesCount[a] > productSalesCount[b] ? a : b) : '-';
 
     if (document.getElementById('report-omzet')) document.getElementById('report-omzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
     if (document.getElementById('report-pengeluaran')) document.getElementById('report-pengeluaran').innerText = 'Rp ' + totalPengeluaran.toLocaleString('id-ID');
@@ -740,6 +777,7 @@ function renderLaporan() {
         labaElem.style.color = labaBersih >= 0 ? '#059669' : '#ef4444';
     }
     if (document.getElementById('report-top-channel')) document.getElementById('report-top-channel').innerText = topChannel;
+    if (document.getElementById('report-top-product')) document.getElementById('report-top-product').innerText = topProduct;
 }
 
 function checkEmptyTable(elem, length, colSpan, message) {

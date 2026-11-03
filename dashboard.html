@@ -18,10 +18,10 @@
     <!-- Header Mobile -->
     <header class="mobile-header">
         <div class="mobile-brand">
-            <img src="logo.png" alt="Logo Brand" class="brand-logo" onerror="this.style.display='none'">
+            <img src="logo.png" alt="Logo Brand" class="brand-logo">
             <div class="brand-text">
                 <h2>UMKM Digital</h2>
-                <!-- <span class="brand-badge">PRO</span> -->
+                <span class="brand-badge">PRO</span>
             </div>
         </div>
         <a href="index.html" class="mobile-logout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
@@ -30,7 +30,7 @@
     <!-- Sidebar / Navigasi Desktop -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="logo.png" alt="Logo Brand" class="brand-logo-desktop" onerror="this.style.display='none'">
+            <img src="logo.png" alt="Logo Brand" class="brand-logo-desktop">
             <div>
                 <h2>UMKM Digital</h2>
                 <span class="brand-subtitle">Panel Operasional Kuliner</span>
@@ -124,24 +124,38 @@
                         </div>
                     </div>
 
-                    <!-- Multi-Item Menu Container -->
+                    <!-- Container Daftar Menu Dipesan Modern -->
                     <div class="menu-items-box">
-                        <label class="menu-box-label">Daftar Menu Dipesan:</label>
+                        <div class="menu-box-header">
+                            <label class="menu-box-label"><i class="fa-solid fa-utensils"></i> Daftar Menu Dipesan:</label>
+                        </div>
                         
                         <div id="order-items-container">
                             <div class="order-item-row">
-                                <select class="item-product-select styled-input" required onchange="calculateTotalOrder()"></select>
-                                <div class="qty-control">
-                                    <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
-                                    <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="Qty" onchange="calculateTotalOrder()">
-                                    <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+                                <div class="item-row-header">
+                                    <select class="item-product-select styled-input" required onchange="calculateTotalOrder()"></select>
+                                    <button type="button" class="btn-remove-item-card" onclick="removeOrderItemRow(this)" title="Hapus Item">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
                                 </div>
-                                <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-                                <button type="button" class="btn-sm btn-remove-item" onclick="removeOrderItemRow(this)"><i class="fa-solid fa-xmark"></i></button>
+                                
+                                <div class="item-row-details">
+                                    <div class="qty-control">
+                                        <span class="qty-label">Qty:</span>
+                                        <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
+                                        <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="1" onchange="calculateTotalOrder()">
+                                        <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
+                                    </div>
+                                    <div class="note-control">
+                                        <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <button type="button" class="btn-add-menu" onclick="addOrderItemRow()"><i class="fa-solid fa-plus"></i> Tambah Menu Lain</button>
+                        <button type="button" class="btn-add-menu-modern" onclick="addOrderItemRow()">
+                            <i class="fa-solid fa-circle-plus"></i> Tambah Menu Lain
+                        </button>
                     </div>
 
                     <!-- Summary & Submit -->
