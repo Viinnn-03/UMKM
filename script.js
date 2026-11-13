@@ -9,11 +9,203 @@ let customers = JSON.parse(localStorage.getItem('umkm_customers')) || defaultCus
 let orders = JSON.parse(localStorage.getItem('umkm_orders')) || defaultOrders;
 let expenses = JSON.parse(localStorage.getItem('umkm_expenses')) || defaultExpenses;
 
+let ownerAccount = JSON.parse(localStorage.getItem('umkm_owner_account')) || {
+    storeName: 'UMKM Digital Kuliner',
+    ownerName: 'Administrator Utama',
+    username: 'admin',
+    password: '123',
+    phone: '-',
+    address: 'Kota Medan',
+    logoData: '' // Saat pertama kosong (tidak ada logo)
+};
+
 function saveData() {
     localStorage.setItem('umkm_products', JSON.stringify(products));
     localStorage.setItem('umkm_customers', JSON.stringify(customers));
     localStorage.setItem('umkm_orders', JSON.stringify(orders));
     localStorage.setItem('umkm_expenses', JSON.stringify(expenses));
+    populateCustomerDatalist();
+    loadAccountSettingsUI();
+}
+
+// --- PENGATURAN AKUN & MANAJEMEN LOGO OPSIONAL ---
+function applyLogoVisibility() {
+    const logoSrc = ownerAccount.logoData || '';
+    const hasLogo = logoSrc.trim() !== '';
+
+    const sidebarLogo = document.getElementById('sidebar-header-logo');
+    const mobileLogo = document.getElementById('mobile-header-logo');
+    const profileLogo = document.getElementById('account-profile-logo');
+    const bgWatermark = document.getElementById('dashboard-bg-watermark');
+    const btnRemoveLogo = document.getElementById('btn-remove-logo');
+
+    if (hasLogo) {
+        if (sidebarLogo) { sidebarLogo.src = logoSrc; sidebarLogo.style.display = 'block'; }
+        if (mobileLogo) { mobileLogo.src = logoSrc; mobileLogo.style.display = 'block'; }
+        if (profileLogo) { profileLogo.src = logoSrc; profileLogo.style.display = 'block'; }
+        if (bgWatermark) { bgWatermark.style.backgroundImage = `url('${logoSrc}')`; bgWatermark.style.display = 'block'; }
+        if (btnRemoveLogo) btnRemoveLogo.style.display = 'inline-flex';
+    } else {
+        if (sidebarLogo) sidebarLogo.style.display = 'none';
+        if (mobileLogo) mobileLogo.style.display = 'none';
+        if (profileLogo) profileLogo.style.display = 'none';
+        if (bgWatermark) bgWatermark.style.display = 'none';
+        if (btnRemoveLogo) btnRemoveLogo.style.display = 'none';
+    }
+}
+
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        ownerAccount.logoData = e.target.result;
+        localStorage.setItem('umkm_owner_account', JSON.stringify(ownerAccount));
+        applyLogoVisibility();
+        Swal.fire({
+            icon: 'success',
+            title: 'Logo Terpasang!',
+            text: 'Logo usaha berhasil dipasang ke profil dan background dashboard.',
+            confirmButtonColor: '#059669'
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeStoreLogo() {
+    ownerAccount.logoData = '';
+    localStorage.setItem('umkm_owner_account', JSON.stringify(ownerAccount));
+    applyLogoVisibility();
+    Swal.fire({
+        icon: 'info',
+        title: 'Logo Dihapus',
+        text: 'Tampilan kembali bersih tanpa logo.',
+        confirmButtonColor: '#059669'
+    });
+}
+
+function loadAccountSettingsUI() {
+    if (document.getElementById('sidebar-store-title')) {
+        document.getElementById('sidebar-store-title').innerText = ownerAccount.storeName || 'UMKM Digital';
+    }
+    if (document.getElementById('mobile-store-title')) {
+        document.getElementById('mobile-store-title').innerText = ownerAccount.storeName || 'UMKM Digital';
+    }
+    if (document.getElementById('owner-store-name')) {
+        document.getElementById('owner-store-name').innerText = ownerAccount.storeName || 'UMKM Digital Kuliner';
+    }
+    if (document.getElementById('owner-account-subtitle')) {
+        document.getElementById('owner-account-subtitle').innerText = `Pemilik: ${ownerAccount.ownerName} • Status Sesi: Aktif`;
+    }
+    if (document.getElementById('acc-store-name')) document.getElementById('acc-store-name').value = ownerAccount.storeName || '';
+    if (document.getElementById('acc-owner-name')) document.getElementById('acc-owner-name').value = ownerAccount.ownerName || '';
+    if (document.getElementById('acc-phone')) document.getElementById('acc-phone').value = ownerAccount.phone || '';
+    if (document.getElementById('acc-address')) document.getElementById('acc-address').value = ownerAccount.address || '';
+    if (document.getElementById('acc-username')) document.getElementById('acc-username').value = ownerAccount.username || 'admin';
+
+    if (document.getElementById('acc-data-summary')) {
+        document.getElementById('acc-data-summary').innerText = `${products.length} Produk • ${customers.length} Pelanggan • ${orders.length} Transaksi`;
+    }
+
+    applyLogoVisibility();
+}
+
+function saveAccountProfile(e) {
+    e.preventDefault();
+    ownerAccount.storeName = document.getElementById('acc-store-name').value.trim();
+    ownerAccount.ownerName = document.getElementById('acc-owner-name').value.trim();
+    ownerAccount.phone = document.getElementById('acc-phone').value.trim();
+    ownerAccount.address = document.getElementById('acc-address').value.trim();
+
+    localStorage.setItem('umkm_owner_account', JSON.stringify(ownerAccount));
+    loadAccountSettingsUI();
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Profil Disimpan!',
+        text: 'Informasi profil usaha UMKM berhasil diperbarui.',
+        confirmButtonColor: '#059669'
+    });
+}
+
+function updateAccountPassword(e) {
+    e.preventDefault();
+    const newUsername = document.getElementById('acc-username').value.trim();
+    const newPass = document.getElementById('acc-new-password').value;
+    const confirmPass = document.getElementById('acc-confirm-password').value;
+
+    if (!newUsername) return;
+
+    if (newPass || confirmPass) {
+        if (newPass !== confirmPass) {
+            Swal.fire({ icon: 'error', title: 'Password Tidak Sama', text: 'Konfirmasi password baru harus cocok.' });
+            return;
+        }
+        ownerAccount.password = newPass;
+    }
+
+    ownerAccount.username = newUsername;
+    localStorage.setItem('umkm_owner_account', JSON.stringify(ownerAccount));
+    document.getElementById('acc-new-password').value = '';
+    document.getElementById('acc-confirm-password').value = '';
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Keamanan Diperbarui!',
+        text: 'Username dan/atau password login berhasil disimpan.',
+        confirmButtonColor: '#2563eb'
+    });
+}
+
+function confirmLogout() {
+    Swal.fire({
+        title: 'Keluar dari Akun?',
+        text: 'Anda akan diarahkan kembali ke halaman login.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Log Out',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'index.html';
+        }
+    });
+}
+
+// --- AUTO-FILL NAMA PELANGGAN SAAT ID UNIK DIMASUKKAN ---
+function populateCustomerDatalist() {
+    const datalist = document.getElementById('customer-id-list');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    customers.forEach(c => {
+        if (c.phone) {
+            datalist.innerHTML += `<option value="${c.phone}">${c.name} (${c.address || 'Pelanggan'})</option>`;
+        }
+    });
+}
+
+function autoFillCustomerName() {
+    const idInput = document.getElementById('cust-phone');
+    const nameInput = document.getElementById('cust-name');
+    const typeSelect = document.getElementById('order-type');
+    if (!idInput || !nameInput) return;
+
+    const enteredId = idInput.value.trim().toLowerCase();
+    if (!enteredId) return;
+
+    const matchedCustomer = customers.find(c => c.phone && c.phone.trim().toLowerCase() === enteredId);
+    if (matchedCustomer) {
+        nameInput.value = matchedCustomer.name;
+        if (typeSelect && matchedCustomer.address) {
+            const validTypes = ['Dine-In', 'Takeaway', 'Delivery'];
+            if (validTypes.includes(matchedCustomer.address)) {
+                typeSelect.value = matchedCustomer.address;
+            }
+        }
+    }
 }
 
 // --- NAVIGASI MULTI-PLATFORM ---
@@ -36,6 +228,7 @@ function showSection(sectionId) {
     renderStock();
     renderPengeluaran();
     renderLaporan();
+    loadAccountSettingsUI();
 }
 
 // --- MULTI-MENU OPERASIONAL KULINER ---
@@ -183,7 +376,6 @@ function renderDashboard() {
 
         let badgeClass = o.status === 'Baru' ? 'badge-baru' : (o.status === 'Diproses' ? 'badge-proses' : 'badge-selesai');
 
-        // Render Desktop Table
         tableBody.innerHTML += `
             <tr>
                 <td><b>${o.id}</b></td>
@@ -193,13 +385,12 @@ function renderDashboard() {
                 <td><span class="channel-tag">${o.channel}</span></td>
                 <td><span class="badge ${badgeClass}">${o.status}</span></td>
                 <td>
-                    ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
-                    <button class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
+                    ${o.status !== 'Selesai' ? `<button type="button" class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
+                    <button type="button" class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
                 </td>
             </tr>
         `;
 
-        // Render Mobile Cards View
         if (mobileCards) {
             mobileCards.innerHTML += `
                 <div class="mobile-card">
@@ -213,8 +404,8 @@ function renderDashboard() {
                         <div><b>Total:</b> Rp ${o.price.toLocaleString('id-ID')}</div>
                     </div>
                     <div class="mobile-card-footer">
-                        ${o.status !== 'Selesai' ? `<button class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
-                        <button class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
+                        ${o.status !== 'Selesai' ? `<button type="button" class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold; text-align:center; flex:1;">Selesai</span>'}
+                        <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
                     </div>
                 </div>
             `;
@@ -235,7 +426,7 @@ function renderDashboard() {
     if (document.getElementById('dashboard-top-product')) document.getElementById('dashboard-top-product').innerText = topProduct;
 }
 
-// --- FORM SUBMIT PESANAN DENGAN AUTO-GENERATE CUSTOMER ID ---
+// --- FORM SUBMIT PESANAN ---
 const orderForm = document.getElementById('order-form');
 if (orderForm) {
     orderForm.addEventListener('submit', function (e) {
@@ -302,7 +493,8 @@ if (orderForm) {
 
         const now = new Date();
         const formattedDate = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}.${String(now.getSeconds()).padStart(2, '0')}`;
-        const newOrderId = 'ORD-00' + (orders.length + 1);
+        const uniqueSuffix = String(Date.now()).slice(-4);
+        const newOrderId = `ORD-${uniqueSuffix}`;
 
         const summaryProductText = orderItems.map(i => `${i.productName} (${i.qty}x)${i.note ? ` [${i.note}]` : ''}`).join(', ');
 
@@ -322,6 +514,7 @@ if (orderForm) {
         let existingCust = customers.find(c => c.phone && c.phone.trim().toLowerCase() === custPhoneInput.toLowerCase());
         if (existingCust) {
             existingCust.name = custNameInput;
+            existingCust.address = orderType;
         } else {
             customers.push({
                 phone: custPhoneInput,
@@ -375,29 +568,44 @@ if (orderForm) {
     });
 }
 
+// --- PEMBATALAN PESANAN + AUTO HAPUS PELANGGAN ---
 function cancelOrder(orderId) {
     Swal.fire({
-        title: 'Pembatalan Pesanan',
-        text: 'Apakah Anda yakin? Stok produk akan dikembalikan.',
+        title: 'Hapus / Batalkan Pesanan?',
+        text: 'Stok produk akan dikembalikan, dan pelanggan akan dihapus dari database jika tidak memiliki pesanan lain.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Batalkan'
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus Pesanan',
+        cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
             const index = orders.findIndex(o => o.id === orderId);
             if (index !== -1) {
                 const order = orders[index];
+                const customerRef = order.phone ? order.phone.trim().toLowerCase() : '';
+
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
                         const product = products.find(p => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase());
                         if (product) product.stock += item.qty;
                     });
                 }
+
                 orders.splice(index, 1);
+
+                if (customerRef) {
+                    const remainingOrders = orders.filter(o => o.phone && o.phone.trim().toLowerCase() === customerRef);
+                    if (remainingOrders.length === 0) {
+                        customers = customers.filter(c => !(c.phone && c.phone.trim().toLowerCase() === customerRef));
+                    }
+                }
+
                 saveData();
-                Swal.fire('Dibatalkan!', 'Pesanan dibatalkan.', 'success');
+                Swal.fire('Terhapus!', 'Pesanan dibatalkan dan data pelanggan disinkronkan.', 'success');
                 renderDashboard();
+                renderCustomers();
                 renderStock();
                 renderLaporan();
             }
@@ -467,6 +675,7 @@ function renderPengeluaran() {
 
 function nextStatus(orderId) {
     let order = orders.find(o => o.id === orderId);
+    if (!order) return;
     if (order.status === 'Baru') order.status = 'Diproses';
     else if (order.status === 'Diproses') order.status = 'Selesai';
     
@@ -544,7 +753,7 @@ function renderStock() {
                 <td><b>${p.stock} pcs</b></td>
                 <td><span class="badge ${badgeColorClass}">${statusStokText}</span></td>
                 <td>
-                    <button class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
+                    <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
                 </td>
             </tr>
         `;
@@ -561,7 +770,7 @@ function renderStock() {
                         <div><b>Sisa Stok:</b> ${p.stock} pcs</div>
                     </div>
                     <div class="mobile-card-footer">
-                        <button class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
+                        <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
                     </div>
                 </div>
             `;
@@ -571,7 +780,6 @@ function renderStock() {
     checkEmptyTable(tableBody, filteredProducts.length, 6, 'Belum ada produk.');
 }
 
-// --- DESAIN MODAL SWEETALERT UPDATE STOK KEREN & PRESISI ---
 async function updateProductStock(productId) {
     let product = products.find(p => p.id === productId);
     if (!product) return;
@@ -652,7 +860,6 @@ function toggleDateFilter() {
     renderLaporan();
 }
 
-// --- RENDER LAPORAN (PERBAIKAN PRODUK TERLARIS LENGKAP) ---
 function renderLaporan() {
     populateReportProductFilter();
     let totalOmzet = 0, totalPengeluaran = 0, channelCount = {}, productSalesCount = {};
@@ -687,7 +894,6 @@ function renderLaporan() {
 
         if (o.items && Array.isArray(o.items)) {
             o.items.forEach(item => {
-                // Hitung kuantitas produk terlaris
                 productSalesCount[item.productName] = (productSalesCount[item.productName] || 0) + item.qty;
 
                 const nameMatch = (produkVal === 'semua' || item.productName.toLowerCase() === produkVal);
@@ -765,8 +971,6 @@ function renderLaporan() {
 
     let labaBersih = totalOmzet - totalPengeluaran;
     let topChannel = Object.keys(channelCount).length > 0 ? Object.keys(channelCount).reduce((a, b) => channelCount[a] > channelCount[b] ? a : b) : '-';
-    
-    // Perbaikan Produk Terlaris
     let topProduct = Object.keys(productSalesCount).length > 0 ? Object.keys(productSalesCount).reduce((a, b) => productSalesCount[a] > productSalesCount[b] ? a : b) : '-';
 
     if (document.getElementById('report-omzet')) document.getElementById('report-omzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
@@ -788,52 +992,122 @@ function checkEmptyTable(elem, length, colSpan, message) {
     return false;
 }
 
-function exportToCSV() {
-    if (orders.length === 0) {
-        Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Belum ada transaksi untuk di-export.' });
+// --- EXPORT EXCEL (.XLSX) RAPI DI SEMUA SHEET ---
+function exportToExcel() {
+    if (orders.length === 0 && expenses.length === 0) {
+        Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Belum ada data penjualan maupun pengeluaran untuk di-export.' });
         return;
     }
-    let csvContent = "sep=,\nNo Order,Tanggal,Customer,ID/No Meja,Produk,Total Harga,Channel,Status\n";
-    orders.forEach(o => {
-        let row = `"${o.id}","${o.date}","${o.customer}","${o.phone}","${o.product}",${o.price},"${o.channel}","${o.status}"`;
-        csvContent += row + "\n";
-    });
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Laporan_Transaksi_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
 
-function backupDataJSON() {
-    const backupData = { products, customers, orders, expenses };
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Backup_Toko_${new Date().toISOString().slice(0,10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-}
+    const wb = XLSX.utils.book_new();
+    const todayStr = new Date().toLocaleDateString('id-ID');
+    const storeTitle = (ownerAccount.storeName || 'UMKM DIGITAL').toUpperCase();
+    const rupiahFormat = '"Rp "#,##0.00';
 
-function restoreDataJSON(event) {
-    const fileReader = new FileReader();
-    fileReader.onload = function (e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (data.products && data.orders) {
-                products = data.products; customers = data.customers || []; orders = data.orders; expenses = data.expenses || [];
-                saveData();
-                Swal.fire({ icon: 'success', title: 'Restore Berhasil!' });
-                showSection('dashboard');
+    function applyCurrencyFormat(ws, colLetter, startRow, endRow) {
+        for (let r = startRow; r <= endRow; r++) {
+            const cellRef = `${colLetter}${r}`;
+            if (ws[cellRef]) {
+                ws[cellRef].z = rupiahFormat;
             }
-        } catch (err) { Swal.fire({ icon: 'error', title: 'Gagal' }); }
-    };
-    if (event.target.files[0]) fileReader.readAsText(event.target.files[0]);
+        }
+    }
+
+    // 1. SHEET LAPORAN PENJUALAN
+    const salesHeader = [
+        [`LAPORAN PENJUALAN ${storeTitle}`],
+        ["Tanggal Cetak:"],
+        [todayStr],
+        ["No", "No Order", "Tanggal", "Customer", "ID / No. Meja", "Detail Produk", "Channel", "Status", "Total Penjualan (Rp)"]
+    ];
+
+    const salesRows = orders.map((o, idx) => [
+        idx + 1,
+        o.id,
+        o.date || '-',
+        o.customer,
+        o.phone || '-',
+        o.product,
+        o.channel,
+        o.status,
+        Number(o.price) || 0
+    ]);
+
+    const lastSalesRow = 4 + salesRows.length;
+    const totalSalesRowIndex = lastSalesRow + 1;
+    const salesFooter = [
+        ["", "", "", "", "", "", "", "TOTAL OMZET", salesRows.length > 0 ? { t: 'n', f: `SUM(I5:I${lastSalesRow})` } : 0]
+    ];
+
+    const wsSales = XLSX.utils.aoa_to_sheet([...salesHeader, ...salesRows, ...salesFooter]);
+    wsSales['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } }
+    ];
+    wsSales['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 22 }, { wch: 24 }, { wch: 16 }, { wch: 36 }, { wch: 20 }, { wch: 14 }, { wch: 22 }];
+    applyCurrencyFormat(wsSales, 'I', 5, totalSalesRowIndex);
+    XLSX.utils.book_append_sheet(wb, wsSales, "Laporan Penjualan");
+
+    // 2. SHEET LAPORAN PENGELUARAN
+    const expHeader = [
+        [`LAPORAN PENGELUARAN ${storeTitle}`],
+        ["Tanggal Cetak:"],
+        [todayStr],
+        ["No", "ID Pengeluaran", "Tanggal", "Deskripsi Pengeluaran", "Kategori", "Nominal (Rp)"]
+    ];
+
+    const expRows = expenses.map((e, idx) => [
+        idx + 1,
+        e.id,
+        e.date || '-',
+        e.name,
+        e.category,
+        Number(e.amount) || 0
+    ]);
+
+    const lastExpRow = 4 + expRows.length;
+    const totalExpRowIndex = lastExpRow + 1;
+    const expFooter = [
+        ["", "", "", "", "TOTAL PENGELUARAN", expRows.length > 0 ? { t: 'n', f: `SUM(F5:F${lastExpRow})` } : 0]
+    ];
+
+    const wsExp = XLSX.utils.aoa_to_sheet([...expHeader, ...expRows, ...expFooter]);
+    wsExp['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }
+    ];
+    wsExp['!cols'] = [{ wch: 6 }, { wch: 18 }, { wch: 22 }, { wch: 34 }, { wch: 24 }, { wch: 22 }];
+    applyCurrencyFormat(wsExp, 'F', 5, totalExpRowIndex);
+    XLSX.utils.book_append_sheet(wb, wsExp, "Laporan Pengeluaran");
+
+    // 3. SHEET RINGKASAN LABA BERSIH
+    const summaryData = [
+        [`RINGKASAN KEUANGAN & LABA BERSIH ${storeTitle}`],
+        ["Tanggal Cetak:"],
+        [todayStr],
+        ["No", "Keterangan Komponen Keuangan", "Jumlah (Rp)"],
+        [1, "Total Pendapatan (Omzet Penjualan)", { t: 'n', f: `'Laporan Penjualan'!I${totalSalesRowIndex}` }],
+        [2, "Total Pengeluaran Operasional", { t: 'n', f: `'Laporan Pengeluaran'!F${totalExpRowIndex}` }],
+        ["", "LABA BERSIH (OMZET - PENGELUARAN)", { t: 'n', f: "C5-C6" }]
+    ];
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    wsSummary['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } }
+    ];
+    wsSummary['!cols'] = [{ wch: 6 }, { wch: 42 }, { wch: 24 }];
+    applyCurrencyFormat(wsSummary, 'C', 5, 7);
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Laba Bersih");
+
+    XLSX.writeFile(wb, `Laporan_Keuangan_UMKM_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
+// --- INISIALISASI AWAL ---
 populateProductDropdown();
+populateCustomerDatalist();
+loadAccountSettingsUI();
 renderDashboard();

@@ -4,35 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Pengelolaan Pesanan UMKM Multichannel</title>
-    <!-- Font Inter & Font Awesome Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- Watermark Background Logo (Muncul hanya jika logo sudah diupload) -->
+    <div id="dashboard-bg-watermark" class="bg-logo-watermark" style="display: none;"></div>
+
     <!-- Header Mobile -->
     <header class="mobile-header">
         <div class="mobile-brand">
-            <img src="logo.png" alt="Logo Brand" class="brand-logo">
+            <img id="mobile-header-logo" src="" alt="Logo Brand" class="brand-logo" style="display: none;">
             <div class="brand-text">
-                <h2>UMKM Digital</h2>
-                <!-- <span class="brand-badge">PRO</span> -->
+                <h2 id="mobile-store-title">UMKM Digital</h2>
+                <span class="brand-badge">PRO</span>
             </div>
         </div>
-        <a href="index.html" class="mobile-logout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+        <button type="button" class="mobile-account-btn" onclick="showSection('akun')">
+            <i class="fa-solid fa-user-gear"></i> Akun
+        </button>
     </header>
 
     <!-- Sidebar / Navigasi Desktop -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="logo.png" alt="Logo Brand" class="brand-logo-desktop">
+            <img id="sidebar-header-logo" src="" alt="Logo Brand" class="brand-logo-desktop" style="display: none;">
             <div>
-                <h2>UMKM Digital</h2>
+                <h2 id="sidebar-store-title">UMKM Digital</h2>
                 <span class="brand-subtitle">Panel Operasional Kuliner</span>
             </div>
         </div>
@@ -43,7 +46,7 @@
                 <li><a href="#stok" class="nav-link" onclick="showSection('stok')"><i class="fa-solid fa-boxes-stacked"></i> <span>Manajemen Stok</span></a></li>
                 <li><a href="#pengeluaran" class="nav-link" onclick="showSection('pengeluaran')"><i class="fa-solid fa-receipt"></i> <span>Laporan Pengeluaran</span></a></li>
                 <li><a href="#laporan" class="nav-link" onclick="showSection('laporan')"><i class="fa-solid fa-chart-line"></i> <span>Laporan Penjualan</span></a></li>
-                <li><a href="index.html" class="nav-link logout-btn"><i class="fa-solid fa-door-open"></i> <span>Logout</span></a></li>
+                <li><a href="#akun" class="nav-link" onclick="showSection('akun')"><i class="fa-solid fa-user-gear"></i> <span>Pengaturan Akun</span></a></li>
             </ul>
         </nav>
     </aside>
@@ -100,7 +103,8 @@
                     <div class="form-grid-4">
                         <div class="form-group">
                             <label for="cust-phone">ID Pelanggan / No. Meja (Unik):</label>
-                            <input type="text" id="cust-phone" placeholder="Contoh: MEJA-05 / Kosongkan (Auto ID)" class="styled-input">
+                            <input type="text" id="cust-phone" list="customer-id-list" oninput="autoFillCustomerName()" onchange="autoFillCustomerName()" placeholder="Ketik ID (ex: MEJA-05) / Kosong = Auto" class="styled-input">
+                            <datalist id="customer-id-list"></datalist>
                         </div>
                         <div class="form-group">
                             <label for="cust-name">Nama Pelanggan / Pemesan:</label>
@@ -332,18 +336,12 @@
             <p>Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.</p>
 
             <div class="form-container form-accent-info">
-                <h3>Backup & Export Data Toko</h3>
+                <h3><i class="fa-solid fa-file-excel" style="color:#059669;"></i> Export Laporan Keuangan</h3>
+                <p style="margin-bottom: 14px; font-size: 13px;">Unduh file Excel (.xlsx) rapi di semua sheet lengkap dengan format Rupiah & rumus total otomatis.</p>
                 <div class="backup-btn-group">
-                    <button type="button" class="btn-backup btn-backup-excel" onclick="exportToCSV()">
-                        <i class="fa-solid fa-file-excel"></i> Download Laporan Transaksi (Excel/CSV)
+                    <button type="button" class="btn-backup btn-backup-excel" onclick="exportToExcel()">
+                        <i class="fa-solid fa-file-excel"></i> Download Laporan Excel (.xlsx) Otomatis
                     </button>
-                    <button type="button" class="btn-backup btn-backup-json" onclick="backupDataJSON()">
-                        <i class="fa-solid fa-database"></i> Backup Semua Data (JSON)
-                    </button>
-                    <label class="btn-backup btn-backup-restore">
-                        <i class="fa-solid fa-file-import"></i> Restore Data (Upload File)
-                        <input type="file" id="import-file" accept=".json" onchange="restoreDataJSON(event)" style="display: none;">
-                    </label>
                 </div>
             </div>
 
@@ -418,6 +416,104 @@
             </div>
         </section>
 
+        <!-- SECTION 6: PENGATURAN AKUN PEMILIK UMKM -->
+        <section id="akun" class="page-section">
+            <h1>Pengaturan Akun</h1>
+            <p>Kelola profil toko, logo usaha (opsional), keamanan password, dan sesi login pemilik UMKM.</p>
+
+            <div class="account-grid-layout">
+                <!-- KARTU 1: PROFIL & EDIT DATA TOKO -->
+                <div class="form-container form-accent-emerald">
+                    <div class="account-profile-header">
+                        <img id="account-profile-logo" src="" alt="Logo UMKM" class="account-avatar" style="display: none;">
+                        <div style="flex: 1;">
+                            <span class="account-role-badge"><i class="fa-solid fa-crown"></i> Akun Pemilik UMKM</span>
+                            <h2 id="owner-store-name">UMKM Digital Kuliner</h2>
+                            <p id="owner-account-subtitle" style="margin: 4px 0 10px 0; font-size: 14px;">Status Sesi: Aktif (Administrator Utama)</p>
+                            
+                            <!-- Kontrol Upload / Hapus Logo -->
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <label for="acc-logo-upload" class="btn-sm" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; cursor: pointer;">
+                                    <i class="fa-solid fa-image"></i> Pasang Logo Toko
+                                </label>
+                                <input type="file" id="acc-logo-upload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+                                <button type="button" id="btn-remove-logo" class="btn-sm" style="background-color: #fef2f2; color: #ef4444; border: 1px solid #fecaca; display: none;" onclick="removeStoreLogo()">
+                                    <i class="fa-solid fa-trash"></i> Hapus Logo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="account-profile-form" onsubmit="saveAccountProfile(event)">
+                        <div class="form-grid-3" style="margin-bottom: 14px;">
+                            <div class="form-group">
+                                <label for="acc-store-name">Nama Usaha / Toko:</label>
+                                <input type="text" id="acc-store-name" class="styled-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="acc-owner-name">Nama Pemilik:</label>
+                                <input type="text" id="acc-owner-name" class="styled-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="acc-phone">No. WhatsApp / Kontak Toko:</label>
+                                <input type="text" id="acc-phone" class="styled-input" placeholder="0812-XXXX-XXXX">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 18px;">
+                            <label for="acc-address">Alamat Operasional Toko:</label>
+                            <input type="text" id="acc-address" class="styled-input" placeholder="Contoh: Jl. Sudirman No. 10, Medan">
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil
+                        </button>
+                    </form>
+                </div>
+
+                <!-- KARTU 2: KEAMANAN PASSWORD & LOGOUT -->
+                <div class="form-container form-accent-info">
+                    <h2 style="margin-bottom: 16px;"><i class="fa-solid fa-shield-halved" style="color: #2563eb;"></i> Keamanan Akun & Sesi</h2>
+                    
+                    <form id="account-security-form" onsubmit="updateAccountPassword(event)">
+                        <div class="form-grid-3" style="margin-bottom: 16px;">
+                            <div class="form-group">
+                                <label for="acc-username">Username Login:</label>
+                                <input type="text" id="acc-username" class="styled-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="acc-new-password">Password Baru:</label>
+                                <input type="password" id="acc-new-password" class="styled-input" placeholder="Isi jika ingin mengganti">
+                            </div>
+                            <div class="form-group">
+                                <label for="acc-confirm-password">Konfirmasi Password Baru:</label>
+                                <input type="password" id="acc-confirm-password" class="styled-input" placeholder="Ulangi password baru">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="background-color: #2563eb;">
+                            <i class="fa-solid fa-key"></i> Perbarui Username & Password
+                        </button>
+                    </form>
+
+                    <div class="account-info-grid" style="margin-top: 24px;">
+                        <div class="account-info-item">
+                            <span class="info-label">Ringkasan Data Tersimpan</span>
+                            <span class="info-value" id="acc-data-summary">0 Produk • 0 Pelanggan • 0 Transaksi</span>
+                        </div>
+                        <div class="account-info-item">
+                            <span class="info-label">Hak Akses Sistem</span>
+                            <span class="info-value">Full Access (Kasir, Stok, Pengeluaran & Laporan)</span>
+                        </div>
+                    </div>
+
+                    <div class="account-logout-area">
+                        <p style="font-size: 13px; margin-bottom: 12px;">Keluar dari sesi saat ini untuk mengamankan akses panel operasional toko.</p>
+                        <button type="button" class="btn-primary btn-danger btn-lg" onclick="confirmLogout()">
+                            <i class="fa-solid fa-right-from-bracket"></i> Log Out dari Akun
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Bottom Navigation Bar (Mobile View) -->
@@ -442,9 +538,13 @@
             <i class="fa-solid fa-chart-line nav-icon"></i>
             <span class="nav-label">Laporan</span>
         </button>
+        <button class="bottom-nav-item" onclick="showSection('akun')">
+            <i class="fa-solid fa-user-gear nav-icon"></i>
+            <span class="nav-label">Akun</span>
+        </button>
     </nav>
 
-    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="script.js"></script>
 </body>
