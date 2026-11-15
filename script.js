@@ -748,7 +748,7 @@ function renderStock() {
     let filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery) || p.id.toLowerCase().includes(searchQuery));
 
     filteredProducts.forEach(p => {
-        let statusStokText = p.stock > 10 ? 'Stok Melimpah' : (p.stock > 0 ? 'Stok Menipis' : 'Stok Habis');
+        let statusStokText = p.stock > 10 ? 'Stok Tersedia' : (p.stock > 0 ? 'Stok Menipis' : 'Stok Habis');
         let badgeColorClass = p.stock > 10 ? 'badge-selesai' : (p.stock > 0 ? 'badge-proses' : 'badge-baru');
 
         tableBody.innerHTML += `
