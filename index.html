@@ -8,11 +8,93 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=5">
+<style>
+        body.auth-body {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 100vh !important;
+            background-color: #faf8f5 !important;
+            padding: 20px !important;
+            overflow: hidden !important;
+            position: relative !important;
+            isolation: isolate !important;
+        }
+
+        /* Lapisan 1: Warna penuh satu layar tanpa batas kotak */
+        body.auth-body::before {
+            content: "" !important;
+            position: fixed !important;
+            inset: -40px !important;
+            background-image: url('logo.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            opacity: 0.22 !important;
+            filter: blur(24px) brightness(1.12) !important;
+            -webkit-filter: blur(24px) brightness(1.12) !important;
+            z-index: -1 !important;
+            pointer-events: none !important;
+        }
+
+        /* Lapisan 2: Ukuran kotak elemen sama persis dengan ukuran logo agar mask memudar sempurna */
+        .bg-logo-watermark.auth-watermark-blur {
+            position: fixed !important;
+            left: 50% !important;
+            top: 50% !important;
+            right: auto !important;
+            bottom: auto !important;
+            transform: translate(-50%, -50%) !important;
+            width: min(84vh, 88vw) !important;
+            height: min(84vh, 88vw) !important;
+            background-image: url('logo.png') !important;
+            background-size: contain !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            opacity: 0.40 !important;
+            filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
+            -webkit-filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 70%) !important;
+            mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 70%) !important;
+            z-index: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .auth-wrapper {
+            width: 100% !important;
+            max-width: 420px !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+
+        /* Kartu form semi-transparan agar lambang & tulisan LEGACIES utuh terlihat */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.56) !important;
+            backdrop-filter: blur(3px) !important;
+            -webkit-backdrop-filter: blur(3px) !important;
+            padding: 30px 26px !important;
+            border-radius: 16px !important;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.78) !important;
+        }
+
+        .auth-card .styled-input {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        @media screen and (max-width: 768px) {
+            .bg-logo-watermark.auth-watermark-blur {
+                width: 96vw !important;
+                height: 96vw !important;
+                top: 48% !important;
+            }
+        }
+    </style>
 </head>
 <body class="auth-body">
 
-    <!-- Background Logo Full Layar (Berlaku Otomatis untuk Login & Register) -->
+    <!-- Background Logo Full Layar (Otomatis berlaku untuk Login & Register) -->
     <div class="bg-logo-watermark auth-watermark-blur"></div>
 
     <div class="auth-wrapper">
