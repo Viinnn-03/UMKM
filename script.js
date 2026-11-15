@@ -866,6 +866,21 @@ function toggleDateFilter() {
     renderLaporan();
 }
 
+// --- HELPER PENCOCOKAN TANGGAL LAPORAN ---
+function isReportDateMatch(dateStr, periodeVal, tanggalVal, bulanVal) {
+    if (periodeVal === 'semua') return true;
+    if (!dateStr) return false;
+    const parts = dateStr.split(',')[0].trim().split('/');
+    if (parts.length === 3) {
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2];
+        if (periodeVal === 'harian' && tanggalVal) return `${year}-${month}-${day}` === tanggalVal;
+        if (periodeVal === 'bulanan' && bulanVal) return `${year}-${month}` === bulanVal;
+    }
+    return false;
+}
+
 function renderLaporan() {
     populateReportProductFilter();
     let totalOmzet = 0, totalPengeluaran = 0, channelCount = {}, productSalesCount = {};
@@ -880,20 +895,7 @@ function renderLaporan() {
     if (detailBody) detailBody.innerHTML = '';
     if (mobileCards) mobileCards.innerHTML = '';
 
-    const isDateMatch = (dateStr) => {
-        if (!dateStr) return false;
-        const parts = dateStr.split(',')[0].trim().split('/');
-        if (parts.length === 3) {
-            const day = parts[0].padStart(2, '0');
-            const month = parts[1].padStart(2, '0');
-            const year = parts[2];
-            if (periodeVal === 'harian' && tanggalVal) return `${year}-${month}-${day}` === tanggalVal;
-            if (periodeVal === 'bulanan' && bulanVal) return `${year}-${month}` === bulanVal;
-        }
-        return periodeVal === 'semua';
-    };
-
-    let filteredOrders = orders.filter(o => isDateMatch(o.date));
+    let filteredOrders = orders.filter(o => isReportDateMatch(o.date, periodeVal, tanggalVal, bulanVal));
 
     filteredOrders.forEach(o => {
         channelCount[o.channel] = (channelCount[o.channel] || 0) + 1;
@@ -972,7 +974,7 @@ function renderLaporan() {
         }
     });
 
-    let filteredExpenses = expenses.filter(exp => isDateMatch(exp.date));
+    let filteredExpenses = expenses.filter(exp => isReportDateMatch(exp.date, periodeVal, tanggalVal, bulanVal));
     filteredExpenses.forEach(exp => { totalPengeluaran += exp.amount; });
 
     let labaBersih = totalOmzet - totalPengeluaran;
@@ -998,10 +1000,82 @@ function checkEmptyTable(elem, length, colSpan, message) {
     return false;
 }
 
-// --- EXPORT EXCEL (.XLSX) RAPI DI SEMUA SHEET ---
+// --- EXPORT EXCEL (.XLSX) SESUAI PERIODE & JENIS PRODUK YANG DIPILIH ---
 function exportToExcel() {
-    if (orders.length === 0 && expenses.length === 0) {
-        Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Belum ada data penjualan maupun pengeluaran untuk di-export.' });
+    const periodeVal = document.getElementById('filter-periode') ? document.getElementById('filter-periode').value : 'semua';
+    const tanggalVal = document.getElementById('filter-tanggal') ? document.getElementById('filter-tanggal').value : '';
+    const bulanVal = document.getElementById('filter-bulan') ? document.getElementById('filter-bulan').value : '';
+    const produkSelect = document.getElementById('filter-produk');
+    const produkVal = produkSelect ? produkSelect.value.toLowerCase() : 'semua';
+    const produkLabel = (produkSelect && produkSelect.selectedIndex >= 0) ? produkSelect.options[produkSelect.selectedIndex].text : 'Semua Produk';
+
+    let periodeLabel = 'Semua Periode';
+    if (periodeVal === 'harian') {
+        if (!tanggalVal) {
+            Swal.fire({ icon: 'warning', title: 'Pilih Tanggal', text: 'Silakan pilih tanggal terlebih dahulu untuk laporan harian.' });
+            return;
+        }
+        periodeLabel = `Harian (${tanggalVal})`;
+    } else if (periodeVal === 'bulanan') {
+        if (!bulanVal) {
+            Swal.fire({ icon: 'warning', title: 'Pilih Bulan', text: 'Silakan pilih bulan terlebih dahulu untuk laporan bulanan.' });
+            return;
+        }
+        periodeLabel = `Bulanan (${bulanVal})`;
+    }
+
+    // Saring pesanan & pengeluaran sesuai filter yang sedang aktif
+    const filteredOrders = orders.filter(o => isReportDateMatch(o.date, periodeVal, tanggalVal, bulanVal));
+    const filteredExpenses = expenses.filter(exp => isReportDateMatch(exp.date, periodeVal, tanggalVal, bulanVal));
+
+    // Bentuk baris penjualan sesuai filter produk
+    const salesRows = [];
+    filteredOrders.forEach(o => {
+        if (o.items && Array.isArray(o.items)) {
+            const matchedItems = (produkVal === 'semua')
+                ? o.items
+                : o.items.filter(item => item.productName.toLowerCase() === produkVal);
+
+            matchedItems.forEach(item => {
+                const detailText = `${item.productName} (${item.qty}x)${item.note ? ` [${item.note}]` : ''}`;
+                const itemSubtotal = (Number(item.price) || 0) * (Number(item.qty) || 0);
+
+                salesRows.push([
+                    salesRows.length + 1,
+                    o.id,
+                    o.date || '-',
+                    o.customer,
+                    o.phone || '-',
+                    detailText,
+                    o.channel,
+                    o.status,
+                    itemSubtotal
+                ]);
+            });
+        } else {
+            const nameMatch = (produkVal === 'semua' || (o.product && o.product.toLowerCase().includes(produkVal)));
+            if (nameMatch) {
+                salesRows.push([
+                    salesRows.length + 1,
+                    o.id,
+                    o.date || '-',
+                    o.customer,
+                    o.phone || '-',
+                    o.product,
+                    o.channel,
+                    o.status,
+                    Number(o.price) || 0
+                ]);
+            }
+        }
+    });
+
+    if (salesRows.length === 0 && filteredExpenses.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Data Tidak Ditemukan',
+            text: `Tidak ada data penjualan maupun pengeluaran untuk filter ${periodeLabel} - ${produkLabel}.`
+        });
         return;
     }
 
@@ -1019,25 +1093,13 @@ function exportToExcel() {
         }
     }
 
-    // 1. SHEET LAPORAN PENJUALAN
+    // 1. SHEET LAPORAN PENJUALAN (TERFILTER)
     const salesHeader = [
         [`LAPORAN PENJUALAN ${storeTitle}`],
-        ["Tanggal Cetak:"],
-        [todayStr],
+        [`Periode: ${periodeLabel} | Filter Produk: ${produkLabel}`],
+        [`Tanggal Cetak: ${todayStr}`],
         ["No", "No Order", "Tanggal", "Customer", "ID / No. Meja", "Detail Produk", "Channel", "Status", "Total Penjualan (Rp)"]
     ];
-
-    const salesRows = orders.map((o, idx) => [
-        idx + 1,
-        o.id,
-        o.date || '-',
-        o.customer,
-        o.phone || '-',
-        o.product,
-        o.channel,
-        o.status,
-        Number(o.price) || 0
-    ]);
 
     const lastSalesRow = 4 + salesRows.length;
     const totalSalesRowIndex = lastSalesRow + 1;
@@ -1055,15 +1117,15 @@ function exportToExcel() {
     applyCurrencyFormat(wsSales, 'I', 5, totalSalesRowIndex);
     XLSX.utils.book_append_sheet(wb, wsSales, "Laporan Penjualan");
 
-    // 2. SHEET LAPORAN PENGELUARAN
+    // 2. SHEET LAPORAN PENGELUARAN (TERFILTER SESUAI PERIODE)
     const expHeader = [
         [`LAPORAN PENGELUARAN ${storeTitle}`],
-        ["Tanggal Cetak:"],
-        [todayStr],
+        [`Periode: ${periodeLabel}`],
+        [`Tanggal Cetak: ${todayStr}`],
         ["No", "ID Pengeluaran", "Tanggal", "Deskripsi Pengeluaran", "Kategori", "Nominal (Rp)"]
     ];
 
-    const expRows = expenses.map((e, idx) => [
+    const expRows = filteredExpenses.map((e, idx) => [
         idx + 1,
         e.id,
         e.date || '-',
@@ -1091,8 +1153,8 @@ function exportToExcel() {
     // 3. SHEET RINGKASAN LABA BERSIH
     const summaryData = [
         [`RINGKASAN KEUANGAN & LABA BERSIH ${storeTitle}`],
-        ["Tanggal Cetak:"],
-        [todayStr],
+        [`Periode: ${periodeLabel} | Filter Produk: ${produkLabel}`],
+        [`Tanggal Cetak: ${todayStr}`],
         ["No", "Keterangan Komponen Keuangan", "Jumlah (Rp)"],
         [1, "Total Pendapatan (Omzet Penjualan)", { t: 'n', f: `'Laporan Penjualan'!I${totalSalesRowIndex}` }],
         [2, "Total Pengeluaran Operasional", { t: 'n', f: `'Laporan Pengeluaran'!F${totalExpRowIndex}` }],
@@ -1109,7 +1171,9 @@ function exportToExcel() {
     applyCurrencyFormat(wsSummary, 'C', 5, 7);
     XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Laba Bersih");
 
-    XLSX.writeFile(wb, `Laporan_Keuangan_UMKM_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const fileSuffixPeriode = periodeVal === 'harian' ? tanggalVal : (periodeVal === 'bulanan' ? bulanVal : 'Semua_Periode');
+    const fileSuffixProduk = produkVal === 'semua' ? 'Semua_Produk' : produkLabel.replace(/[^a-zA-Z0-9]/g, '_');
+    XLSX.writeFile(wb, `Laporan_Keuangan_${fileSuffixPeriode}_${fileSuffixProduk}.xlsx`);
 }
 
 // --- INISIALISASI AWAL ---
