@@ -1,7 +1,7 @@
 :root {
     --bg-body: #f8fafc;
-    --sidebar-bg: #2c2924;
-    --sidebar-hover: rgba(255, 255, 255, 0.12);
+    --sidebar-bg: #e5dccd;
+    --sidebar-hover: rgba(5, 150, 105, 0.14);
     --primary: #059669;
     --primary-hover: #047857;
     --accent-blue: #2563eb;
@@ -49,18 +49,18 @@ body {
     z-index: 0;
 }
 
-/* --- HALAMAN LOGIN & REGISTER: FULL LAYAR MULUS TANPA KOTAK + LOGO & TULISAN UTUH --- */
+/* --- HALAMAN LOGIN & REGISTER: BACKGROUND HANGAT & LOGO TERANG TERBACA --- */
 body.auth-body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #faf8f5;
+    background-color: #e5dccd;
     padding: 20px;
     overflow: hidden;
     isolation: isolate;
 }
 
-/* Lapisan 1: Warna penuh satu layar tanpa batas kotak */
+/* Lapisan 1: Warna dasar krem-cokelat hangat sedikit gelap */
 body.auth-body::before {
     content: "";
     position: fixed;
@@ -69,31 +69,31 @@ body.auth-body::before {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.22;
-    filter: blur(20px) brightness(1.12);
-    -webkit-filter: blur(20px) brightness(1.12);
+    opacity: 0.32;
+    filter: blur(24px) brightness(0.86) contrast(1.08);
+    -webkit-filter: blur(24px) brightness(0.86) contrast(1.08);
     z-index: -1;
     pointer-events: none;
 }
 
-/* Lapisan 2: Logo utama fit proporsional dengan tepi memudar (tanpa garis kotak) */
+/* Lapisan 2: Logo utama lebih terang & terbaca jelas dengan tepi memudar */
 .bg-logo-watermark.auth-watermark-blur {
-    left: 0 !important;
-    top: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    transform: none !important;
-    width: 100vw !important;
-    height: 100vh !important;
+    left: 50% !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: min(84vh, 88vw) !important;
+    height: min(84vh, 88vw) !important;
     background-image: url('logo.png') !important;
-    background-size: min(88vh, 88vw) auto !important;
+    background-size: contain !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
-    opacity: 0.36 !important;
-    filter: blur(0.8px) brightness(1.06) contrast(1.24) !important;
-    -webkit-filter: blur(0.8px) brightness(1.06) contrast(1.24) !important;
-    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 72%) !important;
-    mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 72%) !important;
+    opacity: 0.48 !important;
+    filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
+    -webkit-filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 46%, transparent 72%) !important;
+    mask-image: radial-gradient(circle at 50% 50%, #000 46%, transparent 72%) !important;
     z-index: 0 !important;
 }
 
@@ -104,19 +104,19 @@ body.auth-body::before {
     z-index: 2;
 }
 
-/* Kartu form transparan lembut agar lambang & tulisan LEGACIES utuh terlihat */
+/* Kartu form transparan lembut */
 .auth-card {
-    background: rgba(255, 255, 255, 0.58);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     padding: 30px 26px;
     border-radius: 16px;
-    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.82);
 }
 
 .auth-card .styled-input {
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.92);
 }
 
 .auth-logo-header {
@@ -182,14 +182,15 @@ body.auth-body::before {
 }
 .auth-switch-text a:hover { text-decoration: underline; }
 
-.mobile-header, .bottom-nav, .mobile-cards-container { display: none; }
+.mobile-header, .mobile-top-header, .bottom-nav, .mobile-cards-container { display: none; }
 
-/* --- SIDEBAR DESKTOP (MEMENUHI PENUH TANPA GARIS KOTAK + LOGO FIT DI TENGAH) --- */
+/* --- SIDEBAR DESKTOP (BACKGROUND HANGAT & LOGO TERANG TERBACA) --- */
 .sidebar {
     width: 280px;
     height: 100vh;
-    background-color: #2c2924 !important;
-    color: #fff;
+    background-color: #e5dccd !important;
+    background-image: none !important;
+    color: #0f172a;
     position: fixed;
     padding: 24px 16px;
     z-index: 100;
@@ -197,19 +198,21 @@ body.auth-body::before {
     flex-direction: column;
     overflow: hidden;
     isolation: isolate;
+    border-right: 1px solid rgba(140, 122, 98, 0.35);
+    box-shadow: 2px 0 14px rgba(15, 23, 42, 0.06);
 }
 
 .sidebar::before {
     content: "";
     position: absolute;
-    inset: -24px;
+    inset: -30px;
     background-image: url('logo.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.45;
-    filter: brightness(0.42) blur(16px);
-    -webkit-filter: brightness(0.42) blur(16px);
+    opacity: 0.32;
+    filter: blur(24px) brightness(0.86) contrast(1.08);
+    -webkit-filter: blur(24px) brightness(0.86) contrast(1.08);
     z-index: -2;
     pointer-events: none;
 }
@@ -217,17 +220,30 @@ body.auth-body::before {
 .sidebar::after {
     content: "";
     position: absolute;
-    inset: 0;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+    width: 245px;
+    height: 245px;
     background-image: url('logo.png');
-    background-size: 92% auto;
-    background-position: center 54%;
+    background-size: contain;
+    background-position: center center;
     background-repeat: no-repeat;
-    opacity: 0.28;
-    filter: brightness(0.75);
-    -webkit-mask-image: radial-gradient(ellipse 85% 58% at 50% 54%, #000 55%, transparent 100%);
-    mask-image: radial-gradient(ellipse 85% 58% at 50% 54%, #000 55%, transparent 100%);
+    opacity: 0.44;
+    filter: blur(1.2px) brightness(1.04) contrast(1.26);
+    -webkit-filter: blur(1.2px) brightness(1.04) contrast(1.26);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 45%, transparent 70%);
+    mask-image: radial-gradient(circle at 50% 50%, #000 45%, transparent 70%);
     z-index: -1;
     pointer-events: none;
+}
+
+/* Sembunyikan elemen kotak gambar lama jika ada di dalam sidebar/header */
+.sidebar .bg-logo-watermark,
+.mobile-header .bg-logo-watermark,
+.mobile-top-header .bg-logo-watermark,
+#dashboard-bg-watermark {
+    display: none !important;
 }
 
 .sidebar-brand {
@@ -235,7 +251,8 @@ body.auth-body::before {
     align-items: center;
     gap: 12px;
     margin-bottom: 28px;
-    padding: 0 8px;
+    padding: 0 8px 16px 8px;
+    border-bottom: 1px solid rgba(140, 122, 98, 0.32);
     position: relative;
     z-index: 2;
 }
@@ -247,17 +264,21 @@ body.auth-body::before {
     object-fit: contain;
 }
 
-.sidebar-brand h2 {
+.sidebar-brand h2,
+#sidebar-store-title {
     font-size: 20px;
-    color: #ffffff;
+    color: #0f172a !important;
     font-weight: 800;
     line-height: 1.2;
 }
 
-.sidebar-brand .brand-subtitle {
+.sidebar-brand .brand-subtitle,
+.sidebar p {
     font-size: 12px;
-    color: #e2e8f0;
+    color: #475569 !important;
+    font-weight: 600;
     display: block;
+    margin-bottom: 0;
 }
 
 .sidebar nav {
@@ -266,25 +287,39 @@ body.auth-body::before {
 }
 
 .sidebar ul { list-style: none; }
-.sidebar li { margin-bottom: 10px; }
+.sidebar li { margin-bottom: 8px; }
 
-.sidebar a {
-    color: #f8fafc;
+.sidebar a,
+.sidebar .nav-link {
+    color: #1e293b !important;
     text-decoration: none;
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 18px;
+    padding: 13px 16px;
     border-radius: var(--radius-md);
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     transition: all 0.2s ease;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    text-shadow: none;
 }
 
-.sidebar a i { font-size: 19px; width: 24px; text-align: center; }
-.sidebar a:hover { background-color: var(--sidebar-hover); color: #ffffff; transform: translateX(4px); }
-.sidebar a.active { background-color: var(--primary); color: #ffffff; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.45); text-shadow: none; }
+.sidebar a i,
+.sidebar .nav-link i { font-size: 18px; width: 22px; text-align: center; }
+
+.sidebar a:hover,
+.sidebar .nav-link:hover {
+    background-color: rgba(5, 150, 105, 0.14) !important;
+    color: #047857 !important;
+    transform: translateX(4px);
+}
+
+.sidebar a.active,
+.sidebar .nav-link.active {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.30);
+}
 
 /* --- KONTEN UTAMA --- */
 .content {
@@ -651,72 +686,100 @@ body .swal2-actions button { border-radius: 10px !important; font-weight: 700 !i
     html, body { max-width: 100vw !important; overflow-x: hidden !important; }
     body:not(.auth-body) { flex-direction: column; }
 
-    /* Background Logo Utuh Tanpa Kotak di Layar HP (Login & Register) */
+    /* Background Logo Lebih Terang & Terbaca Jelas di Layar HP (Login & Register) */
     .bg-logo-watermark.auth-watermark-blur {
-        background-size: 98vw auto !important;
-        background-position: center 48% !important;
-        -webkit-mask-image: radial-gradient(ellipse 92% 62% at 50% 48%, #000 52%, transparent 82%) !important;
-        mask-image: radial-gradient(ellipse 92% 62% at 50% 48%, #000 52%, transparent 82%) !important;
+        width: 96vw !important;
+        height: 96vw !important;
+        top: 48% !important;
+        background-size: contain !important;
+        opacity: 0.48 !important;
+        filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
+        -webkit-filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 46%, transparent 72%) !important;
+        mask-image: radial-gradient(circle at 50% 50%, #000 46%, transparent 72%) !important;
     }
 
     .bg-logo-watermark:not(.auth-watermark-blur) { left: 50%; width: 280px; height: 280px; opacity: 0.07; }
     .sidebar { display: none !important; }
 
-    /* Headbar Mobile dengan Background Logo Perusahaan */
-    .mobile-header {
-        display: flex;
+    /* Headbar Mobile: Background Hangat & Logo Terang Terbaca Jelas */
+    .mobile-header,
+    .mobile-top-header {
+        display: flex !important;
         justify-content: space-between;
         align-items: center;
-        background-color: #2c2924 !important;
-        color: white;
-        padding: 14px 18px;
+        background-color: #e5dccd !important;
+        background-image: none !important;
+        color: #0f172a;
+        padding: 12px 16px;
         position: sticky;
         top: 0;
         z-index: 100;
-        box-shadow: var(--shadow-md);
-        overflow: hidden;
-        isolation: isolate;
+        border-bottom: 1px solid rgba(140, 122, 98, 0.35) !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+        overflow: hidden !important;
+        isolation: isolate !important;
     }
 
-    .mobile-header::before {
-        content: "";
-        position: absolute;
-        inset: -12px;
-        background-image: url('logo.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        opacity: 0.45;
-        filter: brightness(0.45) blur(10px);
-        -webkit-filter: brightness(0.45) blur(10px);
-        z-index: -2;
-        pointer-events: none;
+    .mobile-header::before,
+    .mobile-top-header::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: -20px !important;
+        background-image: url('logo.png') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        opacity: 0.32 !important;
+        filter: blur(20px) brightness(0.86) contrast(1.08) !important;
+        -webkit-filter: blur(20px) brightness(0.86) contrast(1.08) !important;
+        z-index: -2 !important;
+        pointer-events: none !important;
     }
 
-    .mobile-header::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image: url('logo.png');
-        background-size: auto 150%;
-        background-position: center 48%;
-        background-repeat: no-repeat;
-        opacity: 0.32;
-        filter: brightness(0.85);
-        z-index: -1;
-        pointer-events: none;
+    .mobile-header::after,
+    .mobile-top-header::after {
+        content: "" !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 148px !important;
+        height: 148px !important;
+        background-image: url('logo.png') !important;
+        background-size: contain !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        opacity: 0.50 !important;
+        filter: blur(0.9px) brightness(1.05) contrast(1.28) !important;
+        -webkit-filter: blur(0.9px) brightness(1.05) contrast(1.28) !important;
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 45%, transparent 68%) !important;
+        mask-image: radial-gradient(circle at 50% 50%, #000 45%, transparent 68%) !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
     }
 
     .mobile-brand { display: flex; align-items: center; gap: 10px; position: relative; z-index: 2; }
     .brand-logo { width: 36px; height: 36px; border-radius: 6px; object-fit: contain; }
     .brand-text { display: flex; align-items: center; gap: 6px; }
-    .mobile-header h2 { font-size: 17px; color: #ffffff; font-weight: 800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
-    .mobile-account-btn {
+    .mobile-header h2,
+    .mobile-top-header h2,
+    #mobile-store-title {
+        font-size: 17px;
+        color: #0f172a !important;
+        font-weight: 800;
+        text-shadow: none !important;
+    }
+
+    .mobile-account-btn,
+    #mobile-top-account-btn {
         position: relative;
         z-index: 2;
-        background: rgba(0, 0, 0, 0.28);
-        color: #f8fafc;
-        border: 1px solid rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.78) !important;
+        color: #0f172a !important;
+        border: 1px solid rgba(15, 23, 42, 0.18) !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
         padding: 8px 14px;
         border-radius: 8px;
         font-size: 13px;
@@ -727,10 +790,12 @@ body .swal2-actions button { border-radius: 10px !important; font-weight: 700 !i
         gap: 6px;
         transition: all 0.2s ease;
     }
-    .mobile-account-btn.active {
-        background: var(--primary);
-        border-color: var(--primary);
-        color: #ffffff;
+
+    .mobile-account-btn.active,
+    #mobile-top-account-btn.active {
+        background: var(--primary) !important;
+        border-color: var(--primary) !important;
+        color: #ffffff !important;
     }
 
     .bottom-nav {
