@@ -1,7 +1,7 @@
 :root {
     --bg-body: #f8fafc;
-    --sidebar-bg: #0f172a;
-    --sidebar-hover: #1e293b;
+    --sidebar-bg: #1e232a;
+    --sidebar-hover: rgba(255, 255, 255, 0.12);
     --primary: #059669;
     --primary-hover: #047857;
     --accent-blue: #2563eb;
@@ -49,7 +49,7 @@ body {
     z-index: 0;
 }
 
-/* --- HALAMAN LOGIN & DAFTAR: FULL PUTIH + BACKGROUND LOGO SEDIKIT BURAM --- */
+/* --- HALAMAN LOGIN & REGISTER: TERANG + TULISAN LOGO TERLIHAT JELAS --- */
 body.auth-body {
     display: flex;
     align-items: center;
@@ -60,14 +60,18 @@ body.auth-body {
 }
 
 .bg-logo-watermark.auth-watermark-blur {
-    left: 50%;
-    top: 50%;
-    width: 540px;
-    height: 540px;
+    left: 0;
+    top: 0;
+    transform: none;
+    width: 100vw;
+    height: 100vh;
     background-image: url('logo.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     opacity: 0.16;
-    filter: blur(4px);
-    -webkit-filter: blur(4px);
+    filter: blur(1.2px) brightness(1.14) contrast(1.25);
+    -webkit-filter: blur(1.2px) brightness(1.14) contrast(1.25);
     z-index: 0;
 }
 
@@ -79,12 +83,12 @@ body.auth-body {
 }
 
 .auth-card {
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     padding: 32px 28px;
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
     border: 1px solid #e2e8f0;
 }
 
@@ -151,17 +155,51 @@ body.auth-body {
 
 .mobile-header, .bottom-nav, .mobile-cards-container { display: none; }
 
-/* --- SIDEBAR DESKTOP --- */
+/* --- SIDEBAR DESKTOP (MEMENUHI PENUH TANPA GARIS KOTAK + LOGO FIT DI TENGAH) --- */
 .sidebar {
     width: 280px;
     height: 100vh;
-    background-color: var(--sidebar-bg);
+    background-color: #2c2924;
     color: #fff;
     position: fixed;
     padding: 24px 16px;
     z-index: 100;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+}
+
+/* Lapisan 1: Memenuhi penuh dari atas ke bawah secara mulus tanpa garis tepi kotak */
+.sidebar::before {
+    content: "";
+    position: absolute;
+    inset: -24px;
+    background-image: url('logo.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.42;
+    filter: brightness(0.38) blur(16px);
+    -webkit-filter: brightness(0.38) blur(16px);
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* Lapisan 2: Logo utama fit / utuh di tengah tanpa terpotong */
+.sidebar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url('logo.png');
+    background-size: 92% auto;
+    background-position: center 54%;
+    background-repeat: no-repeat;
+    opacity: 0.24;
+    filter: brightness(0.65);
+    -webkit-mask-image: radial-gradient(ellipse 85% 58% at 50% 54%, #000 55%, transparent 100%);
+    mask-image: radial-gradient(ellipse 85% 58% at 50% 54%, #000 55%, transparent 100%);
+    z-index: -1;
+    pointer-events: none;
 }
 
 .sidebar-brand {
@@ -170,6 +208,8 @@ body.auth-body {
     gap: 12px;
     margin-bottom: 28px;
     padding: 0 8px;
+    position: relative;
+    z-index: 2;
 }
 
 .brand-logo-desktop {
@@ -188,15 +228,20 @@ body.auth-body {
 
 .sidebar-brand .brand-subtitle {
     font-size: 12px;
-    color: #94a3b8;
+    color: #e2e8f0;
     display: block;
+}
+
+.sidebar nav {
+    position: relative;
+    z-index: 2;
 }
 
 .sidebar ul { list-style: none; }
 .sidebar li { margin-bottom: 10px; }
 
 .sidebar a {
-    color: #cbd5e1;
+    color: #f8fafc;
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -206,11 +251,12 @@ body.auth-body {
     font-size: 16px;
     font-weight: 600;
     transition: all 0.2s ease;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .sidebar a i { font-size: 19px; width: 24px; text-align: center; }
 .sidebar a:hover { background-color: var(--sidebar-hover); color: #ffffff; transform: translateX(4px); }
-.sidebar a.active { background-color: var(--primary); color: #ffffff; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35); }
+.sidebar a.active { background-color: var(--primary); color: #ffffff; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.45); text-shadow: none; }
 
 /* --- KONTEN UTAMA --- */
 .content {
@@ -584,7 +630,7 @@ body .swal2-actions button { border-radius: 10px !important; font-weight: 700 !i
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--sidebar-bg);
+        background: #23201c;
         color: white;
         padding: 14px 18px;
         position: sticky;
@@ -597,8 +643,25 @@ body .swal2-actions button { border-radius: 10px !important; font-weight: 700 !i
     .brand-logo { width: 36px; height: 36px; border-radius: 6px; object-fit: contain; }
     .brand-text { display: flex; align-items: center; gap: 6px; }
     .mobile-header h2 { font-size: 17px; color: #ffffff; font-weight: 800; }
-    .brand-badge { background: var(--primary); color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
-    .mobile-account-btn { background: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .mobile-account-btn {
+        background: rgba(255, 255, 255, 0.12);
+        color: #f8fafc;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+    .mobile-account-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #ffffff;
+    }
 
     .bottom-nav {
         display: flex;
@@ -610,7 +673,7 @@ body .swal2-actions button { border-radius: 10px !important; font-weight: 700 !i
         right: 0;
         background: #ffffff;
         border-top: 1.5px solid var(--border-color);
-        padding: 8px 0;
+        padding: 9px 0;
         z-index: 900;
         box-shadow: 0 -4px 14px rgba(0,0,0,0.06);
     }

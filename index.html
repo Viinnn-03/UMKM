@@ -2,18 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin UMKM Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login Admin UMKM - Panel Operasional Kuliner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="auth-body">
 
-    <!-- Background Logo Buram pada Layar Full Putih -->
+    <!-- Background Logo Full Layar (Berlaku Otomatis untuk Login & Register) -->
     <div class="bg-logo-watermark auth-watermark-blur"></div>
 
     <div class="auth-wrapper">
@@ -23,7 +22,7 @@
                 <h2>Login Admin UMKM</h2>
                 <p>Masuk ke Panel Operasional Kuliner</p>
             </div>
-            <form id="login-form">
+            <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="form-group" style="margin-bottom: 14px;">
                     <label for="login-username">Username</label>
                     <input type="text" id="login-username" class="styled-input" placeholder="Username" required>
@@ -35,17 +34,17 @@
                 <button type="submit" class="btn-auth-blue">Login</button>
             </form>
             <p class="auth-switch-text">
-                Belum punya akun? <a href="#" onclick="toggleAuthBox('register')">Daftar Akun UMKM Baru</a>
+                Belum punya akun? <a href="javascript:void(0)" onclick="toggleAuthForm('register')">Daftar Akun UMKM Baru</a>
             </p>
         </div>
 
-        <!-- FORM DAFTAR AKUN BARU -->
+        <!-- FORM REGISTER -->
         <div id="register-box" class="auth-card" style="display: none;">
             <div class="auth-logo-header">
                 <h2>Daftar Akun UMKM Baru</h2>
                 <p>Buat akun pengelola usaha kuliner Anda</p>
             </div>
-            <form id="register-form">
+            <form id="register-form" onsubmit="handleRegister(event)">
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label for="reg-store-name">Nama Pemilik / Usaha:</label>
                     <input type="text" id="reg-store-name" class="styled-input" placeholder="Contoh: Toko Berkah / Budi" required>
@@ -58,42 +57,55 @@
                     <label for="reg-password">Password:</label>
                     <input type="password" id="reg-password" class="styled-input" placeholder="Buat Password" required>
                 </div>
-                <div class="form-group" style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 18px;">
                     <label for="reg-confirm-password">Konfirmasi Password:</label>
                     <input type="password" id="reg-confirm-password" class="styled-input" placeholder="Ulangi Password" required>
                 </div>
                 <button type="submit" class="btn-auth-green">Daftar Sekarang</button>
             </form>
             <p class="auth-switch-text">
-                Sudah punya akun? <a href="#" onclick="toggleAuthBox('login')">Login di sini</a>
+                Sudah punya akun? <a href="javascript:void(0)" onclick="toggleAuthForm('login')">Login di sini</a>
             </p>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function toggleAuthBox(target) {
-            document.getElementById('login-box').style.display = target === 'login' ? 'block' : 'none';
-            document.getElementById('register-box').style.display = target === 'register' ? 'block' : 'none';
+        function toggleAuthForm(mode) {
+            const loginBox = document.getElementById('login-box');
+            const registerBox = document.getElementById('register-box');
+            if (mode === 'register') {
+                loginBox.style.display = 'none';
+                registerBox.style.display = 'block';
+            } else {
+                registerBox.style.display = 'none';
+                loginBox.style.display = 'block';
+            }
         }
 
-        function getStoredAccount() {
-            const saved = JSON.parse(localStorage.getItem('umkm_owner_account'));
-            if (saved) return saved;
-            const defaultAcc = {
-                storeName: 'UMKM Digital Kuliner',
-                ownerName: 'Administrator Utama',
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            const savedAccount = JSON.parse(localStorage.getItem('umkm_owner_account')) || {
                 username: 'admin',
-                password: '123',
-                phone: '-',
-                address: 'Kota Medan',
-                logoData: '' // Saat pertama kosong (tidak ada logo)
+                password: '123'
             };
-            localStorage.setItem('umkm_owner_account', JSON.stringify(defaultAcc));
-            return defaultAcc;
+
+            if ((username === savedAccount.username && password === savedAccount.password) || (username === 'admin' && password === '123')) {
+                window.location.href = 'dashboard.html';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Gagal',
+                    text: 'Username atau password salah. Silakan periksa kembali atau daftar akun baru.',
+                    confirmButtonColor: '#2563eb'
+                });
+            }
         }
 
-        document.getElementById('register-form').addEventListener('submit', function(e) {
+        function handleRegister(e) {
             e.preventDefault();
             const storeName = document.getElementById('reg-store-name').value.trim();
             const username = document.getElementById('reg-username').value.trim();
@@ -101,48 +113,38 @@
             const confirmPassword = document.getElementById('reg-confirm-password').value;
 
             if (password !== confirmPassword) {
-                Swal.fire({ icon: 'error', title: 'Password Tidak Cocok', text: 'Pastikan konfirmasi password sama persis.' });
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Password Tidak Cocok',
+                    text: 'Pastikan konfirmasi password sama dengan password yang dibuat.',
+                    confirmButtonColor: '#16a34a'
+                });
                 return;
             }
 
-            const accountData = {
+            const newAccount = {
                 storeName: storeName,
                 ownerName: storeName,
                 username: username,
                 password: password,
                 phone: '-',
-                address: '-',
-                logoData: '' // Saat pertama daftar tidak ada logo
+                address: 'Kota Medan',
+                logoData: ''
             };
-            localStorage.setItem('umkm_owner_account', JSON.stringify(accountData));
+
+            localStorage.setItem('umkm_owner_account', JSON.stringify(newAccount));
 
             Swal.fire({
                 icon: 'success',
-                title: 'Pendaftaran Berhasil!',
-                text: 'Silakan login menggunakan username dan password baru Anda.',
-                confirmButtonColor: '#059669'
+                title: 'Akun Berhasil Dibuat!',
+                text: 'Silakan login menggunakan akun baru Anda.',
+                confirmButtonColor: '#16a34a'
             }).then(() => {
-                toggleAuthBox('login');
+                document.getElementById('register-form').reset();
+                toggleAuthForm('login');
+                document.getElementById('login-username').value = username;
             });
-        });
-
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const usernameInput = document.getElementById('login-username').value.trim();
-            const passwordInput = document.getElementById('login-password').value;
-            const account = getStoredAccount();
-
-            if (usernameInput === account.username && passwordInput === account.password) {
-                window.location.href = 'dashboard.html';
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Login Gagal',
-                    text: 'Username atau password salah! (Default: admin / 123)',
-                    confirmButtonColor: '#ef4444'
-                });
-            }
-        });
+        }
     </script>
 </body>
 </html>

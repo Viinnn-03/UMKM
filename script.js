@@ -16,7 +16,7 @@ let ownerAccount = JSON.parse(localStorage.getItem('umkm_owner_account')) || {
     password: '123',
     phone: '-',
     address: 'Kota Medan',
-    logoData: '' // Saat pertama kosong (tidak ada logo)
+    logoData: ''
 };
 
 function saveData() {
@@ -213,6 +213,12 @@ function showSection(sectionId) {
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
     document.querySelectorAll('.bottom-nav-item').forEach(btn => btn.classList.remove('active'));
+
+    const mobileTopAccountBtn = document.getElementById('mobile-top-account-btn');
+    if (mobileTopAccountBtn) {
+        if (sectionId === 'akun') mobileTopAccountBtn.classList.add('active');
+        else mobileTopAccountBtn.classList.remove('active');
+    }
 
     const targetSection = document.getElementById(sectionId);
     if (targetSection) targetSection.classList.add('active');

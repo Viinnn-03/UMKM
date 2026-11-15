@@ -16,21 +16,20 @@
     <!-- Watermark Background Logo (Muncul hanya jika logo sudah diupload) -->
     <div id="dashboard-bg-watermark" class="bg-logo-watermark" style="display: none;"></div>
 
-    <!-- Header Mobile -->
+    <!-- Header Mobile (Tanpa Badge PRO, Tombol Akun di Kanan Atas) -->
     <header class="mobile-header">
         <div class="mobile-brand">
             <img id="mobile-header-logo" src="" alt="Logo Brand" class="brand-logo" style="display: none;">
             <div class="brand-text">
                 <h2 id="mobile-store-title">UMKM Digital</h2>
-                <!-- <span class="brand-badge">PRO</span> -->
             </div>
         </div>
-        <button type="button" class="mobile-account-btn" onclick="showSection('akun')">
+        <button type="button" id="mobile-top-account-btn" class="mobile-account-btn" onclick="showSection('akun')">
             <i class="fa-solid fa-user-gear"></i> Akun
         </button>
     </header>
 
-    <!-- Sidebar / Navigasi Desktop -->
+    <!-- Sidebar / Navigasi Desktop (Dengan Background Full Logo Perusahaan) -->
     <aside class="sidebar">
         <div class="sidebar-brand">
             <img id="sidebar-header-logo" src="" alt="Logo Brand" class="brand-logo-desktop" style="display: none;">
@@ -516,7 +515,7 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar (Mobile View) -->
+    <!-- Bottom Navigation Bar (Mobile View - Tombol Akun Bawah Dihapus, Hanya Ada di Kanan Atas) -->
     <nav class="bottom-nav">
         <button class="bottom-nav-item active" onclick="showSection('dashboard')">
             <i class="fa-solid fa-chart-pie nav-icon"></i>
@@ -537,10 +536,6 @@
         <button class="bottom-nav-item" onclick="showSection('laporan')">
             <i class="fa-solid fa-chart-line nav-icon"></i>
             <span class="nav-label">Laporan</span>
-        </button>
-        <button class="bottom-nav-item" onclick="showSection('akun')">
-            <i class="fa-solid fa-user-gear nav-icon"></i>
-            <span class="nav-label">Akun</span>
         </button>
     </nav>
 
