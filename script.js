@@ -535,7 +535,7 @@ if (orderForm) {
 
         Swal.fire({
             icon: 'success',
-            title: 'Pesanan Diteruskan ke Dapur!',
+            title: 'Pesanan Diproses!',
             html: `No Order: <b>${newOrderId}</b><br>Ref ID: <b>${custPhoneInput}</b><br>Total Pembayaran: <b>Rp ${totalOrderPrice.toLocaleString('id-ID')}</b>`,
             confirmButtonColor: '#059669'
         });
@@ -760,6 +760,7 @@ function renderStock() {
                 <td><span class="badge ${badgeColorClass}">${statusStokText}</span></td>
                 <td>
                     <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
+                    <button type="button" class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i> Hapus</button>
                 </td>
             </tr>
         `;
@@ -777,6 +778,7 @@ function renderStock() {
                     </div>
                     <div class="mobile-card-footer">
                         <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
+                        <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i> Hapus</button>
                     </div>
                 </div>
             `;
@@ -829,6 +831,45 @@ async function updateProductStock(productId) {
     }
 }
 
+// --- HAPUS PRODUK DARI DAFTAR STOK ---
+function deleteProduct(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    Swal.fire({
+        title: 'Hapus Produk?',
+        text: `Menu "${product.name}" akan dihapus permanen dari daftar stok.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        customClass: {
+            popup: 'swal2-popup-modern'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            products = products.filter(p => p.id !== productId);
+            saveData();
+            renderStock();
+            populateProductDropdown();
+            populateReportProductFilter();
+
+            Swal.fire({
+                title: 'Terhapus!',
+                text: `Produk "${product.name}" berhasil dihapus.`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false,
+                customClass: {
+                    popup: 'swal2-popup-modern'
+                }
+            });
+        }
+    });
+}
+
 const addProductForm = document.getElementById('add-product-form');
 if (addProductForm) {
     addProductForm.addEventListener('submit', function (e) {
@@ -837,7 +878,7 @@ if (addProductForm) {
         const price = parseInt(document.getElementById('prod-price').value);
         const stock = parseInt(document.getElementById('prod-stock').value);
 
-        const newId = 'PRD' + String(products.length + 1).padStart(2, '0');
+        const newId = 'PRD-' + String(Date.now()).slice(-4);
         products.push({ id: newId, name, price, stock });
         saveData();
 
