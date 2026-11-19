@@ -1083,7 +1083,7 @@ body .swal2-actions button {
     display: none !important;
   }
 
-  /* Headbar Mobile: Logo diposisikan di area tengah-kanan kosong agar tidak tertutup judul kiri */
+  /* Headbar Mobile: Logo diposisikan tepat di tengah (left: 50%) */
   .mobile-header,
   .mobile-top-header {
     display: flex !important;
@@ -1122,7 +1122,7 @@ body .swal2-actions button {
   .mobile-top-header::after {
     content: "" !important;
     position: absolute !important;
-    left: 56% !important;
+    left: 50% !important;
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
     width: 112px !important;
