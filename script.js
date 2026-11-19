@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebas
 import {
   getFirestore,
   doc,
-  setDoc,
   updateDoc,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
@@ -109,13 +108,9 @@ function initRealtimeSync() {
         renderPengeluaran();
         renderLaporan();
       } else {
-        setDoc(tenantDocRef, {
-          account: ownerAccount,
-          products: [],
-          customers: [],
-          orders: [],
-          expenses: [],
-        });
+        // Jika dokumen tenant dihapus dari database, paksa logout & bersihkan sesi
+        sessionStorage.removeItem("umkm_active_tenant");
+        window.location.href = "index.html";
       }
     },
     (error) => {
