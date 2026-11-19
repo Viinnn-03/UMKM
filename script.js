@@ -245,7 +245,7 @@ function handleLogoUpload(event) {
     Swal.fire({
       icon: "warning",
       title: "Ukuran Logo Terlalu Besar",
-      text: "Gunakan gambar logo di bawah 600 KB agar sinkronisasi cloud tetap cepat.",
+      text: "Gunakan gambar logo di bawah 600 KB agar sinkronisasi tetap cepat.",
       confirmButtonColor: "#059669",
     });
     return;
@@ -259,7 +259,7 @@ function handleLogoUpload(event) {
     Swal.fire({
       icon: "success",
       title: "Logo Terpasang!",
-      text: "Logo usaha berhasil disinkronkan ke semua perangkat.",
+      text: "Logo usaha berhasil diubah.",
       confirmButtonColor: "#059669",
     });
   };
@@ -335,7 +335,7 @@ async function saveAccountProfile(e) {
   Swal.fire({
     icon: "success",
     title: "Profil Disimpan!",
-    text: "Informasi profil usaha UMKM berhasil diperbarui di Cloud.",
+    text: "Informasi profil usaha UMKM berhasil diperbarui.",
     confirmButtonColor: "#059669",
   });
 }
@@ -406,7 +406,7 @@ async function updateAccountPassword(e) {
   Swal.fire({
     icon: "success",
     title: "Password Diperbarui!",
-    text: "Password login baru berhasil disimpan ke Cloud.",
+    text: "Password login baru berhasil disimpan.",
     confirmButtonColor: "#2563eb",
   });
 }
@@ -739,7 +739,7 @@ if (orderForm) {
     const orderTypeSelect = document.getElementById("order-type");
     const orderType = orderTypeSelect ? orderTypeSelect.value : "Dine-In";
     const channelSelect = document.getElementById("cust-channel");
-    const channel = channelSelect ? channelSelect.value : "Kasir / On-Site";
+    const channel = channelSelect ? channelSelect.value : "Kasir";
 
     const itemRows = document.querySelectorAll(".order-item-row");
     let orderItems = [];
@@ -884,7 +884,7 @@ if (orderForm) {
 function cancelOrder(orderId) {
   Swal.fire({
     title: "Hapus / Batalkan Pesanan?",
-    text: "Stok produk akan dikembalikan, dan pelanggan akan dihapus dari database jika tidak memiliki pesanan lain.",
+    text: "Stok produk akan dikembalikan.",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#ef4444",
@@ -923,11 +923,7 @@ function cancelOrder(orderId) {
         }
 
         await saveData();
-        Swal.fire(
-          "Terhapus!",
-          "Pesanan dibatalkan dan data pelanggan disinkronkan.",
-          "success",
-        );
+        Swal.fire("Terhapus!", "Pesanan dibatalkan.", "success");
         renderDashboard();
         renderCustomers();
         renderStock();
