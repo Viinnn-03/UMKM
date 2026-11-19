@@ -39,7 +39,7 @@ let ownerAccount = {
   username: activeTenantId || "admin",
   password: "123",
   phone: "-",
-  address: "Kota Medan",
+  address: "",
   logoData: "",
 };
 

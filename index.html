@@ -15,9 +15,13 @@
     />
     <link
       rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=5" />
+    <link rel="stylesheet" href="style.css?v=8" />
     <style>
       body.auth-body {
         display: flex !important;
@@ -26,7 +30,7 @@
         min-height: 100vh !important;
         background-color: #faf8f5 !important;
         padding: 20px !important;
-        overflow: hidden !important;
+        overflow-y: auto !important;
         position: relative !important;
         isolation: isolate !important;
       }
@@ -84,17 +88,38 @@
       }
 
       .auth-card {
-        background: rgba(255, 255, 255, 0.56) !important;
-        backdrop-filter: blur(3px) !important;
-        -webkit-backdrop-filter: blur(3px) !important;
+        background: rgba(255, 255, 255, 0.72) !important;
+        backdrop-filter: blur(5px) !important;
+        -webkit-backdrop-filter: blur(5px) !important;
         padding: 30px 26px !important;
         border-radius: 16px !important;
-        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08) !important;
-        border: 1px solid rgba(255, 255, 255, 0.78) !important;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.82) !important;
       }
 
       .auth-card .styled-input {
-        background-color: rgba(255, 255, 255, 0.85) !important;
+        background-color: rgba(255, 255, 255, 0.92) !important;
+      }
+
+      .forgot-pass-row {
+        text-align: right;
+        margin-top: -6px;
+        margin-bottom: 18px;
+      }
+
+      .forgot-pass-link {
+        font-size: 13px;
+        color: #059669;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .forgot-pass-link:hover {
+        text-decoration: underline;
+        color: #047857;
       }
 
       @media screen and (max-width: 768px) {
@@ -127,7 +152,7 @@
               required
             />
           </div>
-          <div class="form-group" style="margin-bottom: 20px">
+          <div class="form-group" style="margin-bottom: 12px">
             <label for="login-password">Password</label>
             <input
               type="password"
@@ -136,6 +161,15 @@
               placeholder="Password"
               required
             />
+          </div>
+          <div class="forgot-pass-row">
+            <a
+              href="javascript:void(0)"
+              onclick="openForgotPasswordModal()"
+              class="forgot-pass-link"
+            >
+              <i class="fa-solid fa-key"></i> Lupa Password?
+            </a>
           </div>
           <button type="submit" id="btn-login-submit" class="btn-auth-blue">
             Login
@@ -163,6 +197,16 @@
               id="reg-store-name"
               class="styled-input"
               placeholder="Contoh: Toko Berkah / Budi"
+              required
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px">
+            <label for="reg-phone">No. HP / WhatsApp (Untuk Reset Password):</label>
+            <input
+              type="tel"
+              id="reg-phone"
+              class="styled-input"
+              placeholder="Contoh: 081234567890"
               required
             />
           </div>
@@ -231,6 +275,7 @@
         doc,
         getDoc,
         setDoc,
+        updateDoc,
       } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
       const firebaseConfig = {
@@ -256,8 +301,8 @@
               ownerName: "Administrator Utama",
               username: "admin",
               password: "123",
-              phone: "-",
-              address: "Kota Medan",
+              phone: "081234567890",
+              address: "",
               logoData: "",
             },
             products: [],
@@ -330,6 +375,7 @@
           const storeName = document
             .getElementById("reg-store-name")
             .value.trim();
+          const phone = document.getElementById("reg-phone").value.trim();
           const rawUsername = document
             .getElementById("reg-username")
             .value.trim();
@@ -372,8 +418,8 @@
                 ownerName: storeName,
                 username: rawUsername,
                 password: password,
-                phone: "-",
-                address: "Kota Medan",
+                phone: phone || "-",
+                address: "",
                 logoData: "",
               },
               products: [],
@@ -398,8 +444,7 @@
               icon: "error",
               title: "Gagal Mendaftar",
               text:
-                "Terjadi kesalahan saat menyimpan Akun: " +
-                error.message,
+                "Terjadi kesalahan saat menyimpan Akun: " + error.message,
               confirmButtonColor: "#ef4444",
             });
           } finally {
@@ -407,6 +452,157 @@
             btn.innerText = "Daftar Sekarang";
           }
         });
+
+      // FITUR LUPA PASSWORD (VERIFIKASI USERNAME + NO HP TERDAFTAR)
+      async function openForgotPasswordModal() {
+        const { value: verifyData } = await Swal.fire({
+          title:
+            '<div class="swal-custom-title"><i class="fa-solid fa-key" style="color:#059669;"></i> Reset Password</div>',
+          html: `
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">
+              Masukkan <b>Username</b> dan <b>Nomor HP/WhatsApp</b> yang terdaftar pada akun usaha Anda.
+            </p>
+            <div class="swal-form-group">
+              <label>Username Akun:</label>
+              <input id="fp-username" type="text" class="swal2-input styled-swal-input" placeholder="Contoh: admin">
+            </div>
+            <div class="swal-form-group">
+              <label>Nomor HP / WhatsApp Terdaftar:</label>
+              <input id="fp-phone" type="tel" class="swal2-input styled-swal-input" placeholder="Contoh: 081234567890">
+            </div>
+          `,
+          focusConfirm: false,
+          showCancelButton: true,
+          confirmButtonText: "Verifikasi Akun",
+          cancelButtonText: "Batal",
+          confirmButtonColor: "#059669",
+          cancelButtonColor: "#64748b",
+          customClass: {
+            popup: "swal2-popup-modern",
+          },
+          preConfirm: () => {
+            const username = document
+              .getElementById("fp-username")
+              .value.trim()
+              .toLowerCase();
+            const phone = document.getElementById("fp-phone").value.trim();
+            if (!username || !phone) {
+              Swal.showValidationMessage("Username dan Nomor HP wajib diisi!");
+              return false;
+            }
+            return { username, phone };
+          },
+        });
+
+        if (!verifyData) return;
+
+        Swal.fire({
+          title: "Memeriksa Data Akun...",
+          allowOutsideClick: false,
+          customClass: { popup: "swal2-popup-modern" },
+          didOpen: () => Swal.showLoading(),
+        });
+
+        try {
+          if (verifyData.username === "admin") {
+            await ensureDefaultAdmin();
+          }
+
+          const tenantRef = doc(db, "umkm_tenants", verifyData.username);
+          const tenantSnap = await getDoc(tenantRef);
+
+          if (!tenantSnap.exists()) {
+            Swal.fire({
+              icon: "error",
+              title: "Akun Tidak Ditemukan",
+              text: `Username "${verifyData.username}" tidak terdaftar di sistem.`,
+              confirmButtonColor: "#ef4444",
+              customClass: { popup: "swal2-popup-modern" },
+            });
+            return;
+          }
+
+          const accountData = tenantSnap.data().account || {};
+          const savedPhone = (accountData.phone || "").trim();
+          const normalizePhone = (num) =>
+            num.replace(/[\s\-+]/g, "").replace(/^62/, "0");
+
+          if (
+            !savedPhone ||
+            savedPhone === "-" ||
+            normalizePhone(savedPhone) !== normalizePhone(verifyData.phone)
+          ) {
+            Swal.fire({
+              icon: "error",
+              title: "Verifikasi Gagal",
+              text: "Nomor HP tidak cocok dengan data yang terdaftar pada akun ini.",
+              confirmButtonColor: "#ef4444",
+              customClass: { popup: "swal2-popup-modern" },
+            });
+            return;
+          }
+
+          const { value: newPassword } = await Swal.fire({
+            icon: "success",
+            title: "Akun Terverifikasi!",
+            html: `
+              <p style="font-size: 13px; color: #334155; margin-bottom: 12px;">
+                Halo <b>${accountData.ownerName || verifyData.username}</b> (${accountData.storeName || "UMKM"}), silakan buat password baru:
+              </p>
+              <div class="swal-form-group">
+                <input id="fp-new-pass" type="password" class="swal2-input styled-swal-input" placeholder="Masukkan Password Baru">
+              </div>
+              <div class="swal-form-group">
+                <input id="fp-confirm-pass" type="password" class="swal2-input styled-swal-input" placeholder="Ulangi Password Baru">
+              </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Simpan Password Baru",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#059669",
+            cancelButtonColor: "#64748b",
+            customClass: { popup: "swal2-popup-modern" },
+            preConfirm: () => {
+              const pass1 = document.getElementById("fp-new-pass").value;
+              const pass2 = document.getElementById("fp-confirm-pass").value;
+              if (!pass1 || pass1.length < 3) {
+                Swal.showValidationMessage("Password baru minimal 3 karakter!");
+                return false;
+              }
+              if (pass1 !== pass2) {
+                Swal.showValidationMessage("Konfirmasi password tidak cocok!");
+                return false;
+              }
+              return pass1;
+            },
+          });
+
+          if (!newPassword) return;
+
+          await updateDoc(tenantRef, {
+            "account.password": newPassword,
+          });
+
+          Swal.fire({
+            icon: "success",
+            title: "Password Berhasil Direset!",
+            text: "Silakan login menggunakan password baru Anda.",
+            confirmButtonColor: "#059669",
+            customClass: { popup: "swal2-popup-modern" },
+          });
+        } catch (error) {
+          console.error("Error reset password:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Terjadi Kesalahan",
+            text: "Gagal terhubung ke server database: " + error.message,
+            confirmButtonColor: "#ef4444",
+            customClass: { popup: "swal2-popup-modern" },
+          });
+        }
+      }
+
+      window.openForgotPasswordModal = openForgotPasswordModal;
     </script>
   </body>
 </html>
