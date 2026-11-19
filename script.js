@@ -1,34 +1,130 @@
-// --- DATA AWAL LOCALSTORAGE ---
-let defaultProducts = [];
-let defaultCustomers = [];
-let defaultOrders = [];
-let defaultExpenses = [];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  onSnapshot,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-let products =
-  JSON.parse(localStorage.getItem("umkm_products")) || defaultProducts;
-let customers =
-  JSON.parse(localStorage.getItem("umkm_customers")) || defaultCustomers;
-let orders = JSON.parse(localStorage.getItem("umkm_orders")) || defaultOrders;
-let expenses =
-  JSON.parse(localStorage.getItem("umkm_expenses")) || defaultExpenses;
+// --- KONFIGURASI FIREBASE PROJECT ---
+const firebaseConfig = {
+  apiKey: "AIzaSyA3x9grxeVu_a1_BFY_1EfEtwA-rGE7LFA",
+  authDomain: "manajemen-operasional-umkm.firebaseapp.com",
+  projectId: "manajemen-operasional-umkm",
+  storageBucket: "manajemen-operasional-umkm.firebasestorage.app",
+  messagingSenderId: "139605713066",
+  appId: "1:139605713066:web:610a6cc1cb5ba1fd0fb0d3",
+};
 
-let ownerAccount = JSON.parse(localStorage.getItem("umkm_owner_account")) || {
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// --- CEK SESI LOGIN AKTIF ---
+const activeTenantId = sessionStorage.getItem("umkm_active_tenant");
+if (!activeTenantId) {
+  window.location.href = "index.html";
+}
+
+const tenantDocRef = doc(db, "umkm_tenants", activeTenantId || "admin");
+
+// --- STATE DATA REAL-TIME ---
+let products = [];
+let customers = [];
+let orders = [];
+let expenses = [];
+
+let ownerAccount = {
   storeName: "UMKM Digital Kuliner",
   ownerName: "Administrator Utama",
-  username: "admin",
+  username: activeTenantId || "admin",
   password: "123",
   phone: "-",
   address: "Kota Medan",
   logoData: "",
 };
 
-function saveData() {
-  localStorage.setItem("umkm_products", JSON.stringify(products));
-  localStorage.setItem("umkm_customers", JSON.stringify(customers));
-  localStorage.setItem("umkm_orders", JSON.stringify(orders));
-  localStorage.setItem("umkm_expenses", JSON.stringify(expenses));
+// --- SIMPAN & SINKRONISASI DATA KE CLOUD FIRESTORE ---
+async function saveData() {
   populateCustomerDatalist();
   loadAccountSettingsUI();
+  try {
+    await updateDoc(tenantDocRef, {
+      products: products,
+      customers: customers,
+      orders: orders,
+      expenses: expenses,
+    });
+  } catch (error) {
+    console.error("Gagal menyinkronkan data ke Firestore:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Gagal Sinkronisasi Cloud",
+      text: "Periksa koneksi internet Anda: " + error.message,
+      confirmButtonColor: "#ef4444",
+    });
+  }
+}
+
+async function saveAccountDataToCloud() {
+  loadAccountSettingsUI();
+  try {
+    await updateDoc(tenantDocRef, {
+      account: ownerAccount,
+    });
+  } catch (error) {
+    console.error("Gagal menyimpan akun ke Firestore:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Gagal Menyimpan Akun",
+      text: error.message,
+      confirmButtonColor: "#ef4444",
+    });
+  }
+}
+
+// --- LISTENER REAL-TIME MULTI-DEVICE ---
+function initRealtimeSync() {
+  onSnapshot(
+    tenantDocRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        const cloudData = docSnap.data();
+        products = Array.isArray(cloudData.products) ? cloudData.products : [];
+        customers = Array.isArray(cloudData.customers)
+          ? cloudData.customers
+          : [];
+        orders = Array.isArray(cloudData.orders) ? cloudData.orders : [];
+        expenses = Array.isArray(cloudData.expenses) ? cloudData.expenses : [];
+        if (cloudData.account) {
+          ownerAccount = { ...ownerAccount, ...cloudData.account };
+        }
+
+        // Perbarui seluruh tampilan di semua perangkat secara otomatis
+        populateProductDropdown();
+        populateCustomerDatalist();
+        loadAccountSettingsUI();
+        renderDashboard();
+        renderCustomers();
+        renderStock();
+        renderPengeluaran();
+        renderLaporan();
+      } else {
+        // Buat dokumen awal jika belum ada
+        setDoc(tenantDocRef, {
+          account: ownerAccount,
+          products: [],
+          customers: [],
+          orders: [],
+          expenses: [],
+        });
+      }
+    },
+    (error) => {
+      console.error("Realtime listener error:", error);
+    },
+  );
 }
 
 // --- HELPER GENERATOR ID & NOMOR ORDER BERURUTAN (TANPA TANGGAL) ---
@@ -151,24 +247,35 @@ function handleLogoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
+  // Batasi ukuran gambar agar aman disimpan di dokumen Firestore (< 600KB)
+  if (file.size > 600 * 1024) {
+    Swal.fire({
+      icon: "warning",
+      title: "Ukuran Logo Terlalu Besar",
+      text: "Gunakan gambar logo di bawah 600 KB agar sinkronisasi cloud tetap cepat.",
+      confirmButtonColor: "#059669",
+    });
+    return;
+  }
+
   const reader = new FileReader();
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     ownerAccount.logoData = e.target.result;
-    localStorage.setItem("umkm_owner_account", JSON.stringify(ownerAccount));
+    await saveAccountDataToCloud();
     applyLogoVisibility();
     Swal.fire({
       icon: "success",
       title: "Logo Terpasang!",
-      text: "Logo usaha berhasil dipasang ke profil dan background dashboard.",
+      text: "Logo usaha berhasil disinkronkan ke semua perangkat.",
       confirmButtonColor: "#059669",
     });
   };
   reader.readAsDataURL(file);
 }
 
-function removeStoreLogo() {
+async function removeStoreLogo() {
   ownerAccount.logoData = "";
-  localStorage.setItem("umkm_owner_account", JSON.stringify(ownerAccount));
+  await saveAccountDataToCloud();
   applyLogoVisibility();
   Swal.fire({
     icon: "info",
@@ -193,7 +300,7 @@ function loadAccountSettingsUI() {
   }
   if (document.getElementById("owner-account-subtitle")) {
     document.getElementById("owner-account-subtitle").innerText =
-      `Pemilik: ${ownerAccount.ownerName} • Status Sesi: Aktif`;
+      `Pemilik: ${ownerAccount.ownerName} • Cloud Sync Aktif`;
   }
   if (document.getElementById("acc-store-name"))
     document.getElementById("acc-store-name").value =
@@ -205,9 +312,11 @@ function loadAccountSettingsUI() {
     document.getElementById("acc-phone").value = ownerAccount.phone || "";
   if (document.getElementById("acc-address"))
     document.getElementById("acc-address").value = ownerAccount.address || "";
-  if (document.getElementById("acc-username"))
+  if (document.getElementById("acc-username")) {
     document.getElementById("acc-username").value =
-      ownerAccount.username || "admin";
+      ownerAccount.username || activeTenantId;
+    document.getElementById("acc-username").readOnly = true;
+  }
 
   if (document.getElementById("acc-data-summary")) {
     document.getElementById("acc-data-summary").innerText =
@@ -217,7 +326,7 @@ function loadAccountSettingsUI() {
   applyLogoVisibility();
 }
 
-function saveAccountProfile(e) {
+async function saveAccountProfile(e) {
   e.preventDefault();
   ownerAccount.storeName = document
     .getElementById("acc-store-name")
@@ -228,46 +337,48 @@ function saveAccountProfile(e) {
   ownerAccount.phone = document.getElementById("acc-phone").value.trim();
   ownerAccount.address = document.getElementById("acc-address").value.trim();
 
-  localStorage.setItem("umkm_owner_account", JSON.stringify(ownerAccount));
-  loadAccountSettingsUI();
+  await saveAccountDataToCloud();
 
   Swal.fire({
     icon: "success",
     title: "Profil Disimpan!",
-    text: "Informasi profil usaha UMKM berhasil diperbarui.",
+    text: "Informasi profil usaha UMKM berhasil diperbarui di Cloud.",
     confirmButtonColor: "#059669",
   });
 }
 
-function updateAccountPassword(e) {
+async function updateAccountPassword(e) {
   e.preventDefault();
-  const newUsername = document.getElementById("acc-username").value.trim();
   const newPass = document.getElementById("acc-new-password").value;
   const confirmPass = document.getElementById("acc-confirm-password").value;
 
-  if (!newUsername) return;
-
-  if (newPass || confirmPass) {
-    if (newPass !== confirmPass) {
-      Swal.fire({
-        icon: "error",
-        title: "Password Tidak Sama",
-        text: "Konfirmasi password baru harus cocok.",
-      });
-      return;
-    }
-    ownerAccount.password = newPass;
+  if (!newPass) {
+    Swal.fire({
+      icon: "info",
+      title: "Password Kosong",
+      text: "Isi password baru jika ingin mengganti password login.",
+    });
+    return;
   }
 
-  ownerAccount.username = newUsername;
-  localStorage.setItem("umkm_owner_account", JSON.stringify(ownerAccount));
+  if (newPass !== confirmPass) {
+    Swal.fire({
+      icon: "error",
+      title: "Password Tidak Sama",
+      text: "Konfirmasi password baru harus cocok.",
+    });
+    return;
+  }
+
+  ownerAccount.password = newPass;
+  await saveAccountDataToCloud();
   document.getElementById("acc-new-password").value = "";
   document.getElementById("acc-confirm-password").value = "";
 
   Swal.fire({
     icon: "success",
     title: "Keamanan Diperbarui!",
-    text: "Username dan/atau password login berhasil disimpan.",
+    text: "Password login baru berhasil disimpan ke Cloud.",
     confirmButtonColor: "#2563eb",
   });
 }
@@ -284,6 +395,7 @@ function confirmLogout() {
     cancelButtonText: "Batal",
   }).then((result) => {
     if (result.isConfirmed) {
+      sessionStorage.removeItem("umkm_active_tenant");
       window.location.href = "index.html";
     }
   });
@@ -589,7 +701,7 @@ function renderDashboard() {
 // --- FORM SUBMIT PESANAN ---
 const orderForm = document.getElementById("order-form");
 if (orderForm) {
-  orderForm.addEventListener("submit", function (e) {
+  orderForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const custNameInput = document.getElementById("cust-name").value.trim();
@@ -697,7 +809,7 @@ if (orderForm) {
       });
     }
 
-    saveData();
+    await saveData();
 
     Swal.fire({
       icon: "success",
@@ -751,7 +863,7 @@ function cancelOrder(orderId) {
     cancelButtonColor: "#64748b",
     confirmButtonText: "Ya, Hapus Pesanan",
     cancelButtonText: "Batal",
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
       const index = orders.findIndex((o) => o.id === orderId);
       if (index !== -1) {
@@ -782,7 +894,7 @@ function cancelOrder(orderId) {
           }
         }
 
-        saveData();
+        await saveData();
         Swal.fire(
           "Terhapus!",
           "Pesanan dibatalkan dan data pelanggan disinkronkan.",
@@ -797,7 +909,7 @@ function cancelOrder(orderId) {
   });
 }
 
-function tambahPengeluaran(e) {
+async function tambahPengeluaran(e) {
   e.preventDefault();
   const name = document.getElementById("expense-name").value.trim();
   const category = document.getElementById("expense-category").value;
@@ -808,7 +920,7 @@ function tambahPengeluaran(e) {
   const newExpId = generateNextExpenseId();
 
   expenses.push({ id: newExpId, name, category, amount, date: formattedDate });
-  saveData();
+  await saveData();
 
   Swal.fire({
     icon: "success",
@@ -862,13 +974,13 @@ function renderPengeluaran() {
   checkEmptyTable(expenseBody, expenses.length, 4, "Belum ada pengeluaran.");
 }
 
-function nextStatus(orderId) {
+async function nextStatus(orderId) {
   let order = orders.find((o) => o.id === orderId);
   if (!order) return;
   if (order.status === "Baru") order.status = "Diproses";
   else if (order.status === "Diproses") order.status = "Selesai";
 
-  saveData();
+  await saveData();
   renderDashboard();
   renderLaporan();
 }
@@ -1036,7 +1148,7 @@ async function updateProductStock(productId) {
 
     product.stock = newStock;
     product.price = newPrice;
-    saveData();
+    await saveData();
     renderStock();
     populateProductDropdown();
   }
@@ -1059,10 +1171,10 @@ function deleteProduct(productId) {
     customClass: {
       popup: "swal2-popup-modern",
     },
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
       products = products.filter((p) => p.id !== productId);
-      saveData();
+      await saveData();
       renderStock();
       populateProductDropdown();
       populateReportProductFilter();
@@ -1083,7 +1195,7 @@ function deleteProduct(productId) {
 
 const addProductForm = document.getElementById("add-product-form");
 if (addProductForm) {
-  addProductForm.addEventListener("submit", function (e) {
+  addProductForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     const name = document.getElementById("prod-name").value.trim();
     const price = parseInt(document.getElementById("prod-price").value);
@@ -1091,7 +1203,7 @@ if (addProductForm) {
 
     const newId = generateNextProductId();
     products.push({ id: newId, name, price, stock });
-    saveData();
+    await saveData();
 
     Swal.fire({ icon: "success", title: "Produk Ditambahkan!" });
     addProductForm.reset();
@@ -1332,7 +1444,6 @@ function exportToExcel() {
     periodeLabel = `Bulanan (${bulanVal})`;
   }
 
-  // Saring pesanan & pengeluaran sesuai filter yang sedang aktif
   const filteredOrders = orders.filter((o) =>
     isReportDateMatch(o.date, periodeVal, tanggalVal, bulanVal),
   );
@@ -1340,7 +1451,6 @@ function exportToExcel() {
     isReportDateMatch(exp.date, periodeVal, tanggalVal, bulanVal),
   );
 
-  // Bentuk baris penjualan sesuai filter produk
   const salesRows = [];
   filteredOrders.forEach((o) => {
     if (o.items && Array.isArray(o.items)) {
@@ -1411,7 +1521,7 @@ function exportToExcel() {
     }
   }
 
-  // 1. SHEET LAPORAN PENJUALAN (TERFILTER)
+  // 1. SHEET LAPORAN PENJUALAN
   const salesHeader = [
     [`LAPORAN PENJUALAN ${storeTitle}`],
     [`Periode: ${periodeLabel} | Filter Produk: ${produkLabel}`],
@@ -1469,7 +1579,7 @@ function exportToExcel() {
   applyCurrencyFormat(wsSales, "I", 5, totalSalesRowIndex);
   XLSX.utils.book_append_sheet(wb, wsSales, "Laporan Penjualan");
 
-  // 2. SHEET LAPORAN PENGELUARAN (TERFILTER SESUAI PERIODE)
+  // 2. SHEET LAPORAN PENGELUARAN
   const expHeader = [
     [`LAPORAN PENGELUARAN ${storeTitle}`],
     [`Periode: ${periodeLabel}`],
@@ -1572,8 +1682,29 @@ function exportToExcel() {
   );
 }
 
-// --- INISIALISASI AWAL ---
-populateProductDropdown();
-populateCustomerDatalist();
-loadAccountSettingsUI();
-renderDashboard();
+// --- EXPOSE FUNGSI KE GLOBAL WINDOW UNTUK EVENT HANDLER ONCLICK/ONSUBMIT DI HTML ---
+window.showSection = showSection;
+window.autoFillCustomerName = autoFillCustomerName;
+window.changeQty = changeQty;
+window.addOrderItemRow = addOrderItemRow;
+window.removeOrderItemRow = removeOrderItemRow;
+window.calculateTotalOrder = calculateTotalOrder;
+window.nextStatus = nextStatus;
+window.cancelOrder = cancelOrder;
+window.renderDashboard = renderDashboard;
+window.renderCustomers = renderCustomers;
+window.renderStock = renderStock;
+window.updateProductStock = updateProductStock;
+window.deleteProduct = deleteProduct;
+window.tambahPengeluaran = tambahPengeluaran;
+window.toggleDateFilter = toggleDateFilter;
+window.renderLaporan = renderLaporan;
+window.exportToExcel = exportToExcel;
+window.handleLogoUpload = handleLogoUpload;
+window.removeStoreLogo = removeStoreLogo;
+window.saveAccountProfile = saveAccountProfile;
+window.updateAccountPassword = updateAccountPassword;
+window.confirmLogout = confirmLogout;
+
+// --- JALANKAN SINKRONISASI CLOUD SAAT HALAMAN DIBUKA ---
+initRealtimeSync();

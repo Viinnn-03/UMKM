@@ -1,546 +1,875 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Sistem Pengelolaan Pesanan UMKM Multichannel</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="style.css?v=2">
-</head>
-<body>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+    />
+    <link rel="stylesheet" href="style.css?v=2" />
+  </head>
+  <body>
     <!-- Watermark Background Logo (Muncul hanya jika logo sudah diupload) -->
-    <div id="dashboard-bg-watermark" class="bg-logo-watermark" style="display: none;"></div>
+    <div
+      id="dashboard-bg-watermark"
+      class="bg-logo-watermark"
+      style="display: none"
+    ></div>
 
     <!-- Header Mobile (Tanpa Badge PRO, Tombol Akun di Kanan Atas) -->
     <header class="mobile-header">
-        <div class="mobile-brand">
-            <img id="mobile-header-logo" src="" alt="Logo Brand" class="brand-logo" style="display: none;">
-            <div class="brand-text">
-                <h2 id="mobile-store-title">UMKM Digital</h2>
-            </div>
+      <div class="mobile-brand">
+        <img
+          id="mobile-header-logo"
+          src=""
+          alt="Logo Brand"
+          class="brand-logo"
+          style="display: none"
+        />
+        <div class="brand-text">
+          <h2 id="mobile-store-title">UMKM Digital</h2>
         </div>
-        <button type="button" id="mobile-top-account-btn" class="mobile-account-btn" onclick="showSection('akun')">
-            <i class="fa-solid fa-user-gear"></i> Akun
-        </button>
+      </div>
+      <button
+        type="button"
+        id="mobile-top-account-btn"
+        class="mobile-account-btn"
+        onclick="showSection('akun')"
+      >
+        <i class="fa-solid fa-user-gear"></i> Akun
+      </button>
     </header>
 
     <!-- Sidebar / Navigasi Desktop (Dengan Background Full Logo Perusahaan) -->
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <img id="sidebar-header-logo" src="" alt="Logo Brand" class="brand-logo-desktop" style="display: none;">
-            <div>
-                <h2 id="sidebar-store-title">UMKM Digital</h2>
-                <span class="brand-subtitle">Panel Operasional Kuliner</span>
-            </div>
+      <div class="sidebar-brand">
+        <img
+          id="sidebar-header-logo"
+          src=""
+          alt="Logo Brand"
+          class="brand-logo-desktop"
+          style="display: none"
+        />
+        <div>
+          <h2 id="sidebar-store-title">UMKM Digital</h2>
+          <span class="brand-subtitle">Panel Operasional Kuliner</span>
         </div>
-        <nav>
-            <ul>
-                <li><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard Utama</span></a></li>
-                <li><a href="#pelanggan" class="nav-link" onclick="showSection('pelanggan')"><i class="fa-solid fa-users"></i> <span>Database Pelanggan</span></a></li>
-                <li><a href="#stok" class="nav-link" onclick="showSection('stok')"><i class="fa-solid fa-boxes-stacked"></i> <span>Manajemen Stok</span></a></li>
-                <li><a href="#pengeluaran" class="nav-link" onclick="showSection('pengeluaran')"><i class="fa-solid fa-receipt"></i> <span>Laporan Pengeluaran</span></a></li>
-                <li><a href="#laporan" class="nav-link" onclick="showSection('laporan')"><i class="fa-solid fa-chart-line"></i> <span>Laporan Penjualan</span></a></li>
-                <li><a href="#akun" class="nav-link" onclick="showSection('akun')"><i class="fa-solid fa-user-gear"></i> <span>Pengaturan Akun</span></a></li>
-            </ul>
-        </nav>
+      </div>
+      <nav>
+        <ul>
+          <li>
+            <a
+              href="#dashboard"
+              class="nav-link active"
+              onclick="showSection('dashboard')"
+              ><i class="fa-solid fa-chart-pie"></i>
+              <span>Dashboard Utama</span></a
+            >
+          </li>
+          <li>
+            <a
+              href="#pelanggan"
+              class="nav-link"
+              onclick="showSection('pelanggan')"
+              ><i class="fa-solid fa-users"></i>
+              <span>Database Pelanggan</span></a
+            >
+          </li>
+          <li>
+            <a href="#stok" class="nav-link" onclick="showSection('stok')"
+              ><i class="fa-solid fa-boxes-stacked"></i>
+              <span>Manajemen Stok</span></a
+            >
+          </li>
+          <li>
+            <a
+              href="#pengeluaran"
+              class="nav-link"
+              onclick="showSection('pengeluaran')"
+              ><i class="fa-solid fa-receipt"></i>
+              <span>Laporan Pengeluaran</span></a
+            >
+          </li>
+          <li>
+            <a href="#laporan" class="nav-link" onclick="showSection('laporan')"
+              ><i class="fa-solid fa-chart-line"></i>
+              <span>Laporan Penjualan</span></a
+            >
+          </li>
+          <li>
+            <a href="#akun" class="nav-link" onclick="showSection('akun')"
+              ><i class="fa-solid fa-user-gear"></i>
+              <span>Pengaturan Akun</span></a
+            >
+          </li>
+        </ul>
+      </nav>
     </aside>
 
     <!-- Konten Utama -->
     <main class="content">
+      <!-- SECTION 1: DASHBOARD UTAMA -->
+      <section id="dashboard" class="page-section active">
+        <div class="section-header">
+          <div>
+            <h1>Dashboard Utama</h1>
+            <p>Pengelolaan Pesanan Operasional Toko Kuliner</p>
+          </div>
+        </div>
 
-        <!-- SECTION 1: DASHBOARD UTAMA -->
-        <section id="dashboard" class="page-section active">
-            <div class="section-header">
-                <div>
-                    <h1>Dashboard Utama</h1>
-                    <p>Pengelolaan Pesanan Operasional Toko Kuliner</p>
-                </div>
+        <div class="cards-grid">
+          <div class="card">
+            <h3>Jumlah Pesanan</h3>
+            <p class="stat-number" id="total-pesanan">0</p>
+          </div>
+          <div class="card card-warning">
+            <h3>Pesanan Baru</h3>
+            <p class="stat-number" id="pesanan-baru">0</p>
+          </div>
+          <div class="card card-info">
+            <h3>Pesanan Diproses</h3>
+            <p class="stat-number" id="pesanan-proses">0</p>
+          </div>
+          <div class="card card-success">
+            <h3>Pesanan Selesai</h3>
+            <p class="stat-number" id="pesanan-selesai">0</p>
+          </div>
+          <div class="card card-emerald">
+            <h3>Total Omzet</h3>
+            <p class="stat-number" id="dashboard-omzet">Rp 0</p>
+          </div>
+          <div class="card">
+            <h3>Produk Terlaris</h3>
+            <p class="stat-text" id="dashboard-top-product">-</p>
+          </div>
+        </div>
+
+        <!-- FORM INPUT PESANAN MULTI-MENU MODERN -->
+        <div class="form-container form-accent-emerald">
+          <div class="form-header-flex">
+            <h2 class="form-title">
+              <i class="fa-solid fa-circle-plus"></i> Input Pesanan Baru
+              (Multi-Menu)
+            </h2>
+            <a
+              href="#stok"
+              onclick="showSection('stok')"
+              class="btn-manage-stock"
+            >
+              <i class="fa-solid fa-boxes-stacked"></i> + Kelola Menu & Stok
+            </a>
+          </div>
+
+          <form id="order-form">
+            <div class="form-grid-4">
+              <div class="form-group">
+                <label for="cust-phone">ID Pelanggan / No. Meja (Unik):</label>
+                <input
+                  type="text"
+                  id="cust-phone"
+                  list="customer-id-list"
+                  oninput="autoFillCustomerName()"
+                  onchange="autoFillCustomerName()"
+                  placeholder="Ketik ID (ex: MEJA-05) / Kosong = Auto"
+                  class="styled-input"
+                />
+                <datalist id="customer-id-list"></datalist>
+              </div>
+              <div class="form-group">
+                <label for="cust-name">Nama Pelanggan / Pemesan:</label>
+                <input
+                  type="text"
+                  id="cust-name"
+                  required
+                  placeholder="Contoh: Budi / Meja 05"
+                  class="styled-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="order-type">Tipe Pesanan:</label>
+                <select id="order-type" required class="styled-input">
+                  <option value="Dine-In">Makan di Tempat (Dine-In)</option>
+                  <option value="Takeaway">Bawa Pulang (Takeaway)</option>
+                  <option value="Delivery">Pesanan Antar (Delivery)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="cust-channel">Saluran Masuk:</label>
+                <select id="cust-channel" required class="styled-input">
+                  <option value="Kasir / On-Site">Kasir / On-Site</option>
+                  <option value="WhatsApp">WhatsApp</option>
+                  <option value="GoFood/GrabFood">
+                    GoFood / GrabFood / ShopeeFood
+                  </option>
+                </select>
+              </div>
             </div>
 
-            <div class="cards-grid">
-                <div class="card">
-                    <h3>Jumlah Pesanan</h3>
-                    <p class="stat-number" id="total-pesanan">0</p>
-                </div>
-                <div class="card card-warning">
-                    <h3>Pesanan Baru</h3>
-                    <p class="stat-number" id="pesanan-baru">0</p>
-                </div>
-                <div class="card card-info">
-                    <h3>Pesanan Diproses</h3>
-                    <p class="stat-number" id="pesanan-proses">0</p>
-                </div>
-                <div class="card card-success">
-                    <h3>Pesanan Selesai</h3>
-                    <p class="stat-number" id="pesanan-selesai">0</p>
-                </div>
-                <div class="card card-emerald">
-                    <h3>Total Omzet</h3>
-                    <p class="stat-number" id="dashboard-omzet">Rp 0</p>
-                </div>
-                <div class="card">
-                    <h3>Produk Terlaris</h3>
-                    <p class="stat-text" id="dashboard-top-product">-</p>
-                </div>
-            </div>
+            <!-- Container Daftar Menu Dipesan Modern -->
+            <div class="menu-items-box">
+              <div class="menu-box-header">
+                <label class="menu-box-label"
+                  ><i class="fa-solid fa-utensils"></i> Daftar Menu
+                  Dipesan:</label
+                >
+              </div>
 
-            <!-- FORM INPUT PESANAN MULTI-MENU MODERN -->
-            <div class="form-container form-accent-emerald">
-                <div class="form-header-flex">
-                    <h2 class="form-title"><i class="fa-solid fa-circle-plus"></i> Input Pesanan Baru (Multi-Menu)</h2>
-                    <a href="#stok" onclick="showSection('stok')" class="btn-manage-stock">
-                        <i class="fa-solid fa-boxes-stacked"></i> + Kelola Menu & Stok
-                    </a>
-                </div>
-
-                <form id="order-form">
-                    <div class="form-grid-4">
-                        <div class="form-group">
-                            <label for="cust-phone">ID Pelanggan / No. Meja (Unik):</label>
-                            <input type="text" id="cust-phone" list="customer-id-list" oninput="autoFillCustomerName()" onchange="autoFillCustomerName()" placeholder="Ketik ID (ex: MEJA-05) / Kosong = Auto" class="styled-input">
-                            <datalist id="customer-id-list"></datalist>
-                        </div>
-                        <div class="form-group">
-                            <label for="cust-name">Nama Pelanggan / Pemesan:</label>
-                            <input type="text" id="cust-name" required placeholder="Contoh: Budi / Meja 05" class="styled-input">
-                        </div>
-                        <div class="form-group">
-                            <label for="order-type">Tipe Pesanan:</label>
-                            <select id="order-type" required class="styled-input">
-                                <option value="Dine-In">Makan di Tempat (Dine-In)</option>
-                                <option value="Takeaway">Bawa Pulang (Takeaway)</option>
-                                <option value="Delivery">Pesanan Antar (Delivery)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="cust-channel">Saluran Masuk:</label>
-                            <select id="cust-channel" required class="styled-input">
-                                <option value="Kasir / On-Site">Kasir / On-Site</option>
-                                <option value="WhatsApp">WhatsApp</option>
-                                <option value="GoFood/GrabFood">GoFood / GrabFood / ShopeeFood</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Container Daftar Menu Dipesan Modern -->
-                    <div class="menu-items-box">
-                        <div class="menu-box-header">
-                            <label class="menu-box-label"><i class="fa-solid fa-utensils"></i> Daftar Menu Dipesan:</label>
-                        </div>
-                        
-                        <div id="order-items-container">
-                            <div class="order-item-row">
-                                <div class="item-row-header">
-                                    <select class="item-product-select styled-input" required onchange="calculateTotalOrder()"></select>
-                                    <button type="button" class="btn-remove-item-card" onclick="removeOrderItemRow(this)" title="Hapus Item">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </div>
-                                
-                                <div class="item-row-details">
-                                    <div class="qty-control">
-                                        <span class="qty-label">Qty:</span>
-                                        <button type="button" class="btn-qty" onclick="changeQty(this, -1)">-</button>
-                                        <input type="number" class="item-qty-input styled-input" min="1" value="1" required placeholder="1" onchange="calculateTotalOrder()">
-                                        <button type="button" class="btn-qty" onclick="changeQty(this, 1)">+</button>
-                                    </div>
-                                    <div class="note-control">
-                                        <input type="text" class="item-note-input styled-input" placeholder="Catatan (ex: Pedas / Tanpa Es)">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button type="button" class="btn-add-menu-modern" onclick="addOrderItemRow()">
-                            <i class="fa-solid fa-circle-plus"></i> Tambah Menu Lain
-                        </button>
-                    </div>
-
-                    <!-- Summary & Submit -->
-                    <div class="order-summary-bar">
-                        <div>
-                            <span class="summary-label">Estimasi Total Pembayaran:</span>
-                            <h2 id="order-total-preview" class="summary-amount">Rp 0</h2>
-                        </div>
-                        <button type="submit" class="btn-primary btn-lg">
-                            <i class="fa-solid fa-check"></i> Simpan & Diproses Dapur
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="table-header-flex">
-                <h2>Daftar Pesanan Active</h2>
-                <input type="text" id="search-order" onkeyup="renderDashboard()" placeholder="Cari No Order / Customer..." class="input-search styled-input">
-            </div>
-
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No Order</th>
-                            <th>Customer</th>
-                            <th>ID / No. Meja</th>
-                            <th>Produk</th>
-                            <th>Channel</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="order-table-body"></tbody>
-                </table>
-            </div>
-            <div id="order-cards-mobile" class="mobile-cards-container"></div>
-        </section>
-
-        <!-- SECTION 2: DATABASE PELANGGAN -->
-        <section id="pelanggan" class="page-section">
-            <div class="table-header-flex">
-                <div>
-                    <h1>Database Pelanggan</h1>
-                    <p>Riwayat pembeli otomatis tersimpan dari orderan masuk.</p>
-                </div>
-                <input type="text" id="search-customer" onkeyup="renderCustomers()" placeholder="Cari Nama / ID Pelanggan..." class="input-search styled-input">
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID Unik / Ref</th>
-                            <th>Nama</th>
-                            <th>Alamat / Tipe</th>
-                            <th>Riwayat Pemesanan</th>
-                            <th>Total Transaksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customer-table-body"></tbody>
-                </table>
-            </div>
-            <div id="customer-cards-mobile" class="mobile-cards-container"></div>
-        </section>
-
-        <!-- SECTION 3: MANAJEMEN STOK -->
-        <section id="stok" class="page-section">
-            <h1>Manajemen Stok</h1>
-            <p>Stok berkurang otomatis saat order masuk. Anda juga dapat memperbarui stok secara manual.</p>
-
-            <div class="form-container">
-                <h2><i class="fa-solid fa-box-open"></i> Tambah Produk Baru</h2>
-                <form id="add-product-form">
-                    <div class="form-grid-3">
-                        <div class="form-group">
-                            <label for="prod-name">Nama Produk:</label>
-                            <input type="text" id="prod-name" required placeholder="Contoh: Nasi Goreng Spesial" class="styled-input">
-                        </div>
-                        <div class="form-group">
-                            <label for="prod-price">Harga (Rp):</label>
-                            <input type="number" id="prod-price" min="1" required placeholder="Contoh: 25000" class="styled-input">
-                        </div>
-                        <div class="form-group">
-                            <label for="prod-stock">Jumlah Stok Awal:</label>
-                            <input type="number" id="prod-stock" min="0" value="10" required class="styled-input">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary">Tambah Produk</button>
-                </form>
-            </div>
-
-            <div class="table-header-flex">
-                <h2>Daftar Stok Produk</h2>
-                <input type="text" id="search-stock" onkeyup="renderStock()" placeholder="Cari Produk..." class="input-search styled-input">
-            </div>
-
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID Produk</th>
-                            <th>Nama Produk</th>
-                            <th>Harga</th>
-                            <th>Sisa Stok</th>
-                            <th>Keterangan Stok</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stock-table-body"></tbody>
-                </table>
-            </div>
-            <div id="stock-cards-mobile" class="mobile-cards-container"></div>
-        </section>
-
-        <!-- SECTION 4: LAPORAN PENGELUARAN -->
-        <section id="pengeluaran" class="page-section">
-            <h1>Laporan Pengeluaran</h1>
-            <p>Pencatatan dan pemantauan pengeluaran operasional usaha Anda.</p>
-
-            <div class="form-container form-accent-danger">
-                <h2><i class="fa-solid fa-wallet"></i> Input Pengeluaran Operasional</h2>
-                <form id="expense-form" onsubmit="tambahPengeluaran(event)">
-                    <div class="form-grid-3">
-                        <div class="form-group">
-                            <label for="expense-name">Deskripsi Pengeluaran:</label>
-                            <input type="text" id="expense-name" required placeholder="Contoh: Beli Bahan Baku / Listrik" class="styled-input">
-                        </div>
-                        <div class="form-group">
-                            <label for="expense-category">Kategori:</label>
-                            <select id="expense-category" required class="styled-input">
-                                <option value="Bahan Baku">Bahan Baku</option>
-                                <option value="Operasional">Operasional / Keperluan Toko</option>
-                                <option value="Gaji">Gaji Karyawan</option>
-                                <option value="Pemasaran">Pemasaran / Iklan</option>
-                                <option value="Lainnya">Lain-lain</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="expense-amount">Jumlah (Rp):</label>
-                            <input type="number" id="expense-amount" min="1" required placeholder="Contoh: 50000" class="styled-input">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary btn-danger">Simpan Pengeluaran</button>
-                </form>
-            </div>
-
-            <div class="cards-grid">
-                <div class="card card-danger">
-                    <h3>Total Pengeluaran</h3>
-                    <p class="stat-number stat-danger" id="total-pengeluaran-card">Rp 0</p>
-                </div>
-            </div>
-
-            <h2>Detail Pengeluaran Operasional</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Deskripsi</th>
-                            <th>Kategori</th>
-                            <th>Nominal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="detail-pengeluaran-body"></tbody>
-                </table>
-            </div>
-            <div id="expense-cards-mobile" class="mobile-cards-container"></div>
-        </section>
-
-        <!-- SECTION 5: LAPORAN PENJUALAN & KEUANGAN -->
-        <section id="laporan" class="page-section">
-            <h1>Laporan Penjualan & Keuangan</h1>
-            <p>Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.</p>
-
-            <div class="form-container form-accent-info">
-                <h3><i class="fa-solid fa-file-excel" style="color:#059669;"></i> Export Laporan Keuangan</h3>
-                <p style="margin-bottom: 14px; font-size: 13px;">Unduh file Excel (.xlsx) rapi di semua sheet lengkap dengan format Rupiah & rumus total otomatis.</p>
-                <div class="backup-btn-group">
-                    <button type="button" class="btn-backup btn-backup-excel" onclick="exportToExcel()">
-                        <i class="fa-solid fa-file-excel"></i> Download Laporan Excel (.xlsx) Otomatis
+              <div id="order-items-container">
+                <div class="order-item-row">
+                  <div class="item-row-header">
+                    <select
+                      class="item-product-select styled-input"
+                      required
+                      onchange="calculateTotalOrder()"
+                    ></select>
+                    <button
+                      type="button"
+                      class="btn-remove-item-card"
+                      onclick="removeOrderItemRow(this)"
+                      title="Hapus Item"
+                    >
+                      <i class="fa-solid fa-trash-can"></i>
                     </button>
-                </div>
-            </div>
+                  </div>
 
-            <div class="filter-container">
-                <div class="filter-group">
-                    <label for="filter-periode">Periode Laporan:</label>
-                    <select id="filter-periode" onchange="toggleDateFilter()" class="styled-input">
-                        <option value="semua">Semua</option>
-                        <option value="harian">Harian (Pilih Tanggal)</option>
-                        <option value="bulanan">Bulanan (Pilih Bulan)</option>
-                    </select>
-                </div>
-                <div id="date-picker-wrapper" style="display: none;">
-                    <label for="filter-tanggal">Pilih Tanggal:</label>
-                    <input type="date" id="filter-tanggal" onchange="renderLaporan()" class="styled-input">
-                </div>
-                <div id="month-picker-wrapper" style="display: none;">
-                    <label for="filter-bulan">Pilih Bulan:</label>
-                    <input type="month" id="filter-bulan" onchange="renderLaporan()" class="styled-input">
-                </div>
-            </div>
-
-            <div class="cards-grid">
-                <div class="card card-success">
-                    <h3>Total Omzet (Pendapatan)</h3>
-                    <p class="stat-number" id="report-omzet">Rp 0</p>
-                </div>
-                <div class="card card-danger">
-                    <h3>Total Pengeluaran</h3>
-                    <p class="stat-number stat-danger" id="report-pengeluaran">Rp 0</p>
-                </div>
-                <div class="card card-emerald">
-                    <h3>Laba Bersih (Omzet - Pengeluaran)</h3>
-                    <p class="stat-number" id="report-laba">Rp 0</p>
-                </div>
-                <div class="card">
-                    <h3>Channel Paling Banyak Orderan</h3>
-                    <p class="stat-text" id="report-top-channel">-</p>
-                </div>
-                <div class="card">
-                    <h3>Produk Terlaris</h3>
-                    <p class="stat-text" id="report-top-product">-</p>
-                </div>
-            </div>
-
-            <div class="laporan-detail">
-                <div class="table-header-flex">
-                    <h2>Detail Transaksi Penjualan</h2>
-                    <div class="filter-inline">
-                        <label for="filter-produk">Pilih Jenis Produk:</label>
-                        <select id="filter-produk" onchange="renderLaporan()" class="styled-input">
-                            <option value="semua">Semua Produk</option>
-                        </select>
+                  <div class="item-row-details">
+                    <div class="qty-control">
+                      <span class="qty-label">Qty:</span>
+                      <button
+                        type="button"
+                        class="btn-qty"
+                        onclick="changeQty(this, -1)"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        class="item-qty-input styled-input"
+                        min="1"
+                        value="1"
+                        required
+                        placeholder="1"
+                        onchange="calculateTotalOrder()"
+                      />
+                      <button
+                        type="button"
+                        class="btn-qty"
+                        onclick="changeQty(this, 1)"
+                      >
+                        +
+                      </button>
                     </div>
+                    <div class="note-control">
+                      <input
+                        type="text"
+                        class="item-note-input styled-input"
+                        placeholder="Catatan (ex: Pedas / Tanpa Es)"
+                      />
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Produk</th>
-                                <th>PCS</th>
-                                <th>Customer / Ref</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detail-transaksi-body"></tbody>
-                    </table>
-                </div>
-                <div id="report-cards-mobile" class="mobile-cards-container"></div>
+              <button
+                type="button"
+                class="btn-add-menu-modern"
+                onclick="addOrderItemRow()"
+              >
+                <i class="fa-solid fa-circle-plus"></i> Tambah Menu Lain
+              </button>
             </div>
-        </section>
 
-        <!-- SECTION 6: PENGATURAN AKUN PEMILIK UMKM -->
-        <section id="akun" class="page-section">
-            <h1>Pengaturan Akun</h1>
-            <p>Kelola profil toko, logo usaha (opsional), keamanan password, dan sesi login pemilik UMKM.</p>
-
-            <div class="account-grid-layout">
-                <!-- KARTU 1: PROFIL & EDIT DATA TOKO -->
-                <div class="form-container form-accent-emerald">
-                    <div class="account-profile-header">
-                        <img id="account-profile-logo" src="" alt="Logo UMKM" class="account-avatar" style="display: none;">
-                        <div style="flex: 1;">
-                            <span class="account-role-badge"><i class="fa-solid fa-crown"></i> Akun Pemilik UMKM</span>
-                            <h2 id="owner-store-name">UMKM Digital Kuliner</h2>
-                            <p id="owner-account-subtitle" style="margin: 4px 0 10px 0; font-size: 14px;">Status Sesi: Aktif (Administrator Utama)</p>
-                            
-                            <!-- Kontrol Upload / Hapus Logo -->
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <label for="acc-logo-upload" class="btn-sm" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; cursor: pointer;">
-                                    <i class="fa-solid fa-image"></i> Pasang Logo Toko
-                                </label>
-                                <input type="file" id="acc-logo-upload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
-                                <button type="button" id="btn-remove-logo" class="btn-sm" style="background-color: #fef2f2; color: #ef4444; border: 1px solid #fecaca; display: none;" onclick="removeStoreLogo()">
-                                    <i class="fa-solid fa-trash"></i> Hapus Logo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form id="account-profile-form" onsubmit="saveAccountProfile(event)">
-                        <div class="form-grid-3" style="margin-bottom: 14px;">
-                            <div class="form-group">
-                                <label for="acc-store-name">Nama Usaha / Toko:</label>
-                                <input type="text" id="acc-store-name" class="styled-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="acc-owner-name">Nama Pemilik:</label>
-                                <input type="text" id="acc-owner-name" class="styled-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="acc-phone">No. WhatsApp / Kontak Toko:</label>
-                                <input type="text" id="acc-phone" class="styled-input" placeholder="0812-XXXX-XXXX">
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 18px;">
-                            <label for="acc-address">Alamat Operasional Toko:</label>
-                            <input type="text" id="acc-address" class="styled-input" placeholder="Contoh: Jl. Sudirman No. 10, Medan">
-                        </div>
-                        <button type="submit" class="btn-primary">
-                            <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil
-                        </button>
-                    </form>
-                </div>
-
-                <!-- KARTU 2: KEAMANAN PASSWORD & LOGOUT -->
-                <div class="form-container form-accent-info">
-                    <h2 style="margin-bottom: 16px;"><i class="fa-solid fa-shield-halved" style="color: #2563eb;"></i> Keamanan Akun & Sesi</h2>
-                    
-                    <form id="account-security-form" onsubmit="updateAccountPassword(event)">
-                        <div class="form-grid-3" style="margin-bottom: 16px;">
-                            <div class="form-group">
-                                <label for="acc-username">Username Login:</label>
-                                <input type="text" id="acc-username" class="styled-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="acc-new-password">Password Baru:</label>
-                                <input type="password" id="acc-new-password" class="styled-input" placeholder="Isi jika ingin mengganti">
-                            </div>
-                            <div class="form-group">
-                                <label for="acc-confirm-password">Konfirmasi Password Baru:</label>
-                                <input type="password" id="acc-confirm-password" class="styled-input" placeholder="Ulangi password baru">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-primary" style="background-color: #2563eb;">
-                            <i class="fa-solid fa-key"></i> Perbarui Username & Password
-                        </button>
-                    </form>
-
-                    <div class="account-info-grid" style="margin-top: 24px;">
-                        <div class="account-info-item">
-                            <span class="info-label">Ringkasan Data Tersimpan</span>
-                            <span class="info-value" id="acc-data-summary">0 Produk • 0 Pelanggan • 0 Transaksi</span>
-                        </div>
-                        <div class="account-info-item">
-                            <span class="info-label">Hak Akses Sistem</span>
-                            <span class="info-value">Full Access (Kasir, Stok, Pengeluaran & Laporan)</span>
-                        </div>
-                    </div>
-
-                    <div class="account-logout-area">
-                        <p style="font-size: 13px; margin-bottom: 12px;">Keluar dari sesi saat ini untuk mengamankan akses panel operasional toko.</p>
-                        <button type="button" class="btn-primary btn-danger btn-lg" onclick="confirmLogout()">
-                            <i class="fa-solid fa-right-from-bracket"></i> Log Out dari Akun
-                        </button>
-                    </div>
-                </div>
+            <!-- Summary & Submit -->
+            <div class="order-summary-bar">
+              <div>
+                <span class="summary-label">Estimasi Total Pembayaran:</span>
+                <h2 id="order-total-preview" class="summary-amount">Rp 0</h2>
+              </div>
+              <button type="submit" class="btn-primary btn-lg">
+                <i class="fa-solid fa-check"></i> Simpan & Proses
+              </button>
             </div>
-        </section>
+          </form>
+        </div>
 
+        <div class="table-header-flex">
+          <h2>Daftar Pesanan Active</h2>
+          <input
+            type="text"
+            id="search-order"
+            onkeyup="renderDashboard()"
+            placeholder="Cari No Order / Customer..."
+            class="input-search styled-input"
+          />
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>No Order</th>
+                <th>Customer</th>
+                <th>ID / No. Meja</th>
+                <th>Produk</th>
+                <th>Channel</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="order-table-body"></tbody>
+          </table>
+        </div>
+        <div id="order-cards-mobile" class="mobile-cards-container"></div>
+      </section>
+
+      <!-- SECTION 2: DATABASE PELANGGAN -->
+      <section id="pelanggan" class="page-section">
+        <div class="table-header-flex">
+          <div>
+            <h1>Database Pelanggan</h1>
+            <p>Riwayat pembeli otomatis tersimpan dari orderan masuk.</p>
+          </div>
+          <input
+            type="text"
+            id="search-customer"
+            onkeyup="renderCustomers()"
+            placeholder="Cari Nama / ID Pelanggan..."
+            class="input-search styled-input"
+          />
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Unik / Ref</th>
+                <th>Nama</th>
+                <th>Alamat / Tipe</th>
+                <th>Riwayat Pemesanan</th>
+                <th>Total Transaksi</th>
+              </tr>
+            </thead>
+            <tbody id="customer-table-body"></tbody>
+          </table>
+        </div>
+        <div id="customer-cards-mobile" class="mobile-cards-container"></div>
+      </section>
+
+      <!-- SECTION 3: MANAJEMEN STOK -->
+      <section id="stok" class="page-section">
+        <h1>Manajemen Stok</h1>
+        <p>
+          Stok berkurang otomatis saat order masuk. Anda juga dapat memperbarui
+          stok secara manual.
+        </p>
+
+        <div class="form-container">
+          <h2><i class="fa-solid fa-box-open"></i> Tambah Produk Baru</h2>
+          <form id="add-product-form">
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="prod-name">Nama Produk:</label>
+                <input
+                  type="text"
+                  id="prod-name"
+                  required
+                  placeholder="Contoh: Nasi Goreng Spesial"
+                  class="styled-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="prod-price">Harga (Rp):</label>
+                <input
+                  type="number"
+                  id="prod-price"
+                  min="1"
+                  required
+                  placeholder="Contoh: 25000"
+                  class="styled-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="prod-stock">Jumlah Stok Awal:</label>
+                <input
+                  type="number"
+                  id="prod-stock"
+                  min="0"
+                  value="10"
+                  required
+                  class="styled-input"
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn-primary">Tambah Produk</button>
+          </form>
+        </div>
+
+        <div class="table-header-flex">
+          <h2>Daftar Stok Produk</h2>
+          <input
+            type="text"
+            id="search-stock"
+            onkeyup="renderStock()"
+            placeholder="Cari Produk..."
+            class="input-search styled-input"
+          />
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Produk</th>
+                <th>Nama Produk</th>
+                <th>Harga</th>
+                <th>Sisa Stok</th>
+                <th>Keterangan Stok</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="stock-table-body"></tbody>
+          </table>
+        </div>
+        <div id="stock-cards-mobile" class="mobile-cards-container"></div>
+      </section>
+
+      <!-- SECTION 4: LAPORAN PENGELUARAN -->
+      <section id="pengeluaran" class="page-section">
+        <h1>Laporan Pengeluaran</h1>
+        <p>Pencatatan dan pemantauan pengeluaran operasional usaha Anda.</p>
+
+        <div class="form-container form-accent-danger">
+          <h2>
+            <i class="fa-solid fa-wallet"></i> Input Pengeluaran Operasional
+          </h2>
+          <form id="expense-form" onsubmit="tambahPengeluaran(event)">
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="expense-name">Deskripsi Pengeluaran:</label>
+                <input
+                  type="text"
+                  id="expense-name"
+                  required
+                  placeholder="Contoh: Beli Bahan Baku / Listrik"
+                  class="styled-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="expense-category">Kategori:</label>
+                <select id="expense-category" required class="styled-input">
+                  <option value="Bahan Baku">Bahan Baku</option>
+                  <option value="Operasional">
+                    Operasional / Keperluan Toko
+                  </option>
+                  <option value="Gaji">Gaji Karyawan</option>
+                  <option value="Pemasaran">Pemasaran / Iklan</option>
+                  <option value="Lainnya">Lain-lain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="expense-amount">Jumlah (Rp):</label>
+                <input
+                  type="number"
+                  id="expense-amount"
+                  min="1"
+                  required
+                  placeholder="Contoh: 50000"
+                  class="styled-input"
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn-primary btn-danger">
+              Simpan Pengeluaran
+            </button>
+          </form>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card card-danger">
+            <h3>Total Pengeluaran</h3>
+            <p class="stat-number stat-danger" id="total-pengeluaran-card">
+              Rp 0
+            </p>
+          </div>
+        </div>
+
+        <h2>Detail Pengeluaran Operasional</h2>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Deskripsi</th>
+                <th>Kategori</th>
+                <th>Nominal</th>
+              </tr>
+            </thead>
+            <tbody id="detail-pengeluaran-body"></tbody>
+          </table>
+        </div>
+        <div id="expense-cards-mobile" class="mobile-cards-container"></div>
+      </section>
+
+      <!-- SECTION 5: LAPORAN PENJUALAN & KEUANGAN -->
+      <section id="laporan" class="page-section">
+        <h1>Laporan Penjualan & Keuangan</h1>
+        <p>
+          Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha
+          Anda.
+        </p>
+
+        <div class="form-container form-accent-info">
+          <h3>
+            <i class="fa-solid fa-file-excel" style="color: #059669"></i> Export
+            Laporan Keuangan
+          </h3>
+          <p style="margin-bottom: 14px; font-size: 13px">
+            Unduh file Excel (.xlsx) rapi di semua sheet lengkap dengan format
+            Rupiah & rumus total otomatis.
+          </p>
+          <div class="backup-btn-group">
+            <button
+              type="button"
+              class="btn-backup btn-backup-excel"
+              onclick="exportToExcel()"
+            >
+              <i class="fa-solid fa-file-excel"></i> Download Laporan Excel
+              (.xlsx) Otomatis
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-container">
+          <div class="filter-group">
+            <label for="filter-periode">Periode Laporan:</label>
+            <select
+              id="filter-periode"
+              onchange="toggleDateFilter()"
+              class="styled-input"
+            >
+              <option value="semua">Semua</option>
+              <option value="harian">Harian (Pilih Tanggal)</option>
+              <option value="bulanan">Bulanan (Pilih Bulan)</option>
+            </select>
+          </div>
+          <div id="date-picker-wrapper" style="display: none">
+            <label for="filter-tanggal">Pilih Tanggal:</label>
+            <input
+              type="date"
+              id="filter-tanggal"
+              onchange="renderLaporan()"
+              class="styled-input"
+            />
+          </div>
+          <div id="month-picker-wrapper" style="display: none">
+            <label for="filter-bulan">Pilih Bulan:</label>
+            <input
+              type="month"
+              id="filter-bulan"
+              onchange="renderLaporan()"
+              class="styled-input"
+            />
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card card-success">
+            <h3>Total Omzet (Pendapatan)</h3>
+            <p class="stat-number" id="report-omzet">Rp 0</p>
+          </div>
+          <div class="card card-danger">
+            <h3>Total Pengeluaran</h3>
+            <p class="stat-number stat-danger" id="report-pengeluaran">Rp 0</p>
+          </div>
+          <div class="card card-emerald">
+            <h3>Laba Bersih (Omzet - Pengeluaran)</h3>
+            <p class="stat-number" id="report-laba">Rp 0</p>
+          </div>
+          <div class="card">
+            <h3>Channel Paling Banyak Orderan</h3>
+            <p class="stat-text" id="report-top-channel">-</p>
+          </div>
+          <div class="card">
+            <h3>Produk Terlaris</h3>
+            <p class="stat-text" id="report-top-product">-</p>
+          </div>
+        </div>
+
+        <div class="laporan-detail">
+          <div class="table-header-flex">
+            <h2>Detail Transaksi Penjualan</h2>
+            <div class="filter-inline">
+              <label for="filter-produk">Pilih Jenis Produk:</label>
+              <select
+                id="filter-produk"
+                onchange="renderLaporan()"
+                class="styled-input"
+              >
+                <option value="semua">Semua Produk</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Produk</th>
+                  <th>PCS</th>
+                  <th>Customer / Ref</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="detail-transaksi-body"></tbody>
+            </table>
+          </div>
+          <div id="report-cards-mobile" class="mobile-cards-container"></div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: PENGATURAN AKUN PEMILIK UMKM -->
+      <section id="akun" class="page-section">
+        <h1>Pengaturan Akun</h1>
+        <p>
+          Kelola profil toko, logo usaha (opsional), keamanan password, dan sesi
+          login pemilik UMKM.
+        </p>
+
+        <div class="account-grid-layout">
+          <!-- KARTU 1: PROFIL & EDIT DATA TOKO -->
+          <div class="form-container form-accent-emerald">
+            <div class="account-profile-header">
+              <img
+                id="account-profile-logo"
+                src=""
+                alt="Logo UMKM"
+                class="account-avatar"
+                style="display: none"
+              />
+              <div style="flex: 1">
+                <span class="account-role-badge"
+                  ><i class="fa-solid fa-crown"></i> Akun Pemilik UMKM</span
+                >
+                <h2 id="owner-store-name">UMKM Digital Kuliner</h2>
+                <p
+                  id="owner-account-subtitle"
+                  style="margin: 4px 0 10px 0; font-size: 14px"
+                >
+                  Status Sesi: Aktif (Administrator Utama)
+                </p>
+
+                <!-- Kontrol Upload / Hapus Logo -->
+                <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                  <label
+                    for="acc-logo-upload"
+                    class="btn-sm"
+                    style="
+                      background-color: #e0f2fe;
+                      color: #0284c7;
+                      border: 1px solid #bae6fd;
+                      cursor: pointer;
+                    "
+                  >
+                    <i class="fa-solid fa-image"></i> Pasang Logo Toko
+                  </label>
+                  <input
+                    type="file"
+                    id="acc-logo-upload"
+                    accept="image/*"
+                    style="display: none"
+                    onchange="handleLogoUpload(event)"
+                  />
+                  <button
+                    type="button"
+                    id="btn-remove-logo"
+                    class="btn-sm"
+                    style="
+                      background-color: #fef2f2;
+                      color: #ef4444;
+                      border: 1px solid #fecaca;
+                      display: none;
+                    "
+                    onclick="removeStoreLogo()"
+                  >
+                    <i class="fa-solid fa-trash"></i> Hapus Logo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <form
+              id="account-profile-form"
+              onsubmit="saveAccountProfile(event)"
+            >
+              <div class="form-grid-3" style="margin-bottom: 14px">
+                <div class="form-group">
+                  <label for="acc-store-name">Nama Usaha / Toko:</label>
+                  <input
+                    type="text"
+                    id="acc-store-name"
+                    class="styled-input"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="acc-owner-name">Nama Pemilik:</label>
+                  <input
+                    type="text"
+                    id="acc-owner-name"
+                    class="styled-input"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="acc-phone">No. WhatsApp / Kontak Toko:</label>
+                  <input
+                    type="text"
+                    id="acc-phone"
+                    class="styled-input"
+                    placeholder="0812-XXXX-XXXX"
+                  />
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 18px">
+                <label for="acc-address">Alamat Operasional Toko:</label>
+                <input
+                  type="text"
+                  id="acc-address"
+                  class="styled-input"
+                  placeholder="Contoh: Jl. Sudirman No. 10, Medan"
+                />
+              </div>
+              <button type="submit" class="btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil
+              </button>
+            </form>
+          </div>
+
+          <!-- KARTU 2: KEAMANAN PASSWORD & LOGOUT -->
+          <div class="form-container form-accent-info">
+            <h2 style="margin-bottom: 16px">
+              <i class="fa-solid fa-shield-halved" style="color: #2563eb"></i>
+              Keamanan Akun & Sesi
+            </h2>
+
+            <form
+              id="account-security-form"
+              onsubmit="updateAccountPassword(event)"
+            >
+              <div class="form-grid-3" style="margin-bottom: 16px">
+                <div class="form-group">
+                  <label for="acc-username">Username Login:</label>
+                  <input
+                    type="text"
+                    id="acc-username"
+                    class="styled-input"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="acc-new-password">Password Baru:</label>
+                  <input
+                    type="password"
+                    id="acc-new-password"
+                    class="styled-input"
+                    placeholder="Isi jika ingin mengganti"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="acc-confirm-password"
+                    >Konfirmasi Password Baru:</label
+                  >
+                  <input
+                    type="password"
+                    id="acc-confirm-password"
+                    class="styled-input"
+                    placeholder="Ulangi password baru"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                class="btn-primary"
+                style="background-color: #2563eb"
+              >
+                <i class="fa-solid fa-key"></i> Perbarui Username & Password
+              </button>
+            </form>
+
+            <div class="account-info-grid" style="margin-top: 24px">
+              <div class="account-info-item">
+                <span class="info-label">Ringkasan Data Tersimpan</span>
+                <span class="info-value" id="acc-data-summary"
+                  >0 Produk • 0 Pelanggan • 0 Transaksi</span
+                >
+              </div>
+              <div class="account-info-item">
+                <span class="info-label">Hak Akses Sistem</span>
+                <span class="info-value"
+                  >Full Access (Kasir, Stok, Pengeluaran & Laporan)</span
+                >
+              </div>
+            </div>
+
+            <div class="account-logout-area">
+              <p style="font-size: 13px; margin-bottom: 12px">
+                Keluar dari sesi saat ini untuk mengamankan akses panel
+                operasional toko.
+              </p>
+              <button
+                type="button"
+                class="btn-primary btn-danger btn-lg"
+                onclick="confirmLogout()"
+              >
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out dari Akun
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Bottom Navigation Bar (Mobile View - Tombol Akun Bawah Dihapus, Hanya Ada di Kanan Atas) -->
     <nav class="bottom-nav">
-        <button class="bottom-nav-item active" onclick="showSection('dashboard')">
-            <i class="fa-solid fa-chart-pie nav-icon"></i>
-            <span class="nav-label">Dashboard</span>
-        </button>
-        <button class="bottom-nav-item" onclick="showSection('pelanggan')">
-            <i class="fa-solid fa-users nav-icon"></i>
-            <span class="nav-label">Pelanggan</span>
-        </button>
-        <button class="bottom-nav-item" onclick="showSection('stok')">
-            <i class="fa-solid fa-boxes-stacked nav-icon"></i>
-            <span class="nav-label">Stok</span>
-        </button>
-        <button class="bottom-nav-item" onclick="showSection('pengeluaran')">
-            <i class="fa-solid fa-receipt nav-icon"></i>
-            <span class="nav-label">Pengeluaran</span>
-        </button>
-        <button class="bottom-nav-item" onclick="showSection('laporan')">
-            <i class="fa-solid fa-chart-line nav-icon"></i>
-            <span class="nav-label">Laporan</span>
-        </button>
+      <button class="bottom-nav-item active" onclick="showSection('dashboard')">
+        <i class="fa-solid fa-chart-pie nav-icon"></i>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="bottom-nav-item" onclick="showSection('pelanggan')">
+        <i class="fa-solid fa-users nav-icon"></i>
+        <span class="nav-label">Pelanggan</span>
+      </button>
+      <button class="bottom-nav-item" onclick="showSection('stok')">
+        <i class="fa-solid fa-boxes-stacked nav-icon"></i>
+        <span class="nav-label">Stok</span>
+      </button>
+      <button class="bottom-nav-item" onclick="showSection('pengeluaran')">
+        <i class="fa-solid fa-receipt nav-icon"></i>
+        <span class="nav-label">Pengeluaran</span>
+      </button>
+      <button class="bottom-nav-item" onclick="showSection('laporan')">
+        <i class="fa-solid fa-chart-line nav-icon"></i>
+        <span class="nav-label">Laporan</span>
+      </button>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="script.js"></script>
-</body>
+    <script type="module" src="script.js"></script>
+  </body>
 </html>

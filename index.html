@@ -1,232 +1,410 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Login Admin UMKM - Panel Operasional Kuliner</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="style.css?v=5">
-<style>
-        body.auth-body {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            min-height: 100vh !important;
-            background-color: #faf8f5 !important;
-            padding: 20px !important;
-            overflow: hidden !important;
-            position: relative !important;
-            isolation: isolate !important;
-        }
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+    />
+    <link rel="stylesheet" href="style.css?v=5" />
+    <style>
+      body.auth-body {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 100vh !important;
+        background-color: #faf8f5 !important;
+        padding: 20px !important;
+        overflow: hidden !important;
+        position: relative !important;
+        isolation: isolate !important;
+      }
 
-        /* Lapisan 1: Warna penuh satu layar tanpa batas kotak */
-        body.auth-body::before {
-            content: "" !important;
-            position: fixed !important;
-            inset: -40px !important;
-            background-image: url('logo.png') !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-            opacity: 0.22 !important;
-            filter: blur(24px) brightness(1.12) !important;
-            -webkit-filter: blur(24px) brightness(1.12) !important;
-            z-index: -1 !important;
-            pointer-events: none !important;
-        }
+      body.auth-body::before {
+        content: "" !important;
+        position: fixed !important;
+        inset: -40px !important;
+        background-image: url("logo.png") !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        opacity: 0.22 !important;
+        filter: blur(24px) brightness(1.12) !important;
+        -webkit-filter: blur(24px) brightness(1.12) !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
+      }
 
-        /* Lapisan 2: Ukuran kotak elemen sama persis dengan ukuran logo agar mask memudar sempurna */
+      .bg-logo-watermark.auth-watermark-blur {
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: translate(-50%, -50%) !important;
+        width: min(84vh, 88vw) !important;
+        height: min(84vh, 88vw) !important;
+        background-image: url("logo.png") !important;
+        background-size: contain !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        opacity: 0.4 !important;
+        filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
+        -webkit-filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
+        -webkit-mask-image: radial-gradient(
+          circle at 50% 50%,
+          #000 48%,
+          transparent 70%
+        ) !important;
+        mask-image: radial-gradient(
+          circle at 50% 50%,
+          #000 48%,
+          transparent 70%
+        ) !important;
+        z-index: 0 !important;
+        pointer-events: none !important;
+      }
+
+      .auth-wrapper {
+        width: 100% !important;
+        max-width: 420px !important;
+        position: relative !important;
+        z-index: 2 !important;
+      }
+
+      .auth-card {
+        background: rgba(255, 255, 255, 0.56) !important;
+        backdrop-filter: blur(3px) !important;
+        -webkit-backdrop-filter: blur(3px) !important;
+        padding: 30px 26px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.78) !important;
+      }
+
+      .auth-card .styled-input {
+        background-color: rgba(255, 255, 255, 0.85) !important;
+      }
+
+      @media screen and (max-width: 768px) {
         .bg-logo-watermark.auth-watermark-blur {
-            position: fixed !important;
-            left: 50% !important;
-            top: 50% !important;
-            right: auto !important;
-            bottom: auto !important;
-            transform: translate(-50%, -50%) !important;
-            width: min(84vh, 88vw) !important;
-            height: min(84vh, 88vw) !important;
-            background-image: url('logo.png') !important;
-            background-size: contain !important;
-            background-position: center center !important;
-            background-repeat: no-repeat !important;
-            opacity: 0.40 !important;
-            filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
-            -webkit-filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
-            -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 70%) !important;
-            mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 70%) !important;
-            z-index: 0 !important;
-            pointer-events: none !important;
+          width: 96vw !important;
+          height: 96vw !important;
+          top: 48% !important;
         }
-
-        .auth-wrapper {
-            width: 100% !important;
-            max-width: 420px !important;
-            position: relative !important;
-            z-index: 2 !important;
-        }
-
-        /* Kartu form semi-transparan agar lambang & tulisan LEGACIES utuh terlihat */
-        .auth-card {
-            background: rgba(255, 255, 255, 0.56) !important;
-            backdrop-filter: blur(3px) !important;
-            -webkit-backdrop-filter: blur(3px) !important;
-            padding: 30px 26px !important;
-            border-radius: 16px !important;
-            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08) !important;
-            border: 1px solid rgba(255, 255, 255, 0.78) !important;
-        }
-
-        .auth-card .styled-input {
-            background-color: rgba(255, 255, 255, 0.85) !important;
-        }
-
-        @media screen and (max-width: 768px) {
-            .bg-logo-watermark.auth-watermark-blur {
-                width: 96vw !important;
-                height: 96vw !important;
-                top: 48% !important;
-            }
-        }
+      }
     </style>
-</head>
-<body class="auth-body">
-
-    <!-- Background Logo Full Layar (Otomatis berlaku untuk Login & Register) -->
+  </head>
+  <body class="auth-body">
     <div class="bg-logo-watermark auth-watermark-blur"></div>
 
     <div class="auth-wrapper">
-        <!-- FORM LOGIN -->
-        <div id="login-box" class="auth-card">
-            <div class="auth-logo-header">
-                <h2>Login Admin UMKM</h2>
-                <p>Masuk ke Panel Operasional Kuliner</p>
-            </div>
-            <form id="login-form" onsubmit="handleLogin(event)">
-                <div class="form-group" style="margin-bottom: 14px;">
-                    <label for="login-username">Username</label>
-                    <input type="text" id="login-username" class="styled-input" placeholder="Username" required>
-                </div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" class="styled-input" placeholder="Password" required>
-                </div>
-                <button type="submit" class="btn-auth-blue">Login</button>
-            </form>
-            <p class="auth-switch-text">
-                Belum punya akun? <a href="javascript:void(0)" onclick="toggleAuthForm('register')">Daftar Akun UMKM Baru</a>
-            </p>
+      <!-- FORM LOGIN -->
+      <div id="login-box" class="auth-card">
+        <div class="auth-logo-header">
+          <h2>Login Admin UMKM</h2>
+          <p>Masuk ke Panel Operasional Kuliner (Cloud Sync)</p>
         </div>
+        <form id="login-form">
+          <div class="form-group" style="margin-bottom: 14px">
+            <label for="login-username">Username</label>
+            <input
+              type="text"
+              id="login-username"
+              class="styled-input"
+              placeholder="Username"
+              required
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 20px">
+            <label for="login-password">Password</label>
+            <input
+              type="password"
+              id="login-password"
+              class="styled-input"
+              placeholder="Password"
+              required
+            />
+          </div>
+          <button type="submit" id="btn-login-submit" class="btn-auth-blue">
+            Login
+          </button>
+        </form>
+        <p class="auth-switch-text">
+          Belum punya akun?
+          <a href="javascript:void(0)" onclick="toggleAuthForm('register')"
+            >Daftar Akun UMKM Baru</a
+          >
+        </p>
+      </div>
 
-        <!-- FORM REGISTER -->
-        <div id="register-box" class="auth-card" style="display: none;">
-            <div class="auth-logo-header">
-                <h2>Daftar Akun UMKM Baru</h2>
-                <p>Buat akun pengelola usaha kuliner Anda</p>
-            </div>
-            <form id="register-form" onsubmit="handleRegister(event)">
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label for="reg-store-name">Nama Pemilik / Usaha:</label>
-                    <input type="text" id="reg-store-name" class="styled-input" placeholder="Contoh: Toko Berkah / Budi" required>
-                </div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label for="reg-username">Username:</label>
-                    <input type="text" id="reg-username" class="styled-input" placeholder="Buat Username" required>
-                </div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label for="reg-password">Password:</label>
-                    <input type="password" id="reg-password" class="styled-input" placeholder="Buat Password" required>
-                </div>
-                <div class="form-group" style="margin-bottom: 18px;">
-                    <label for="reg-confirm-password">Konfirmasi Password:</label>
-                    <input type="password" id="reg-confirm-password" class="styled-input" placeholder="Ulangi Password" required>
-                </div>
-                <button type="submit" class="btn-auth-green">Daftar Sekarang</button>
-            </form>
-            <p class="auth-switch-text">
-                Sudah punya akun? <a href="javascript:void(0)" onclick="toggleAuthForm('login')">Login di sini</a>
-            </p>
+      <!-- FORM REGISTER -->
+      <div id="register-box" class="auth-card" style="display: none">
+        <div class="auth-logo-header">
+          <h2>Daftar Akun UMKM Baru</h2>
+          <p>Buat akun pengelola usaha kuliner Anda</p>
         </div>
+        <form id="register-form">
+          <div class="form-group" style="margin-bottom: 12px">
+            <label for="reg-store-name">Nama Pemilik / Usaha:</label>
+            <input
+              type="text"
+              id="reg-store-name"
+              class="styled-input"
+              placeholder="Contoh: Toko Berkah / Budi"
+              required
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px">
+            <label for="reg-username">Username:</label>
+            <input
+              type="text"
+              id="reg-username"
+              class="styled-input"
+              placeholder="Buat Username"
+              required
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px">
+            <label for="reg-password">Password:</label>
+            <input
+              type="password"
+              id="reg-password"
+              class="styled-input"
+              placeholder="Buat Password"
+              required
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 18px">
+            <label for="reg-confirm-password">Konfirmasi Password:</label>
+            <input
+              type="password"
+              id="reg-confirm-password"
+              class="styled-input"
+              placeholder="Ulangi Password"
+              required
+            />
+          </div>
+          <button type="submit" id="btn-register-submit" class="btn-auth-green">
+            Daftar Sekarang
+          </button>
+        </form>
+        <p class="auth-switch-text">
+          Sudah punya akun?
+          <a href="javascript:void(0)" onclick="toggleAuthForm('login')"
+            >Login di sini</a
+          >
+        </p>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function toggleAuthForm(mode) {
-            const loginBox = document.getElementById('login-box');
-            const registerBox = document.getElementById('register-box');
-            if (mode === 'register') {
-                loginBox.style.display = 'none';
-                registerBox.style.display = 'block';
-            } else {
-                registerBox.style.display = 'none';
-                loginBox.style.display = 'block';
-            }
+      window.toggleAuthForm = function (mode) {
+        const loginBox = document.getElementById("login-box");
+        const registerBox = document.getElementById("register-box");
+        if (mode === "register") {
+          loginBox.style.display = "none";
+          registerBox.style.display = "block";
+        } else {
+          registerBox.style.display = "none";
+          loginBox.style.display = "block";
         }
+      };
+    </script>
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value;
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        setDoc,
+      } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-            const savedAccount = JSON.parse(localStorage.getItem('umkm_owner_account')) || {
-                username: 'admin',
-                password: '123'
-            };
+      const firebaseConfig = {
+        apiKey: "AIzaSyA3x9grxeVu_a1_BFY_1EfEtwA-rGE7LFA",
+        authDomain: "manajemen-operasional-umkm.firebaseapp.com",
+        projectId: "manajemen-operasional-umkm",
+        storageBucket: "manajemen-operasional-umkm.firebasestorage.app",
+        messagingSenderId: "139605713066",
+        appId: "1:139605713066:web:610a6cc1cb5ba1fd0fb0d3",
+      };
 
-            if ((username === savedAccount.username && password === savedAccount.password) || (username === 'admin' && password === '123')) {
-                window.location.href = 'dashboard.html';
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Login Gagal',
-                    text: 'Username atau password salah. Silakan periksa kembali atau daftar akun baru.',
-                    confirmButtonColor: '#2563eb'
-                });
-            }
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // Pastikan akun default 'admin' tersedia di Firestore jika belum ada
+      async function ensureDefaultAdmin() {
+        const defaultRef = doc(db, "umkm_tenants", "admin");
+        const snap = await getDoc(defaultRef);
+        if (!snap.exists()) {
+          await setDoc(defaultRef, {
+            account: {
+              storeName: "UMKM Digital Kuliner",
+              ownerName: "Administrator Utama",
+              username: "admin",
+              password: "123",
+              phone: "-",
+              address: "Kota Medan",
+              logoData: "",
+            },
+            products: [],
+            customers: [],
+            orders: [],
+            expenses: [],
+          });
         }
+      }
 
-        function handleRegister(e) {
-            e.preventDefault();
-            const storeName = document.getElementById('reg-store-name').value.trim();
-            const username = document.getElementById('reg-username').value.trim();
-            const password = document.getElementById('reg-password').value;
-            const confirmPassword = document.getElementById('reg-confirm-password').value;
+      // HANDLER LOGIN CLOUD
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const btn = document.getElementById("btn-login-submit");
+          const rawUsername = document
+            .getElementById("login-username")
+            .value.trim();
+          const usernameKey = rawUsername.toLowerCase();
+          const password = document.getElementById("login-password").value;
 
-            if (password !== confirmPassword) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Password Tidak Cocok',
-                    text: 'Pastikan konfirmasi password sama dengan password yang dibuat.',
-                    confirmButtonColor: '#16a34a'
-                });
+          btn.disabled = true;
+          btn.innerText = "Menghubungkan ke Database...";
+
+          try {
+            if (usernameKey === "admin") {
+              await ensureDefaultAdmin();
+            }
+
+            const tenantRef = doc(db, "umkm_tenants", usernameKey);
+            const docSnap = await getDoc(tenantRef);
+
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const acc = data.account || {};
+              if (acc.password === password) {
+                sessionStorage.setItem("umkm_active_tenant", usernameKey);
+                window.location.href = "dashboard.html";
                 return;
+              }
             }
-
-            const newAccount = {
-                storeName: storeName,
-                ownerName: storeName,
-                username: username,
-                password: password,
-                phone: '-',
-                address: 'Kota Medan',
-                logoData: ''
-            };
-
-            localStorage.setItem('umkm_owner_account', JSON.stringify(newAccount));
 
             Swal.fire({
-                icon: 'success',
-                title: 'Akun Berhasil Dibuat!',
-                text: 'Silakan login menggunakan akun baru Anda.',
-                confirmButtonColor: '#16a34a'
-            }).then(() => {
-                document.getElementById('register-form').reset();
-                toggleAuthForm('login');
-                document.getElementById('login-username').value = username;
+              icon: "error",
+              title: "Login Gagal",
+              text: "Username atau password salah. Pastikan akun sudah terdaftar.",
+              confirmButtonColor: "#2563eb",
             });
-        }
+          } catch (error) {
+            console.error(error);
+            Swal.fire({
+              icon: "error",
+              title: "Koneksi Gagal",
+              text: "Gagal terhubung ke server Firebase: " + error.message,
+              confirmButtonColor: "#ef4444",
+            });
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "Login";
+          }
+        });
+
+      // HANDLER REGISTER CLOUD
+      document
+        .getElementById("register-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const btn = document.getElementById("btn-register-submit");
+          const storeName = document
+            .getElementById("reg-store-name")
+            .value.trim();
+          const rawUsername = document
+            .getElementById("reg-username")
+            .value.trim();
+          const usernameKey = rawUsername.toLowerCase();
+          const password = document.getElementById("reg-password").value;
+          const confirmPassword = document.getElementById(
+            "reg-confirm-password",
+          ).value;
+
+          if (password !== confirmPassword) {
+            Swal.fire({
+              icon: "warning",
+              title: "Password Tidak Cocok",
+              text: "Pastikan konfirmasi password sama dengan password yang dibuat.",
+              confirmButtonColor: "#16a34a",
+            });
+            return;
+          }
+
+          btn.disabled = true;
+          btn.innerText = "Menyimpan ke Cloud...";
+
+          try {
+            const tenantRef = doc(db, "umkm_tenants", usernameKey);
+            const existingSnap = await getDoc(tenantRef);
+
+            if (existingSnap.exists()) {
+              Swal.fire({
+                icon: "error",
+                title: "Username Sudah Dipakai",
+                text: "Silakan pilih username lain yang belum digunakan.",
+                confirmButtonColor: "#ef4444",
+              });
+              return;
+            }
+
+            await setDoc(tenantRef, {
+              account: {
+                storeName: storeName,
+                ownerName: storeName,
+                username: rawUsername,
+                password: password,
+                phone: "-",
+                address: "Kota Medan",
+                logoData: "",
+              },
+              products: [],
+              customers: [],
+              orders: [],
+              expenses: [],
+            });
+
+            Swal.fire({
+              icon: "success",
+              title: "Akun Cloud Berhasil Dibuat!",
+              text: "Akun ini kini bisa digunakan dari berbagai HP & Laptop secara bersamaan.",
+              confirmButtonColor: "#16a34a",
+            }).then(() => {
+              document.getElementById("register-form").reset();
+              window.toggleAuthForm("login");
+              document.getElementById("login-username").value = rawUsername;
+            });
+          } catch (error) {
+            console.error(error);
+            Swal.fire({
+              icon: "error",
+              title: "Gagal Mendaftar",
+              text: "Terjadi kesalahan saat menyimpan ke Firebase: " + error.message,
+              confirmButtonColor: "#ef4444",
+            });
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "Daftar Sekarang";
+          }
+        });
     </script>
-</body>
+  </body>
 </html>
