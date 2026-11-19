@@ -21,7 +21,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=7" />
   </head>
   <body>
     <!-- Watermark Background Logo (Muncul hanya jika logo sudah diupload) -->
@@ -31,7 +31,7 @@
       style="display: none"
     ></div>
 
-    <!-- Header Mobile (Tanpa Badge PRO, Tombol Akun di Kanan Atas) -->
+    <!-- Header Mobile -->
     <header class="mobile-header">
       <div class="mobile-brand">
         <img
@@ -55,7 +55,7 @@
       </button>
     </header>
 
-    <!-- Sidebar / Navigasi Desktop (Dengan Background Full Logo Perusahaan) -->
+    <!-- Sidebar / Navigasi Desktop -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <img
@@ -498,6 +498,39 @@
           </form>
         </div>
 
+        <div class="filter-container">
+          <div class="filter-group">
+            <label for="filter-exp-periode">Periode Laporan:</label>
+            <select
+              id="filter-exp-periode"
+              onchange="toggleExpenseDateFilter()"
+              class="styled-input"
+            >
+              <option value="semua">Semua</option>
+              <option value="harian">Harian (Pilih Tanggal)</option>
+              <option value="bulanan">Bulanan (Pilih Bulan)</option>
+            </select>
+          </div>
+          <div id="exp-date-picker-wrapper" style="display: none">
+            <label for="filter-exp-tanggal">Pilih Tanggal:</label>
+            <input
+              type="date"
+              id="filter-exp-tanggal"
+              onchange="renderPengeluaran()"
+              class="styled-input"
+            />
+          </div>
+          <div id="exp-month-picker-wrapper" style="display: none">
+            <label for="filter-exp-bulan">Pilih Bulan:</label>
+            <input
+              type="month"
+              id="filter-exp-bulan"
+              onchange="renderPengeluaran()"
+              class="styled-input"
+            />
+          </div>
+        </div>
+
         <div class="cards-grid">
           <div class="card card-danger">
             <h3>Total Pengeluaran</h3>
@@ -507,7 +540,25 @@
           </div>
         </div>
 
-        <h2>Detail Pengeluaran Operasional</h2>
+        <div class="table-header-flex">
+          <h2>Detail Pengeluaran Operasional</h2>
+          <div class="filter-inline">
+            <label for="filter-exp-kategori">Pilih Jenis Pengeluaran:</label>
+            <select
+              id="filter-exp-kategori"
+              onchange="renderPengeluaran()"
+              class="styled-input"
+            >
+              <option value="semua">Semua Pengeluaran</option>
+              <option value="Bahan Baku">Bahan Baku</option>
+              <option value="Operasional">Operasional / Keperluan Toko</option>
+              <option value="Gaji">Gaji Karyawan</option>
+              <option value="Pemasaran">Pemasaran / Iklan</option>
+              <option value="Lainnya">Lain-lain</option>
+            </select>
+          </div>
+        </div>
+
         <div class="table-responsive">
           <table>
             <thead>
@@ -651,7 +702,6 @@
         </p>
 
         <div class="account-grid-layout">
-          <!-- KARTU 1: PROFIL & EDIT DATA TOKO -->
           <div class="form-container form-accent-emerald">
             <div class="account-profile-header">
               <img
@@ -673,7 +723,6 @@
                   Status Sesi: Aktif (Administrator Utama)
                 </p>
 
-                <!-- Kontrol Upload / Hapus Logo -->
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                   <label
                     for="acc-logo-upload"
@@ -760,7 +809,6 @@
             </form>
           </div>
 
-          <!-- KARTU 2: KEAMANAN PASSWORD & LOGOUT -->
           <div class="form-container form-accent-info">
             <h2 style="margin-bottom: 16px">
               <i class="fa-solid fa-shield-halved" style="color: #2563eb"></i>
@@ -771,7 +819,7 @@
               id="account-security-form"
               onsubmit="updateAccountPassword(event)"
             >
-              <div class="form-grid-3" style="margin-bottom: 16px">
+              <div class="form-grid-4" style="margin-bottom: 16px">
                 <div class="form-group">
                   <label for="acc-username">Username Login:</label>
                   <input
@@ -782,12 +830,23 @@
                   />
                 </div>
                 <div class="form-group">
+                  <label for="acc-old-password">Password Lama:</label>
+                  <input
+                    type="password"
+                    id="acc-old-password"
+                    class="styled-input"
+                    placeholder="Masukkan password saat ini"
+                    required
+                  />
+                </div>
+                <div class="form-group">
                   <label for="acc-new-password">Password Baru:</label>
                   <input
                     type="password"
                     id="acc-new-password"
                     class="styled-input"
-                    placeholder="Isi jika ingin mengganti"
+                    placeholder="Masukkan password baru"
+                    required
                   />
                 </div>
                 <div class="form-group">
@@ -799,6 +858,7 @@
                     id="acc-confirm-password"
                     class="styled-input"
                     placeholder="Ulangi password baru"
+                    required
                   />
                 </div>
               </div>
@@ -807,7 +867,7 @@
                 class="btn-primary"
                 style="background-color: #2563eb"
               >
-                <i class="fa-solid fa-key"></i> Perbarui Username & Password
+                <i class="fa-solid fa-key"></i> Perbarui Password
               </button>
             </form>
 
@@ -844,7 +904,7 @@
       </section>
     </main>
 
-    <!-- Bottom Navigation Bar (Mobile View - Tombol Akun Bawah Dihapus, Hanya Ada di Kanan Atas) -->
+    <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
       <button class="bottom-nav-item active" onclick="showSection('dashboard')">
         <i class="fa-solid fa-chart-pie nav-icon"></i>

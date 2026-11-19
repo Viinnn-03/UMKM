@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebas
 import {
   getFirestore,
   doc,
-  getDoc,
   setDoc,
   updateDoc,
   onSnapshot,
@@ -101,7 +100,6 @@ function initRealtimeSync() {
           ownerAccount = { ...ownerAccount, ...cloudData.account };
         }
 
-        // Perbarui seluruh tampilan di semua perangkat secara otomatis
         populateProductDropdown();
         populateCustomerDatalist();
         loadAccountSettingsUI();
@@ -111,7 +109,6 @@ function initRealtimeSync() {
         renderPengeluaran();
         renderLaporan();
       } else {
-        // Buat dokumen awal jika belum ada
         setDoc(tenantDocRef, {
           account: ownerAccount,
           products: [],
@@ -144,7 +141,6 @@ function generateNextOrderId() {
 function resolveCustomerId(rawInput, custName) {
   let cleanedInput = rawInput.trim().toUpperCase();
 
-  // 1. Jika kasir mengisi manual (misal: "meja 5" atau "MEJA-05"), rapikan formatnya
   if (cleanedInput) {
     const mejaMatch = cleanedInput.match(/^MEJA[\s\-]*(\d+)$/);
     if (mejaMatch) {
@@ -153,7 +149,6 @@ function resolveCustomerId(rawInput, custName) {
     return cleanedInput;
   }
 
-  // 2. Jika dikosongkan, cek apakah nama pelanggan sudah pernah ada di database
   const existingByName = customers.find(
     (c) =>
       c.name &&
@@ -165,7 +160,6 @@ function resolveCustomerId(rawInput, custName) {
     return existingByName.phone;
   }
 
-  // 3. Jika pelanggan baru, buat nomor urut CUST-001, CUST-002, dst.
   let maxCustNum = 0;
   customers.forEach((c) => {
     if (c.phone && c.phone.startsWith("CUST-")) {
@@ -247,7 +241,6 @@ function handleLogoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  // Batasi ukuran gambar agar aman disimpan di dokumen Firestore (< 600KB)
   if (file.size > 600 * 1024) {
     Swal.fire({
       icon: "warning",
@@ -347,16 +340,49 @@ async function saveAccountProfile(e) {
   });
 }
 
+// --- UPDATE PASSWORD DENGAN VERIFIKASI PASSWORD LAMA ---
 async function updateAccountPassword(e) {
   e.preventDefault();
+  const oldPass = document.getElementById("acc-old-password").value;
   const newPass = document.getElementById("acc-new-password").value;
   const confirmPass = document.getElementById("acc-confirm-password").value;
 
+  if (!oldPass) {
+    Swal.fire({
+      icon: "warning",
+      title: "Password Lama Kosong",
+      text: "Masukkan password lama Anda terlebih dahulu untuk verifikasi.",
+      confirmButtonColor: "#2563eb",
+    });
+    return;
+  }
+
+  if (oldPass !== ownerAccount.password) {
+    Swal.fire({
+      icon: "error",
+      title: "Password Lama Salah",
+      text: "Password lama yang Anda masukkan tidak sesuai.",
+      confirmButtonColor: "#ef4444",
+    });
+    return;
+  }
+
   if (!newPass) {
     Swal.fire({
+      icon: "warning",
+      title: "Password Baru Kosong",
+      text: "Silakan masukkan password baru yang diinginkan.",
+      confirmButtonColor: "#2563eb",
+    });
+    return;
+  }
+
+  if (newPass === oldPass) {
+    Swal.fire({
       icon: "info",
-      title: "Password Kosong",
-      text: "Isi password baru jika ingin mengganti password login.",
+      title: "Password Sama",
+      text: "Password baru tidak boleh sama dengan password lama.",
+      confirmButtonColor: "#2563eb",
     });
     return;
   }
@@ -364,20 +390,22 @@ async function updateAccountPassword(e) {
   if (newPass !== confirmPass) {
     Swal.fire({
       icon: "error",
-      title: "Password Tidak Sama",
-      text: "Konfirmasi password baru harus cocok.",
+      title: "Konfirmasi Tidak Sama",
+      text: "Konfirmasi password baru harus cocok dengan password baru.",
+      confirmButtonColor: "#ef4444",
     });
     return;
   }
 
   ownerAccount.password = newPass;
   await saveAccountDataToCloud();
+  document.getElementById("acc-old-password").value = "";
   document.getElementById("acc-new-password").value = "";
   document.getElementById("acc-confirm-password").value = "";
 
   Swal.fire({
     icon: "success",
-    title: "Keamanan Diperbarui!",
+    title: "Password Diperbarui!",
     text: "Password login baru berhasil disimpan ke Cloud.",
     confirmButtonColor: "#2563eb",
   });
@@ -909,6 +937,27 @@ function cancelOrder(orderId) {
   });
 }
 
+// --- PENGELUARAN OPERASIONAL + FILTER PERIODE & KATEGORI ---
+function toggleExpenseDateFilter() {
+  const periodeSelect = document.getElementById("filter-exp-periode");
+  const datePickerWrapper = document.getElementById("exp-date-picker-wrapper");
+  const monthPickerWrapper = document.getElementById(
+    "exp-month-picker-wrapper",
+  );
+
+  if (periodeSelect && periodeSelect.value === "harian") {
+    if (datePickerWrapper) datePickerWrapper.style.display = "inline-block";
+    if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
+  } else if (periodeSelect && periodeSelect.value === "bulanan") {
+    if (datePickerWrapper) datePickerWrapper.style.display = "none";
+    if (monthPickerWrapper) monthPickerWrapper.style.display = "inline-block";
+  } else {
+    if (datePickerWrapper) datePickerWrapper.style.display = "none";
+    if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
+  }
+  renderPengeluaran();
+}
+
 async function tambahPengeluaran(e) {
   e.preventDefault();
   const name = document.getElementById("expense-name").value.trim();
@@ -937,17 +986,41 @@ function renderPengeluaran() {
   const mobileCards = document.getElementById("expense-cards-mobile");
   if (!expenseBody) return;
 
+  const periodeVal = document.getElementById("filter-exp-periode")
+    ? document.getElementById("filter-exp-periode").value
+    : "semua";
+  const tanggalVal = document.getElementById("filter-exp-tanggal")
+    ? document.getElementById("filter-exp-tanggal").value
+    : "";
+  const bulanVal = document.getElementById("filter-exp-bulan")
+    ? document.getElementById("filter-exp-bulan").value
+    : "";
+  const kategoriVal = document.getElementById("filter-exp-kategori")
+    ? document.getElementById("filter-exp-kategori").value
+    : "semua";
+
   expenseBody.innerHTML = "";
   if (mobileCards) mobileCards.innerHTML = "";
   let totalExp = 0;
 
-  expenses.forEach((exp) => {
+  const filteredExpenses = expenses.filter((exp) => {
+    const dateMatch = isReportDateMatch(
+      exp.date,
+      periodeVal,
+      tanggalVal,
+      bulanVal,
+    );
+    const catMatch = kategoriVal === "semua" || exp.category === kategoriVal;
+    return dateMatch && catMatch;
+  });
+
+  filteredExpenses.forEach((exp) => {
     totalExp += exp.amount;
     expenseBody.innerHTML += `
             <tr>
                 <td>${exp.date || "-"}</td>
                 <td>${exp.name}</td>
-                <td>${exp.category}</td>
+                <td><span class="channel-tag">${exp.category}</span></td>
                 <td style="color:#ef4444; font-weight:bold;">Rp ${exp.amount.toLocaleString("id-ID")}</td>
             </tr>
         `;
@@ -971,7 +1044,12 @@ function renderPengeluaran() {
     document.getElementById("total-pengeluaran-card").innerText =
       "Rp " + totalExp.toLocaleString("id-ID");
   }
-  checkEmptyTable(expenseBody, expenses.length, 4, "Belum ada pengeluaran.");
+  checkEmptyTable(
+    expenseBody,
+    filteredExpenses.length,
+    4,
+    "Belum ada pengeluaran pada filter ini.",
+  );
 }
 
 async function nextStatus(orderId) {
@@ -1154,7 +1232,6 @@ async function updateProductStock(productId) {
   }
 }
 
-// --- HAPUS PRODUK DARI DAFTAR STOK ---
 function deleteProduct(productId) {
   const product = products.find((p) => p.id === productId);
   if (!product) return;
@@ -1682,7 +1759,7 @@ function exportToExcel() {
   );
 }
 
-// --- EXPOSE FUNGSI KE GLOBAL WINDOW UNTUK EVENT HANDLER ONCLICK/ONSUBMIT DI HTML ---
+// --- EXPOSE FUNGSI KE GLOBAL WINDOW ---
 window.showSection = showSection;
 window.autoFillCustomerName = autoFillCustomerName;
 window.changeQty = changeQty;
@@ -1697,6 +1774,8 @@ window.renderStock = renderStock;
 window.updateProductStock = updateProductStock;
 window.deleteProduct = deleteProduct;
 window.tambahPengeluaran = tambahPengeluaran;
+window.toggleExpenseDateFilter = toggleExpenseDateFilter;
+window.renderPengeluaran = renderPengeluaran;
 window.toggleDateFilter = toggleDateFilter;
 window.renderLaporan = renderLaporan;
 window.exportToExcel = exportToExcel;
