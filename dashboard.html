@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="style.css?v=7" />
   </head>
   <body>
-    <!-- Watermark Background Logo (Muncul hanya jika logo sudah diupload) -->
+    <!-- Watermark Background Logo -->
     <div
       id="dashboard-bg-watermark"
       class="bg-logo-watermark"
@@ -164,7 +164,6 @@
           <div class="form-header-flex">
             <h2 class="form-title">
               <i class="fa-solid fa-circle-plus"></i> Input Pesanan Baru
-              (Multi-Menu)
             </h2>
             <a
               href="#stok"
@@ -178,7 +177,7 @@
           <form id="order-form">
             <div class="form-grid-4">
               <div class="form-group">
-                <label for="cust-phone">ID Pelanggan / No. Meja (Unik):</label>
+                <label for="cust-phone">ID Pelanggan:</label>
                 <input
                   type="text"
                   id="cust-phone"
@@ -211,7 +210,7 @@
               <div class="form-group">
                 <label for="cust-channel">Saluran Masuk:</label>
                 <select id="cust-channel" required class="styled-input">
-                  <option value="Kasir / On-Site">Kasir / On-Site</option>
+                  <option value="Kasir / On-Site">Kasir</option>
                   <option value="WhatsApp">WhatsApp</option>
                   <option value="GoFood/GrabFood">
                     GoFood / GrabFood / ShopeeFood
@@ -297,7 +296,7 @@
             <!-- Summary & Submit -->
             <div class="order-summary-bar">
               <div>
-                <span class="summary-label">Estimasi Total Pembayaran:</span>
+                <span class="summary-label">Total Pembayaran:</span>
                 <h2 id="order-total-preview" class="summary-amount">Rp 0</h2>
               </div>
               <button type="submit" class="btn-primary btn-lg">
@@ -697,7 +696,7 @@
       <section id="akun" class="page-section">
         <h1>Pengaturan Akun</h1>
         <p>
-          Kelola profil toko, logo usaha (opsional), keamanan password, dan sesi
+          Kelola profil toko, logo usaha, keamanan password, dan sesi
           login pemilik UMKM.
         </p>
 
