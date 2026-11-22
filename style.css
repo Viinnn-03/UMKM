@@ -64,50 +64,6 @@ body.auth-body {
   isolation: isolate;
 }
 
-body.auth-body::before {
-  content: "";
-  position: fixed;
-  inset: -30px;
-  background-image: url("logo.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.32;
-  filter: blur(24px) brightness(0.86) contrast(1.08);
-  -webkit-filter: blur(24px) brightness(0.86) contrast(1.08);
-  z-index: -1;
-  pointer-events: none;
-}
-
-.bg-logo-watermark.auth-watermark-blur {
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  transform: translate(-50%, -50%) !important;
-  width: min(84vh, 88vw) !important;
-  height: min(84vh, 88vw) !important;
-  background-image: url("logo.png") !important;
-  background-size: contain !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  opacity: 0.48 !important;
-  filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
-  -webkit-filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
-  -webkit-mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000 46%,
-    transparent 72%
-  ) !important;
-  mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000 46%,
-    transparent 72%
-  ) !important;
-  z-index: 0 !important;
-  pointer-events: none !important;
-}
-
 .auth-wrapper {
   width: 100%;
   max-width: 420px;
@@ -116,17 +72,17 @@ body.auth-body::before {
 }
 
 .auth-card {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 30px 26px;
   border-radius: 16px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.9);
 }
 
 .auth-card .styled-input {
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(255, 255, 255, 0.96);
 }
 
 .auth-logo-header {
@@ -238,7 +194,6 @@ body.auth-body::before {
   pointer-events: none;
 }
 
-/* Posisi logo utama pas di tengah ruang kosong bawah sidebar */
 .sidebar::after {
   content: "";
   position: absolute;
@@ -358,7 +313,7 @@ body.auth-body::before {
 /* --- KONTEN UTAMA --- */
 .content {
   margin-left: 280px;
-  padding: 32px 32px 90px 32px;
+  padding: 36px 32px 110px 32px;
   width: calc(100% - 280px);
   position: relative;
   z-index: 1;
@@ -404,7 +359,7 @@ p {
 /* Cards Grid */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 18px;
   margin-bottom: 30px;
 }
@@ -486,7 +441,7 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 14px;
 }
@@ -914,8 +869,9 @@ th {
 .account-grid-layout {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
   max-width: 850px;
+  padding-bottom: 30px;
 }
 
 .account-profile-header {
@@ -1053,26 +1009,6 @@ body .swal2-actions button {
     flex-direction: column;
   }
 
-  .bg-logo-watermark.auth-watermark-blur {
-    width: 96vw !important;
-    height: 96vw !important;
-    top: 48% !important;
-    background-size: contain !important;
-    opacity: 0.48 !important;
-    filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
-    -webkit-filter: blur(1.2px) brightness(1.04) contrast(1.28) !important;
-    -webkit-mask-image: radial-gradient(
-      circle at 50% 50%,
-      #000 46%,
-      transparent 72%
-    ) !important;
-    mask-image: radial-gradient(
-      circle at 50% 50%,
-      #000 46%,
-      transparent 72%
-    ) !important;
-  }
-
   .bg-logo-watermark:not(.auth-watermark-blur) {
     left: 50%;
     width: 280px;
@@ -1083,7 +1019,6 @@ body .swal2-actions button {
     display: none !important;
   }
 
-  /* Headbar Mobile: Logo diposisikan tepat di tengah (left: 50%) */
   .mobile-header,
   .mobile-top-header {
     display: flex !important;
@@ -1243,7 +1178,7 @@ body .swal2-actions button {
   .content {
     margin-left: 0 !important;
     width: 100% !important;
-    padding: 14px 14px 130px 14px !important;
+    padding: 16px 14px 130px 14px !important;
   }
   .cards-grid {
     grid-template-columns: 1fr 1fr !important;

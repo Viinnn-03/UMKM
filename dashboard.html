@@ -21,7 +21,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=9" />
+    <link rel="stylesheet" href="style.css?v=12" />
     <style>
       .password-field-wrapper {
         position: relative;
@@ -59,6 +59,201 @@
         font-size: 12px;
         font-weight: 700;
         display: inline-block;
+      }
+      .dashboard-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .live-date-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #ecfdf5;
+        color: #047857;
+        border: 1.5px solid #a7f3d0;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .status-pills-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+      .status-pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1.5px solid transparent;
+        transition: all 0.22s ease;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+      }
+      .status-pill-btn:hover {
+        transform: translateY(-2px);
+      }
+      .pill-all {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+      }
+      .pill-all:hover,
+      .pill-all.active {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #ffffff;
+        border-color: #059669;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.32);
+      }
+      .pill-baru {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fde68a;
+      }
+      .pill-baru:hover,
+      .pill-baru.active {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #ffffff;
+        border-color: #d97706;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.32);
+      }
+      .pill-proses {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-color: #bfdbfe;
+      }
+      .pill-proses:hover,
+      .pill-proses.active {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.32);
+      }
+      .pill-selesai {
+        background: #f5f3ff;
+        color: #6d28d9;
+        border-color: #ddd6fe;
+      }
+      .pill-selesai:hover,
+      .pill-selesai.active {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: #ffffff;
+        border-color: #7c3aed;
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.32);
+      }
+
+      /* Styling Database Pelanggan */
+      .cust-pill-loyal {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fde68a;
+      }
+      .cust-pill-loyal:hover,
+      .cust-pill-loyal.active {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #ffffff;
+        border-color: #d97706;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.32);
+      }
+      .cust-pill-new {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-color: #bfdbfe;
+      }
+      .cust-pill-new:hover,
+      .cust-pill-new.active {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.32);
+      }
+      .cust-avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+      }
+      .cust-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .badge-cust-loyal {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #fde68a;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .badge-cust-new {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .btn-reorder-fast {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        padding: 6px 11px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .btn-reorder-fast:hover {
+        background: #059669;
+        color: #ffffff;
+      }
+      .btn-detail-cust {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .btn-detail-cust:hover {
+        background: #334155;
+        color: #ffffff;
       }
     </style>
   </head>
@@ -164,16 +359,46 @@
     <main class="content">
       <!-- SECTION 1: DASHBOARD UTAMA -->
       <section id="dashboard" class="page-section active">
-        <div class="section-header">
+        <div class="dashboard-header-bar">
           <div>
             <h1>Dashboard Utama</h1>
-            <p>Pengelolaan Pesanan Operasional Toko Kuliner</p>
+            <p style="margin-bottom: 0">
+              Pengelolaan Pesanan Operasional Toko Kuliner
+            </p>
+          </div>
+          <div class="live-date-badge">
+            <i class="fa-regular fa-calendar-check"></i>
+            <span id="dashboard-live-date">Hari Ini</span>
+          </div>
+        </div>
+
+        <!-- FILTER PERIODE DASHBOARD -->
+        <div class="filter-container">
+          <div class="filter-group">
+            <label for="filter-dash-periode">Tampilan Pesanan & Omzet:</label>
+            <select
+              id="filter-dash-periode"
+              onchange="toggleDashboardDateFilter()"
+              class="styled-input"
+            >
+              <option value="harian" selected>Hari Ini (Pilih Tanggal)</option>
+              <option value="semua">Semua Periode</option>
+            </select>
+          </div>
+          <div id="dash-date-picker-wrapper" style="display: inline-block">
+            <label for="filter-dash-tanggal">Pilih Tanggal:</label>
+            <input
+              type="date"
+              id="filter-dash-tanggal"
+              onchange="renderDashboard()"
+              class="styled-input"
+            />
           </div>
         </div>
 
         <div class="cards-grid">
           <div class="card">
-            <h3>Jumlah Pesanan</h3>
+            <h3 id="label-total-pesanan">Jumlah Pesanan Hari Ini</h3>
             <p class="stat-number" id="total-pesanan">0</p>
           </div>
           <div class="card card-warning">
@@ -189,11 +414,15 @@
             <p class="stat-number" id="pesanan-selesai">0</p>
           </div>
           <div class="card card-emerald">
-            <h3>Total Omzet</h3>
+            <h3 id="label-dashboard-omzet">Total Omzet Hari Ini</h3>
             <p class="stat-number" id="dashboard-omzet">Rp 0</p>
           </div>
-          <div class="card">
-            <h3>Produk Terlaris</h3>
+          <div
+            class="card"
+            id="card-dashboard-top-product"
+            style="display: none"
+          >
+            <h3>Produk Terlaris (Semua Periode)</h3>
             <p class="stat-text" id="dashboard-top-product">-</p>
           </div>
         </div>
@@ -363,7 +592,7 @@
         </div>
 
         <div class="table-header-flex">
-          <h2>Daftar Pesanan Active</h2>
+          <h2 id="dashboard-orders-heading">Daftar Pesanan Hari Ini</h2>
           <input
             type="text"
             id="search-order"
@@ -371,6 +600,37 @@
             placeholder="Cari No Order / Customer..."
             class="input-search styled-input"
           />
+        </div>
+
+        <div class="status-pills-bar" id="dashboard-status-pills">
+          <button
+            type="button"
+            class="status-pill-btn pill-all active"
+            onclick="setDashboardStatusFilter('semua', this)"
+          >
+            <i class="fa-solid fa-layer-group"></i> Semua Status
+          </button>
+          <button
+            type="button"
+            class="status-pill-btn pill-baru"
+            onclick="setDashboardStatusFilter('Baru', this)"
+          >
+            <i class="fa-solid fa-bell"></i> Baru
+          </button>
+          <button
+            type="button"
+            class="status-pill-btn pill-proses"
+            onclick="setDashboardStatusFilter('Diproses', this)"
+          >
+            <i class="fa-solid fa-fire-burner"></i> Diproses
+          </button>
+          <button
+            type="button"
+            class="status-pill-btn pill-selesai"
+            onclick="setDashboardStatusFilter('Selesai', this)"
+          >
+            <i class="fa-solid fa-circle-check"></i> Selesai
+          </button>
         </div>
 
         <div class="table-responsive">
@@ -397,25 +657,70 @@
         <div class="table-header-flex">
           <div>
             <h1>Database Pelanggan</h1>
-            <p>Riwayat pembeli otomatis tersimpan dari orderan masuk.</p>
+            <p>
+              Riwayat pembeli otomatis tersimpan dari setiap transaksi masuk.
+            </p>
           </div>
           <input
             type="text"
             id="search-customer"
             onkeyup="renderCustomers()"
-            placeholder="Cari Nama / ID Pelanggan..."
+            placeholder="Cari Nama / ID / Menu..."
             class="input-search styled-input"
           />
         </div>
+
+        <!-- Kartu Ringkasan Pelanggan -->
+        <div class="cards-grid">
+          <div class="card card-emerald">
+            <h3>Total Pelanggan Terdaftar</h3>
+            <p class="stat-number" id="cust-stat-total">0</p>
+          </div>
+          <div class="card card-warning">
+            <h3>Pelanggan Loyal (≥ 2x Order)</h3>
+            <p class="stat-number" id="cust-stat-loyal">0</p>
+          </div>
+          <div class="card card-info">
+            <h3>Pelanggan Paling Sering Order</h3>
+            <p class="stat-text" id="cust-stat-top">-</p>
+          </div>
+        </div>
+
+        <!-- Filter Kategori Pelanggan -->
+        <div class="status-pills-bar" id="customer-status-pills">
+          <button
+            type="button"
+            class="status-pill-btn pill-all active"
+            onclick="setCustomerFilter('semua', this)"
+          >
+            <i class="fa-solid fa-users"></i> Semua Pelanggan
+          </button>
+          <button
+            type="button"
+            class="status-pill-btn cust-pill-loyal"
+            onclick="setCustomerFilter('loyal', this)"
+          >
+            <i class="fa-solid fa-crown"></i> Pelanggan Loyal
+          </button>
+          <button
+            type="button"
+            class="status-pill-btn cust-pill-new"
+            onclick="setCustomerFilter('baru', this)"
+          >
+            <i class="fa-solid fa-user-plus"></i> Pelanggan Baru (1x)
+          </button>
+        </div>
+
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
-                <th>ID Unik / Ref</th>
-                <th>Nama</th>
-                <th>Alamat / Tipe</th>
-                <th>Riwayat Pemesanan</th>
-                <th>Total Transaksi</th>
+                <th>Pelanggan</th>
+                <th>ID / Tipe</th>
+                <th>Status</th>
+                <th>Riwayat Menu</th>
+                <th>Total Belanja</th>
+                <th>Aksi Cepat</th>
               </tr>
             </thead>
             <tbody id="customer-table-body"></tbody>
@@ -1042,6 +1347,6 @@
         }
       };
     </script>
-<script type="module" src="script.js?v=2"></script>
+    <script type="module" src="script.js?v=4"></script>
   </body>
 </html>

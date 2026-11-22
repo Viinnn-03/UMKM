@@ -21,14 +21,14 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=9" />
+    <link rel="stylesheet" href="style.css?v=11" />
     <style>
       body.auth-body {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         min-height: 100vh !important;
-        background-color: #faf8f5 !important;
+        background-color: #f5efe6 !important;
         padding: 20px !important;
         overflow-y: auto !important;
         position: relative !important;
@@ -43,41 +43,15 @@
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
-        opacity: 0.22 !important;
-        filter: blur(24px) brightness(1.12) !important;
-        -webkit-filter: blur(24px) brightness(1.12) !important;
+        opacity: 0.14 !important;
+        filter: blur(28px) brightness(1.1) !important;
+        -webkit-filter: blur(28px) brightness(1.1) !important;
         z-index: -1 !important;
         pointer-events: none !important;
       }
 
       .bg-logo-watermark.auth-watermark-blur {
-        position: fixed !important;
-        left: 50% !important;
-        top: 50% !important;
-        right: auto !important;
-        bottom: auto !important;
-        transform: translate(-50%, -50%) !important;
-        width: min(84vh, 88vw) !important;
-        height: min(84vh, 88vw) !important;
-        background-image: url("logo.png") !important;
-        background-size: contain !important;
-        background-position: center center !important;
-        background-repeat: no-repeat !important;
-        opacity: 0.4 !important;
-        filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
-        -webkit-filter: blur(0.6px) brightness(1.06) contrast(1.26) !important;
-        -webkit-mask-image: radial-gradient(
-          circle at 50% 50%,
-          #000 48%,
-          transparent 70%
-        ) !important;
-        mask-image: radial-gradient(
-          circle at 50% 50%,
-          #000 48%,
-          transparent 70%
-        ) !important;
-        z-index: 0 !important;
-        pointer-events: none !important;
+        display: none !important;
       }
 
       .auth-wrapper {
@@ -88,20 +62,40 @@
       }
 
       .auth-card {
-        background: rgba(255, 255, 255, 0.72) !important;
-        backdrop-filter: blur(5px) !important;
-        -webkit-backdrop-filter: blur(5px) !important;
-        padding: 30px 26px !important;
-        border-radius: 16px !important;
-        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
-        border: 1px solid rgba(255, 255, 255, 0.82) !important;
+        background: rgba(255, 255, 255, 0.94) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        padding: 32px 28px !important;
+        border-radius: 18px !important;
+        box-shadow: 0 14px 36px rgba(15, 23, 42, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.95) !important;
       }
 
       .auth-card .styled-input {
-        background-color: rgba(255, 255, 255, 0.92) !important;
+        background-color: #ffffff !important;
       }
 
-      /* Wrapper & Tombol Ikon Mata Password */
+      .auth-brand-logo {
+        width: 145px;
+        height: 145px;
+        object-fit: contain;
+        margin: 0 auto 6px auto;
+        display: block;
+        border-radius: 50%;
+        filter: brightness(1.02) contrast(1.18);
+        -webkit-filter: brightness(1.02) contrast(1.18);
+        -webkit-mask-image: radial-gradient(
+          circle at 50% 50%,
+          #000 52%,
+          transparent 73%
+        );
+        mask-image: radial-gradient(
+          circle at 50% 50%,
+          #000 52%,
+          transparent 73%
+        );
+      }
+
       .password-field-wrapper {
         position: relative;
         width: 100%;
@@ -153,23 +147,19 @@
         text-decoration: underline;
         color: #047857;
       }
-
-      @media screen and (max-width: 768px) {
-        .bg-logo-watermark.auth-watermark-blur {
-          width: 96vw !important;
-          height: 96vw !important;
-          top: 48% !important;
-        }
-      }
     </style>
   </head>
   <body class="auth-body">
-    <div class="bg-logo-watermark auth-watermark-blur"></div>
-
     <div class="auth-wrapper">
       <!-- FORM LOGIN -->
       <div id="login-box" class="auth-card">
         <div class="auth-logo-header">
+          <img
+            src="logo.png"
+            alt="Logo Brand"
+            class="auth-brand-logo"
+            onerror="this.style.display='none'"
+          />
           <h2>Login Admin UMKM</h2>
           <p>Masuk ke Panel Operasional Kuliner</p>
         </div>
@@ -228,6 +218,12 @@
       <!-- FORM REGISTER -->
       <div id="register-box" class="auth-card" style="display: none">
         <div class="auth-logo-header">
+          <img
+            src="logo.png"
+            alt="Logo Brand"
+            class="auth-brand-logo"
+            onerror="this.style.display='none'"
+          />
           <h2>Daftar Akun UMKM Baru</h2>
           <p>Buat akun pengelola usaha kuliner Anda</p>
         </div>
@@ -238,7 +234,7 @@
               type="text"
               id="reg-store-name"
               class="styled-input"
-              placeholder="Contoh: Toko Berkah / Budi"
+              placeholder="Contoh: Mie Sop Kampung Medan / Budi"
               required
             />
           </div>
@@ -368,7 +364,6 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
 
-      // --- HELPER HASHING SHA-256 ---
       async function hashPasswordSHA256(plainText) {
         const encoder = new TextEncoder();
         const data = encoder.encode(plainText);
@@ -404,7 +399,6 @@
         }
       }
 
-      // HANDLER LOGIN CLOUD (DENGAN SHA-256 + AUTO-UPGRADE AKUN LAMA)
       document
         .getElementById("login-form")
         .addEventListener("submit", async function (e) {
@@ -469,7 +463,6 @@
           }
         });
 
-      // HANDLER REGISTER CLOUD (PASSWORD TERENKRIPSI SHA-256)
       document
         .getElementById("register-form")
         .addEventListener("submit", async function (e) {
@@ -558,7 +551,6 @@
           }
         });
 
-      // FITUR LUPA PASSWORD (DENGAN IKON MATA & HASHING SHA-256)
       async function openForgotPasswordModal() {
         const { value: verifyData } = await Swal.fire({
           title:

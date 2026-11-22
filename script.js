@@ -55,6 +55,8 @@ let products = [];
 let customers = [];
 let orders = [];
 let expenses = [];
+let dashboardStatusFilter = "semua";
+let currentCustomerFilter = "semua";
 
 let ownerAccount = {
   storeName: "UMKM Digital Kuliner",
@@ -86,8 +88,22 @@ function formatTransactionDateFromInput(isoDateStr) {
   return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}, ${timePart}`;
 }
 
+function renderLiveDateBadge() {
+  const badgeElem = document.getElementById("dashboard-live-date");
+  if (!badgeElem) return;
+  const now = new Date();
+  const formatted = now.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  badgeElem.innerHTML = `<i class="fa-regular fa-calendar-check"></i> <span>${formatted}</span>`;
+}
+
 function initDefaultDates() {
   const todayISO = getTodayISOString();
+  renderLiveDateBadge();
 
   const orderDateInput = document.getElementById("order-date");
   if (orderDateInput && !orderDateInput.value) orderDateInput.value = todayISO;
@@ -95,6 +111,14 @@ function initDefaultDates() {
   const expenseDateInput = document.getElementById("expense-date");
   if (expenseDateInput && !expenseDateInput.value)
     expenseDateInput.value = todayISO;
+
+  const filterDashPeriode = document.getElementById("filter-dash-periode");
+  const filterDashTanggal = document.getElementById("filter-dash-tanggal");
+  const dashDateWrapper = document.getElementById("dash-date-picker-wrapper");
+  if (filterDashPeriode) filterDashPeriode.value = "harian";
+  if (filterDashTanggal && !filterDashTanggal.value)
+    filterDashTanggal.value = todayISO;
+  if (dashDateWrapper) dashDateWrapper.style.display = "inline-block";
 
   const filterExpPeriode = document.getElementById("filter-exp-periode");
   const filterExpTanggal = document.getElementById("filter-exp-tanggal");
@@ -686,7 +710,7 @@ function populateReportProductFilter() {
   filterProductSelect.value = currentVal;
 }
 
-// --- FITUR STRUK / NOTA DIGITAL & SALIN WHATSAPP (OPSI 1) ---
+// --- FITUR STRUK / NOTA DIGITAL & SALIN WHATSAPP ---
 function buildReceiptPlainText(order) {
   const storeName = (
     ownerAccount.storeName || "UMKM DIGITAL KULINER"
@@ -902,7 +926,45 @@ function openReceiptModal(orderId) {
   });
 }
 
-// --- RENDER DASHBOARD & MOBILE CARDS (PESANAN TERBARU DI PALING ATAS) ---
+// --- FILTER PERIODE & STATUS DASHBOARD UTAMA ---
+function toggleDashboardDateFilter() {
+  const periodeSelect = document.getElementById("filter-dash-periode");
+  const datePickerWrapper = document.getElementById("dash-date-picker-wrapper");
+  const monthPickerWrapper = document.getElementById(
+    "dash-month-picker-wrapper",
+  );
+
+  if (periodeSelect && periodeSelect.value === "harian") {
+    if (datePickerWrapper) datePickerWrapper.style.display = "inline-block";
+    if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
+    const tanggalInput = document.getElementById("filter-dash-tanggal");
+    if (tanggalInput && !tanggalInput.value) {
+      tanggalInput.value = getTodayISOString();
+    }
+  } else if (periodeSelect && periodeSelect.value === "bulanan") {
+    if (datePickerWrapper) datePickerWrapper.style.display = "none";
+    if (monthPickerWrapper) monthPickerWrapper.style.display = "inline-block";
+    const bulanInput = document.getElementById("filter-dash-bulan");
+    if (bulanInput && !bulanInput.value) {
+      bulanInput.value = getTodayISOString().slice(0, 7);
+    }
+  } else {
+    if (datePickerWrapper) datePickerWrapper.style.display = "none";
+    if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
+  }
+  renderDashboard();
+}
+
+function setDashboardStatusFilter(statusVal, btnElem) {
+  dashboardStatusFilter = statusVal;
+  document
+    .querySelectorAll("#dashboard-status-pills .status-pill-btn")
+    .forEach((pill) => pill.classList.remove("active"));
+  if (btnElem) btnElem.classList.add("active");
+  renderDashboard();
+}
+
+// --- RENDER DASHBOARD & MOBILE CARDS ---
 function renderDashboard() {
   const tableBody = document.getElementById("order-table-body");
   const mobileCards = document.getElementById("order-cards-mobile");
@@ -911,31 +973,61 @@ function renderDashboard() {
   tableBody.innerHTML = "";
   if (mobileCards) mobileCards.innerHTML = "";
 
+  const periodeVal = document.getElementById("filter-dash-periode")
+    ? document.getElementById("filter-dash-periode").value
+    : "harian";
+  const tanggalVal = document.getElementById("filter-dash-tanggal")
+    ? document.getElementById("filter-dash-tanggal").value
+    : getTodayISOString();
+  const bulanVal = document.getElementById("filter-dash-bulan")
+    ? document.getElementById("filter-dash-bulan").value
+    : "";
+
   const searchQuery = document.getElementById("search-order")
     ? document.getElementById("search-order").value.toLowerCase()
     : "";
 
-  let totalOrders = orders.length;
+  const labelTotalPesanan = document.getElementById("label-total-pesanan");
+  const omzetLabel = document.getElementById("label-dashboard-omzet");
+  const ordersHeading = document.getElementById("dashboard-orders-heading");
+  const topProductCard = document.getElementById("card-dashboard-top-product");
+
+  if (periodeVal === "harian") {
+    if (labelTotalPesanan)
+      labelTotalPesanan.innerText =
+        tanggalVal === getTodayISOString()
+          ? "Jumlah Pesanan Hari Ini"
+          : `Jumlah Pesanan (${tanggalVal})`;
+    if (omzetLabel)
+      omzetLabel.innerText =
+        tanggalVal === getTodayISOString()
+          ? "Total Omzet Hari Ini"
+          : `Total Omzet (${tanggalVal})`;
+    if (ordersHeading)
+      ordersHeading.innerText =
+        tanggalVal === getTodayISOString()
+          ? "Daftar Pesanan Hari Ini"
+          : `Daftar Pesanan (${tanggalVal})`;
+    if (topProductCard) topProductCard.style.display = "none";
+  } else {
+    if (labelTotalPesanan) labelTotalPesanan.innerText = "Jumlah Semua Pesanan";
+    if (omzetLabel) omzetLabel.innerText = "Total Omzet";
+    if (ordersHeading) ordersHeading.innerText = "Daftar Semua Pesanan";
+    if (topProductCard) topProductCard.style.display = "block";
+  }
+
+  const periodOrders = orders.filter((o) =>
+    isReportDateMatch(o.date, periodeVal, tanggalVal, bulanVal),
+  );
+
+  let totalOrders = periodOrders.length;
   let newOrders = 0,
     processOrders = 0,
     doneOrders = 0,
     totalOmzet = 0;
   let productSalesCount = {};
 
-  let filteredOrders = orders
-    .filter(
-      (o) =>
-        o.id.toLowerCase().includes(searchQuery) ||
-        o.customer.toLowerCase().includes(searchQuery) ||
-        (o.phone && o.phone.toLowerCase().includes(searchQuery)),
-    )
-    .sort((a, b) => {
-      const numA = parseInt((a.id || "").replace("ORD-", ""), 10) || 0;
-      const numB = parseInt((b.id || "").replace("ORD-", ""), 10) || 0;
-      return numB - numA;
-    });
-
-  filteredOrders.forEach((o) => {
+  periodOrders.forEach((o) => {
     if (o.status === "Baru") newOrders++;
     if (o.status === "Diproses") processOrders++;
     if (o.status === "Selesai") {
@@ -950,9 +1042,27 @@ function renderDashboard() {
       });
     } else {
       productSalesCount[o.product] =
-        (productSalesCount[o.product] || 0) + o.qty;
+        (productSalesCount[o.product] || 0) + (o.qty || 1);
     }
+  });
 
+  let filteredOrders = periodOrders
+    .filter((o) => {
+      const statusMatch =
+        dashboardStatusFilter === "semua" || o.status === dashboardStatusFilter;
+      const searchMatch =
+        o.id.toLowerCase().includes(searchQuery) ||
+        o.customer.toLowerCase().includes(searchQuery) ||
+        (o.phone && o.phone.toLowerCase().includes(searchQuery));
+      return statusMatch && searchMatch;
+    })
+    .sort((a, b) => {
+      const numA = parseInt((a.id || "").replace("ORD-", ""), 10) || 0;
+      const numB = parseInt((b.id || "").replace("ORD-", ""), 10) || 0;
+      return numB - numA;
+    });
+
+  filteredOrders.forEach((o) => {
     let badgeClass =
       o.status === "Baru"
         ? "badge-baru"
@@ -1013,7 +1123,12 @@ function renderDashboard() {
     }
   });
 
-  checkEmptyTable(tableBody, filteredOrders.length, 7, "Tidak ada pesanan.");
+  checkEmptyTable(
+    tableBody,
+    filteredOrders.length,
+    7,
+    "Belum ada pesanan pada periode/filter ini.",
+  );
 
   if (document.getElementById("total-pesanan"))
     document.getElementById("total-pesanan").innerText = totalOrders;
@@ -1252,7 +1367,7 @@ function cancelOrder(orderId) {
   });
 }
 
-// --- PENGELUARAN OPERASIONAL + BACKDATE + HAPUS PENGELUARAN (TERBARU DI ATAS) ---
+// --- PENGELUARAN OPERASIONAL + BACKDATE + HAPUS PENGELUARAN ---
 function toggleExpenseDateFilter() {
   const periodeSelect = document.getElementById("filter-exp-periode");
   const datePickerWrapper = document.getElementById("exp-date-picker-wrapper");
@@ -1452,65 +1567,269 @@ async function nextStatus(orderId) {
   renderLaporan();
 }
 
+// --- DATABASE PELANGGAN INTERAKTIF ---
+function setCustomerFilter(filterType, btnElement) {
+  currentCustomerFilter = filterType;
+  const container = document.getElementById("customer-status-pills");
+  if (container) {
+    container
+      .querySelectorAll(".status-pill-btn")
+      .forEach((btn) => btn.classList.remove("active"));
+  }
+  if (btnElement) btnElement.classList.add("active");
+  renderCustomers();
+}
+
+function quickReorderCustomer(custId, custName) {
+  showSection("dashboard");
+  const phoneInput = document.getElementById("cust-phone");
+  const nameInput = document.getElementById("cust-name");
+  if (phoneInput) phoneInput.value = custId === "-" ? "" : custId;
+  if (nameInput) {
+    nameInput.value = custName;
+    nameInput.focus();
+  }
+  const orderForm = document.getElementById("order-form");
+  if (orderForm) {
+    orderForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon: "success",
+    title: `Data ${custName} siap diinputkan pesanan baru`,
+    showConfirmButton: false,
+    timer: 2200,
+  });
+}
+
+function showCustomerDetailModal(custKey) {
+  const custOrders = orders.filter(
+    (o) =>
+      (o.phone || o.customer || "").trim().toLowerCase() ===
+      custKey.toLowerCase(),
+  );
+
+  if (custOrders.length === 0) return;
+
+  const sample = custOrders[0];
+  const displayName = (sample.customer || "Pelanggan").replace(
+    /\s*\((Dine-In|Takeaway|Delivery)\)\s*$/i,
+    "",
+  );
+  const totalSpent = custOrders.reduce(
+    (sum, o) => sum + (Number(o.price) || 0),
+    0,
+  );
+
+  const rowsHtml = custOrders
+    .map(
+      (o) => `
+      <div style="text-align:left; padding:10px 12px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px; background:#f8fafc;">
+        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:13px; color:#0f172a;">
+          <span>${escapeHTML(o.id || "-")} (${escapeHTML(o.date || "-")})</span>
+          <span style="color:#059669;">Rp ${(Number(o.price) || 0).toLocaleString("id-ID")}</span>
+        </div>
+        <div style="font-size:12px; color:#475569; margin-top:4px;">
+          ${escapeHTML(o.product || "-")}
+        </div>
+        <div style="font-size:11px; color:#64748b; margin-top:3px;">
+          ${escapeHTML(o.channel || "Kasir")} • ${escapeHTML(o.paymentMethod || "Tunai")} • Status: ${escapeHTML(o.status || "-")}
+        </div>
+      </div>
+    `,
+    )
+    .join("");
+
+  Swal.fire({
+    title: `Riwayat: ${escapeHTML(displayName)}`,
+    html: `
+      <div style="margin-bottom:12px; font-size:13px; color:#334155;">
+        ID / Meja: <b>${escapeHTML(sample.phone || "-")}</b> • Total Transaksi: <b>${custOrders.length}x</b><br>
+        Akumulasi Belanja: <b style="color:#059669;">Rp ${totalSpent.toLocaleString("id-ID")}</b>
+      </div>
+      <div style="max-height:280px; overflow-y:auto; padding-right:4px;">
+        ${rowsHtml}
+      </div>
+    `,
+    confirmButtonText: "Tutup",
+    confirmButtonColor: "#059669",
+  });
+}
+
 function renderCustomers() {
   const tableBody = document.getElementById("customer-table-body");
   const mobileCards = document.getElementById("customer-cards-mobile");
   if (!tableBody) return;
 
-  tableBody.innerHTML = "";
-  if (mobileCards) mobileCards.innerHTML = "";
+  const searchQuery = (
+    document.getElementById("search-customer")?.value || ""
+  ).toLowerCase();
 
-  const searchQuery = document.getElementById("search-customer")
-    ? document.getElementById("search-customer").value.toLowerCase()
-    : "";
-  let filteredCust = customers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchQuery) ||
-      (c.phone && c.phone.toLowerCase().includes(searchQuery)),
-  );
+  const customerMap = new Map();
 
-  filteredCust.forEach((c) => {
-    let custOrders = orders.filter(
-      (o) =>
-        o.phone &&
-        c.phone &&
-        o.phone.trim().toLowerCase() === c.phone.trim().toLowerCase(),
-    );
-    c.history = custOrders.length;
-    c.totalSpent = custOrders.reduce((total, o) => total + o.price, 0);
+  customers.forEach((c) => {
+    const key = (c.phone || c.name || "").trim().toLowerCase();
+    if (!key) return;
+    customerMap.set(key, {
+      key,
+      id: c.phone || "-",
+      name: c.name || "Pelanggan",
+      type: c.address || "Dine-In",
+      historyList: [],
+      txCount: 0,
+      totalSpent: 0,
+    });
+  });
 
-    const safePhone = escapeHTML(c.phone);
-    const safeName = escapeHTML(c.name);
-    const safeAddr = escapeHTML(c.address || "-");
+  orders.forEach((o) => {
+    const rawId = (o.phone || "").trim();
+    const cleanName = (o.customer || "Pelanggan")
+      .replace(/\s*\((Dine-In|Takeaway|Delivery)\)\s*$/i, "")
+      .trim();
+    const key = (rawId || cleanName).toLowerCase();
 
-    tableBody.innerHTML += `
-            <tr>
-                <td><b>${safePhone}</b></td>
-                <td>${safeName}</td>
-                <td>${safeAddr}</td>
-                <td>${c.history} Kali Pemesanan</td>
-                <td>Rp ${c.totalSpent.toLocaleString("id-ID")}</td>
-            </tr>
-        `;
+    if (!customerMap.has(key)) {
+      customerMap.set(key, {
+        key,
+        id: rawId || "-",
+        name: cleanName,
+        type: "Dine-In",
+        historyList: [],
+        txCount: 0,
+        totalSpent: 0,
+      });
+    }
 
-    if (mobileCards) {
-      mobileCards.innerHTML += `
-                <div class="mobile-card">
-                    <div class="mobile-card-header">
-                        <span class="mobile-card-title">${safeName}</span>
-                        <span class="channel-tag">${safePhone}</span>
-                    </div>
-                    <div class="mobile-card-body">
-                        <div><b>Tipe/Alamat:</b> ${safeAddr}</div>
-                        <div><b>Total Order:</b> ${c.history} Kali Pemesanan</div>
-                        <div><b>Total Belanja:</b> Rp ${c.totalSpent.toLocaleString("id-ID")}</div>
-                    </div>
-                </div>
-            `;
+    const entry = customerMap.get(key);
+    entry.txCount += 1;
+    entry.totalSpent += Number(o.price) || 0;
+    if (o.product && !entry.historyList.includes(o.product)) {
+      entry.historyList.push(o.product);
     }
   });
 
-  checkEmptyTable(tableBody, filteredCust.length, 5, "Belum ada pelanggan.");
+  const mergedList = Array.from(customerMap.values());
+
+  // Update 3 Kartu Ringkasan Pelanggan
+  const totalCust = mergedList.length;
+  const loyalCust = mergedList.filter((c) => c.txCount >= 2).length;
+  let topCustText = "-";
+  if (mergedList.length > 0) {
+    const sortedTop = [...mergedList].sort((a, b) => b.txCount - a.txCount);
+    const best = sortedTop[0];
+    topCustText = `${best.name} (${best.txCount}x)`;
+  }
+
+  const elStatTotal = document.getElementById("cust-stat-total");
+  const elStatLoyal = document.getElementById("cust-stat-loyal");
+  const elStatTop = document.getElementById("cust-stat-top");
+  if (elStatTotal) elStatTotal.innerText = totalCust;
+  if (elStatLoyal) elStatLoyal.innerText = loyalCust;
+  if (elStatTop) elStatTop.innerText = topCustText;
+
+  // Filter berdasarkan tab Loyal/Baru dan pencarian
+  const filteredCust = mergedList.filter((c) => {
+    const isLoyal = c.txCount >= 2;
+    if (currentCustomerFilter === "loyal" && !isLoyal) return false;
+    if (currentCustomerFilter === "baru" && isLoyal) return false;
+
+    const historyText = c.historyList.join(", ").toLowerCase();
+    return (
+      c.name.toLowerCase().includes(searchQuery) ||
+      c.id.toLowerCase().includes(searchQuery) ||
+      c.type.toLowerCase().includes(searchQuery) ||
+      historyText.includes(searchQuery)
+    );
+  });
+
+  tableBody.innerHTML = "";
+  if (mobileCards) mobileCards.innerHTML = "";
+
+  filteredCust.forEach((c) => {
+    const initial = escapeHTML((c.name || "P").charAt(0).toUpperCase());
+    const safeName = escapeHTML(c.name);
+    const safeId = escapeHTML(c.id);
+    const safeType = escapeHTML(c.type);
+    const isLoyal = c.txCount >= 2;
+    const statusBadge = isLoyal
+      ? `<span class="badge-cust-loyal"><i class="fa-solid fa-crown"></i> Loyal (${c.txCount}x)</span>`
+      : `<span class="badge-cust-new"><i class="fa-solid fa-sparkles"></i> Baru (${c.txCount}x)</span>`;
+    const historyPreview = escapeHTML(
+      c.historyList.slice(-2).join(" • ") || "Belum ada detail menu",
+    );
+
+    const jsSafeId = c.id.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const jsSafeName = c.name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const jsSafeKey = c.key.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+    tableBody.innerHTML += `
+      <tr>
+        <td>
+          <div class="cust-name-cell">
+            <div class="cust-avatar-circle">${initial}</div>
+            <div>
+              <div style="font-weight:700; color:#0f172a;">${safeName}</div>
+              <div style="font-size:12px; color:#64748b;">${c.txCount}x Transaksi</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-weight:700; color:#334155;">${safeId}</div>
+          <div style="font-size:12px; color:#64748b;">${safeType}</div>
+        </td>
+        <td>${statusBadge}</td>
+        <td style="max-width:240px; font-size:13px; color:#475569;">${historyPreview}</td>
+        <td style="font-weight:700; color:#059669;">Rp ${c.totalSpent.toLocaleString("id-ID")}</td>
+        <td>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn-reorder-fast" onclick="quickReorderCustomer('${jsSafeId}', '${jsSafeName}')">
+              <i class="fa-solid fa-rotate-right"></i> Order Lagi
+            </button>
+            <button type="button" class="btn-detail-cust" onclick="showCustomerDetailModal('${jsSafeKey}')">
+              <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+
+    if (mobileCards) {
+      mobileCards.innerHTML += `
+        <div class="mobile-card">
+          <div class="mobile-card-header">
+            <div class="cust-name-cell">
+              <div class="cust-avatar-circle">${initial}</div>
+              <div>
+                <div class="mobile-card-title">${safeName}</div>
+                <div style="font-size:12px; color:#64748b;">ID: ${safeId} • ${safeType}</div>
+              </div>
+            </div>
+            ${statusBadge}
+          </div>
+          <div class="mobile-card-body">
+            <div><b>Menu:</b> ${historyPreview}</div>
+            <div style="font-weight:800; color:#059669; margin-top:4px;"><b>Total Belanja:</b> Rp ${c.totalSpent.toLocaleString("id-ID")}</div>
+          </div>
+          <div class="mobile-card-footer">
+            <button type="button" class="btn-reorder-fast" onclick="quickReorderCustomer('${jsSafeId}', '${jsSafeName}')">
+              <i class="fa-solid fa-rotate-right"></i> Order Lagi
+            </button>
+            <button type="button" class="btn-detail-cust" onclick="showCustomerDetailModal('${jsSafeKey}')">
+              <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  });
+
+  checkEmptyTable(
+    tableBody,
+    filteredCust.length,
+    6,
+    "Belum ada data pelanggan yang sesuai filter.",
+  );
 }
 
 function renderStock() {
@@ -2228,6 +2547,11 @@ window.calculateTotalOrder = calculateTotalOrder;
 window.openReceiptModal = openReceiptModal;
 window.nextStatus = nextStatus;
 window.cancelOrder = cancelOrder;
+window.toggleDashboardDateFilter = toggleDashboardDateFilter;
+window.setDashboardStatusFilter = setDashboardStatusFilter;
+window.setCustomerFilter = setCustomerFilter;
+window.quickReorderCustomer = quickReorderCustomer;
+window.showCustomerDetailModal = showCustomerDetailModal;
 window.renderDashboard = renderDashboard;
 window.renderCustomers = renderCustomers;
 window.renderStock = renderStock;
