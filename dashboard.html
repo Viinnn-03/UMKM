@@ -21,7 +21,46 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=8" />
+    <link rel="stylesheet" href="style.css?v=9" />
+    <style>
+      .password-field-wrapper {
+        position: relative;
+        width: 100%;
+      }
+      .password-field-wrapper input {
+        padding-right: 44px !important;
+      }
+      .btn-toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+        z-index: 3;
+      }
+      .btn-toggle-password:hover {
+        color: #2563eb;
+      }
+      .payment-tag {
+        background-color: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-block;
+      }
+    </style>
   </head>
   <body>
     <!-- Watermark Background Logo -->
@@ -175,7 +214,16 @@
           </div>
 
           <form id="order-form">
-            <div class="form-grid-4">
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="order-date">Tanggal Transaksi:</label>
+                <input
+                  type="date"
+                  id="order-date"
+                  required
+                  class="styled-input"
+                />
+              </div>
               <div class="form-group">
                 <label for="cust-phone">ID Pelanggan:</label>
                 <input
@@ -215,6 +263,14 @@
                   <option value="GoFood/GrabFood">
                     GoFood / GrabFood / ShopeeFood
                   </option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="payment-method">Metode Pembayaran:</label>
+                <select id="payment-method" required class="styled-input">
+                  <option value="Tunai (Cash)">Tunai (Cash)</option>
+                  <option value="QRIS">QRIS</option>
+                  <option value="Transfer Bank">Transfer Bank</option>
                 </select>
               </div>
             </div>
@@ -325,7 +381,7 @@
                 <th>Customer</th>
                 <th>ID / No. Meja</th>
                 <th>Produk</th>
-                <th>Channel</th>
+                <th>Channel & Bayar</th>
                 <th>Status</th>
                 <th>Aksi</th>
               </tr>
@@ -456,7 +512,16 @@
             <i class="fa-solid fa-wallet"></i> Input Pengeluaran Operasional
           </h2>
           <form id="expense-form" onsubmit="tambahPengeluaran(event)">
-            <div class="form-grid-3">
+            <div class="form-grid-4">
+              <div class="form-group">
+                <label for="expense-date">Tanggal Pengeluaran:</label>
+                <input
+                  type="date"
+                  id="expense-date"
+                  required
+                  class="styled-input"
+                />
+              </div>
               <div class="form-group">
                 <label for="expense-name">Deskripsi Pengeluaran:</label>
                 <input
@@ -505,12 +570,12 @@
               onchange="toggleExpenseDateFilter()"
               class="styled-input"
             >
-              <option value="semua">Semua</option>
-              <option value="harian">Harian (Pilih Tanggal)</option>
+              <option value="harian" selected>Harian (Pilih Tanggal)</option>
               <option value="bulanan">Bulanan (Pilih Bulan)</option>
+              <option value="semua">Semua</option>
             </select>
           </div>
-          <div id="exp-date-picker-wrapper" style="display: none">
+          <div id="exp-date-picker-wrapper" style="display: inline-block">
             <label for="filter-exp-tanggal">Pilih Tanggal:</label>
             <input
               type="date"
@@ -566,6 +631,7 @@
                 <th>Deskripsi</th>
                 <th>Kategori</th>
                 <th>Nominal</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody id="detail-pengeluaran-body"></tbody>
@@ -611,12 +677,12 @@
               onchange="toggleDateFilter()"
               class="styled-input"
             >
-              <option value="semua">Semua</option>
-              <option value="harian">Harian (Pilih Tanggal)</option>
+              <option value="harian" selected>Harian (Pilih Tanggal)</option>
               <option value="bulanan">Bulanan (Pilih Bulan)</option>
+              <option value="semua">Semua</option>
             </select>
           </div>
-          <div id="date-picker-wrapper" style="display: none">
+          <div id="date-picker-wrapper" style="display: inline-block">
             <label for="filter-tanggal">Pilih Tanggal:</label>
             <input
               type="date"
@@ -830,35 +896,65 @@
                 </div>
                 <div class="form-group">
                   <label for="acc-old-password">Password Lama:</label>
-                  <input
-                    type="password"
-                    id="acc-old-password"
-                    class="styled-input"
-                    placeholder="Masukkan password saat ini"
-                    required
-                  />
+                  <div class="password-field-wrapper">
+                    <input
+                      type="password"
+                      id="acc-old-password"
+                      class="styled-input"
+                      placeholder="Masukkan password saat ini"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="btn-toggle-password"
+                      onclick="togglePasswordVisibility('acc-old-password', this)"
+                      title="Lihat / Sembunyikan Password"
+                    >
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="acc-new-password">Password Baru:</label>
-                  <input
-                    type="password"
-                    id="acc-new-password"
-                    class="styled-input"
-                    placeholder="Masukkan password baru"
-                    required
-                  />
+                  <div class="password-field-wrapper">
+                    <input
+                      type="password"
+                      id="acc-new-password"
+                      class="styled-input"
+                      placeholder="Masukkan password baru"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="btn-toggle-password"
+                      onclick="togglePasswordVisibility('acc-new-password', this)"
+                      title="Lihat / Sembunyikan Password"
+                    >
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="acc-confirm-password"
                     >Konfirmasi Password Baru:</label
                   >
-                  <input
-                    type="password"
-                    id="acc-confirm-password"
-                    class="styled-input"
-                    placeholder="Ulangi password baru"
-                    required
-                  />
+                  <div class="password-field-wrapper">
+                    <input
+                      type="password"
+                      id="acc-confirm-password"
+                      class="styled-input"
+                      placeholder="Ulangi password baru"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="btn-toggle-password"
+                      onclick="togglePasswordVisibility('acc-confirm-password', this)"
+                      title="Lihat / Sembunyikan Password"
+                    >
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               <button
@@ -929,6 +1025,23 @@
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="module" src="script.js"></script>
+    <script>
+      window.togglePasswordVisibility = function (inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector("i");
+        if (!input || !icon) return;
+
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      };
+    </script>
+<script type="module" src="script.js?v=2"></script>
   </body>
 </html>

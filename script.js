@@ -19,6 +19,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// --- HELPER KEAMANAN (SHA-256 & SANITASI XSS) ---
+async function hashPasswordSHA256(plainText) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plainText);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function isAlreadyHashed(str) {
+  return typeof str === "string" && /^[a-f0-9]{64}$/i.test(str);
+}
+
+function escapeHTML(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // --- CEK SESI LOGIN AKTIF ---
 const activeTenantId = sessionStorage.getItem("umkm_active_tenant");
 if (!activeTenantId) {
@@ -37,11 +60,57 @@ let ownerAccount = {
   storeName: "UMKM Digital Kuliner",
   ownerName: "Administrator Utama",
   username: activeTenantId || "admin",
-  password: "123",
+  password: "",
   phone: "-",
-  address: "",
+  address: "Kota Medan",
   logoData: "",
 };
+
+// --- HELPER TANGGAL HARI INI & FORMATTER ---
+function getTodayISOString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatTransactionDateFromInput(isoDateStr) {
+  const now = new Date();
+  const timePart = `${String(now.getHours()).padStart(2, "0")}.${String(now.getMinutes()).padStart(2, "0")}.${String(now.getSeconds()).padStart(2, "0")}`;
+
+  if (isoDateStr && isoDateStr.includes("-")) {
+    const [year, month, day] = isoDateStr.split("-");
+    return `${parseInt(day, 10)}/${parseInt(month, 10)}/${year}, ${timePart}`;
+  }
+  return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}, ${timePart}`;
+}
+
+function initDefaultDates() {
+  const todayISO = getTodayISOString();
+
+  const orderDateInput = document.getElementById("order-date");
+  if (orderDateInput && !orderDateInput.value) orderDateInput.value = todayISO;
+
+  const expenseDateInput = document.getElementById("expense-date");
+  if (expenseDateInput && !expenseDateInput.value)
+    expenseDateInput.value = todayISO;
+
+  const filterExpPeriode = document.getElementById("filter-exp-periode");
+  const filterExpTanggal = document.getElementById("filter-exp-tanggal");
+  const expDateWrapper = document.getElementById("exp-date-picker-wrapper");
+  if (filterExpPeriode) filterExpPeriode.value = "harian";
+  if (filterExpTanggal && !filterExpTanggal.value)
+    filterExpTanggal.value = todayISO;
+  if (expDateWrapper) expDateWrapper.style.display = "inline-block";
+
+  const filterPeriode = document.getElementById("filter-periode");
+  const filterTanggal = document.getElementById("filter-tanggal");
+  const dateWrapper = document.getElementById("date-picker-wrapper");
+  if (filterPeriode) filterPeriode.value = "harian";
+  if (filterTanggal && !filterTanggal.value) filterTanggal.value = todayISO;
+  if (dateWrapper) dateWrapper.style.display = "inline-block";
+}
 
 // --- SIMPAN & SINKRONISASI DATA KE CLOUD FIRESTORE ---
 async function saveData() {
@@ -84,6 +153,8 @@ async function saveAccountDataToCloud() {
 
 // --- LISTENER REAL-TIME MULTI-DEVICE ---
 function initRealtimeSync() {
+  initDefaultDates();
+
   onSnapshot(
     tenantDocRef,
     (docSnap) => {
@@ -108,7 +179,6 @@ function initRealtimeSync() {
         renderPengeluaran();
         renderLaporan();
       } else {
-        // Jika dokumen tenant dihapus dari database, paksa logout & bersihkan sesi
         sessionStorage.removeItem("umkm_active_tenant");
         window.location.href = "index.html";
       }
@@ -119,7 +189,7 @@ function initRealtimeSync() {
   );
 }
 
-// --- HELPER GENERATOR ID & NOMOR ORDER BERURUTAN (TANPA TANGGAL) ---
+// --- HELPER GENERATOR ID & NOMOR ORDER BERURUTAN ---
 function generateNextOrderId() {
   let maxOrderNum = 0;
   orders.forEach((o) => {
@@ -335,7 +405,7 @@ async function saveAccountProfile(e) {
   });
 }
 
-// --- UPDATE PASSWORD DENGAN VERIFIKASI PASSWORD LAMA ---
+// --- UPDATE PASSWORD DENGAN VERIFIKASI SHA-256 ---
 async function updateAccountPassword(e) {
   e.preventDefault();
   const oldPass = document.getElementById("acc-old-password").value;
@@ -352,7 +422,13 @@ async function updateAccountPassword(e) {
     return;
   }
 
-  if (oldPass !== ownerAccount.password) {
+  const hashedOldPass = await hashPasswordSHA256(oldPass);
+  const isOldMatch =
+    ownerAccount.password === hashedOldPass ||
+    (!isAlreadyHashed(ownerAccount.password) &&
+      ownerAccount.password === oldPass);
+
+  if (!isOldMatch) {
     Swal.fire({
       icon: "error",
       title: "Password Lama Salah",
@@ -392,7 +468,7 @@ async function updateAccountPassword(e) {
     return;
   }
 
-  ownerAccount.password = newPass;
+  ownerAccount.password = await hashPasswordSHA256(newPass);
   await saveAccountDataToCloud();
   document.getElementById("acc-old-password").value = "";
   document.getElementById("acc-new-password").value = "";
@@ -401,7 +477,7 @@ async function updateAccountPassword(e) {
   Swal.fire({
     icon: "success",
     title: "Password Diperbarui!",
-    text: "Password login baru berhasil disimpan.",
+    text: "Password login baru berhasil dienkripsi dan disimpan.",
     confirmButtonColor: "#2563eb",
   });
 }
@@ -431,7 +507,7 @@ function populateCustomerDatalist() {
   datalist.innerHTML = "";
   customers.forEach((c) => {
     if (c.phone) {
-      datalist.innerHTML += `<option value="${c.phone}">${c.name} (${c.address || "Pelanggan"})</option>`;
+      datalist.innerHTML += `<option value="${escapeHTML(c.phone)}">${escapeHTML(c.name)} (${escapeHTML(c.address || "Pelanggan")})</option>`;
     }
   });
 }
@@ -505,7 +581,8 @@ function getProductOptionsHTML() {
   }
   let html = '<option value="">-- Pilih Menu Kuliner --</option>';
   products.forEach((p) => {
-    html += `<option value="${p.id}" data-price="${p.price}" data-name="${p.name}" data-stock="${p.stock}">${p.name} (Stok: ${p.stock}) - Rp ${p.price.toLocaleString("id-ID")}</option>`;
+    const safeName = escapeHTML(p.name);
+    html += `<option value="${escapeHTML(p.id)}" data-price="${p.price}" data-name="${safeName}" data-stock="${p.stock}">${safeName} (Stok: ${p.stock}) - Rp ${p.price.toLocaleString("id-ID")}</option>`;
   });
   return html;
 }
@@ -603,13 +680,229 @@ function populateReportProductFilter() {
   filterProductSelect.innerHTML = '<option value="semua">Semua Produk</option>';
 
   products.forEach((p) => {
-    filterProductSelect.innerHTML += `<option value="${p.name.toLowerCase()}">${p.name}</option>`;
+    filterProductSelect.innerHTML += `<option value="${escapeHTML(p.name.toLowerCase())}">${escapeHTML(p.name)}</option>`;
   });
 
   filterProductSelect.value = currentVal;
 }
 
-// --- RENDER DASHBOARD & MOBILE CARDS ---
+// --- FITUR STRUK / NOTA DIGITAL & SALIN WHATSAPP (OPSI 1) ---
+function buildReceiptPlainText(order) {
+  const storeName = (
+    ownerAccount.storeName || "UMKM DIGITAL KULINER"
+  ).toUpperCase();
+  const storeAddress =
+    ownerAccount.address && ownerAccount.address !== "-"
+      ? ownerAccount.address
+      : "";
+  const storePhone =
+    ownerAccount.phone && ownerAccount.phone !== "-" ? ownerAccount.phone : "";
+  const payMethod = order.paymentMethod || "Tunai (Cash)";
+
+  let lines = [];
+  lines.push(`*${storeName}*`);
+  if (storeAddress) lines.push(storeAddress);
+  if (storePhone) lines.push(`Telp/WA: ${storePhone}`);
+  lines.push("--------------------------------");
+  lines.push(`No Order : ${order.id}`);
+  lines.push(`Tanggal  : ${order.date || "-"}`);
+  lines.push(`Pelanggan: ${order.customer}`);
+  lines.push(`ID/Meja  : ${order.phone || "-"}`);
+  lines.push(`Channel  : ${order.channel}`);
+  lines.push(`Bayar    : ${payMethod}`);
+  lines.push("--------------------------------");
+
+  if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+    order.items.forEach((item) => {
+      const subtotal = (Number(item.price) || 0) * (Number(item.qty) || 0);
+      lines.push(`${item.productName}`);
+      lines.push(
+        `  ${item.qty} x Rp ${Number(item.price).toLocaleString("id-ID")} = Rp ${subtotal.toLocaleString("id-ID")}`,
+      );
+      if (item.note) {
+        lines.push(`  Catatan: ${item.note}`);
+      }
+    });
+  } else {
+    lines.push(`${order.product}`);
+  }
+
+  lines.push("--------------------------------");
+  lines.push(`*TOTAL BAYAR: Rp ${Number(order.price).toLocaleString("id-ID")}*`);
+  lines.push(`Status: ${order.status}`);
+  lines.push("--------------------------------");
+  lines.push("Terima kasih atas pesanan Anda!");
+
+  return lines.join("\n");
+}
+
+function openReceiptModal(orderId) {
+  const order = orders.find((o) => o.id === orderId);
+  if (!order) return;
+
+  const storeName = escapeHTML(
+    ownerAccount.storeName || "UMKM Digital Kuliner",
+  );
+  const storeAddress =
+    ownerAccount.address && ownerAccount.address !== "-"
+      ? escapeHTML(ownerAccount.address)
+      : "";
+  const storePhone =
+    ownerAccount.phone && ownerAccount.phone !== "-"
+      ? escapeHTML(ownerAccount.phone)
+      : "";
+  const payMethod = escapeHTML(order.paymentMethod || "Tunai (Cash)");
+
+  let itemsHtml = "";
+  if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+    itemsHtml = order.items
+      .map((item) => {
+        const subtotal = (Number(item.price) || 0) * (Number(item.qty) || 0);
+        return `
+          <div style="margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 6px;">
+            <div style="font-weight: 700; color: #0f172a;">${escapeHTML(item.productName)}</div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569;">
+              <span>${item.qty} x Rp ${Number(item.price).toLocaleString("id-ID")}</span>
+              <span style="font-weight: 600; color: #0f172a;">Rp ${subtotal.toLocaleString("id-ID")}</span>
+            </div>
+            ${item.note ? `<div style="font-size: 12px; color: #64748b; font-style: italic;">Catatan: ${escapeHTML(item.note)}</div>` : ""}
+          </div>
+        `;
+      })
+      .join("");
+  } else {
+    itemsHtml = `<div style="font-size: 13px; color: #0f172a; margin-bottom: 8px;">${escapeHTML(order.product)}</div>`;
+  }
+
+  const receiptHtml = `
+    <div id="printable-receipt-box" style="text-align: left; font-family: 'Courier New', Courier, monospace; background: #ffffff; border: 1px dashed #94a3b8; border-radius: 10px; padding: 16px; max-height: 62vh; overflow-y: auto;">
+      <div style="text-align: center; border-bottom: 1px dashed #94a3b8; padding-bottom: 10px; margin-bottom: 10px;">
+        <div style="font-weight: 800; font-size: 16px; color: #0f172a;">${storeName.toUpperCase()}</div>
+        ${storeAddress ? `<div style="font-size: 12px; color: #475569;">${storeAddress}</div>` : ""}
+        ${storePhone ? `<div style="font-size: 12px; color: #475569;">Telp/WA: ${storePhone}</div>` : ""}
+      </div>
+
+      <div style="font-size: 12px; color: #334155; line-height: 1.5; border-bottom: 1px dashed #94a3b8; padding-bottom: 8px; margin-bottom: 10px;">
+        <div><b>No Order :</b> ${escapeHTML(order.id)}</div>
+        <div><b>Tanggal  :</b> ${escapeHTML(order.date || "-")}</div>
+        <div><b>Customer :</b> ${escapeHTML(order.customer)}</div>
+        <div><b>ID/Meja  :</b> ${escapeHTML(order.phone || "-")}</div>
+        <div><b>Channel  :</b> ${escapeHTML(order.channel)}</div>
+        <div><b>Bayar    :</b> ${payMethod}</div>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        ${itemsHtml}
+      </div>
+
+      <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 15px; color: #059669;">
+        <span>TOTAL BAYAR</span>
+        <span>Rp ${Number(order.price).toLocaleString("id-ID")}</span>
+      </div>
+      <div style="text-align: center; font-size: 11px; color: #64748b; margin-top: 12px;">
+        Status: <b>${escapeHTML(order.status)}</b><br>
+        Terima kasih atas pesanan Anda!
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 14px; justify-content: center; flex-wrap: wrap;">
+      <button type="button" id="btn-copy-wa-receipt" class="btn-sm" style="background-color: #16a34a; color: #ffffff; padding: 10px 14px; font-size: 13px; border-radius: 8px;">
+        <i class="fa-brands fa-whatsapp"></i> Salin Teks Nota WA
+      </button>
+      <button type="button" id="btn-print-receipt" class="btn-sm" style="background-color: #2563eb; color: #ffffff; padding: 10px 14px; font-size: 13px; border-radius: 8px;">
+        <i class="fa-solid fa-print"></i> Cetak / Print Struk
+      </button>
+    </div>
+  `;
+
+  Swal.fire({
+    title:
+      '<div class="swal-custom-title"><i class="fa-solid fa-receipt" style="color:#059669;"></i> Struk Pesanan</div>',
+    html: receiptHtml,
+    showConfirmButton: true,
+    confirmButtonText: "Tutup",
+    confirmButtonColor: "#64748b",
+    customClass: {
+      popup: "swal2-popup-modern",
+    },
+    didOpen: () => {
+      const btnCopy = document.getElementById("btn-copy-wa-receipt");
+      const btnPrint = document.getElementById("btn-print-receipt");
+
+      if (btnCopy) {
+        btnCopy.addEventListener("click", async () => {
+          const plainText = buildReceiptPlainText(order);
+          try {
+            await navigator.clipboard.writeText(plainText);
+            btnCopy.innerHTML =
+              '<i class="fa-solid fa-check"></i> Tersalin! Siap Paste ke WA';
+            btnCopy.style.backgroundColor = "#047857";
+            setTimeout(() => {
+              btnCopy.innerHTML =
+                '<i class="fa-brands fa-whatsapp"></i> Salin Teks Nota WA';
+              btnCopy.style.backgroundColor = "#16a34a";
+            }, 2200);
+          } catch (err) {
+            const tempArea = document.createElement("textarea");
+            tempArea.value = plainText;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempArea);
+            btnCopy.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+          }
+        });
+      }
+
+      if (btnPrint) {
+        btnPrint.addEventListener("click", () => {
+          const receiptContent = document.getElementById(
+            "printable-receipt-box",
+          ).innerHTML;
+          const printWin = window.open("", "_blank", "width=380,height=600");
+          if (!printWin) {
+            Swal.showValidationMessage(
+              "Pop-up diblokir browser. Izinkan pop-up untuk mencetak struk.",
+            );
+            return;
+          }
+          printWin.document.write(`
+            <!doctype html>
+            <html>
+              <head>
+                <title>Struk ${escapeHTML(order.id)}</title>
+                <style>
+                  body {
+                    font-family: 'Courier New', Courier, monospace;
+                    width: 280px;
+                    margin: 0 auto;
+                    padding: 12px;
+                    color: #000;
+                  }
+                  @media print {
+                    body { width: 100%; margin: 0; padding: 4px; }
+                  }
+                </style>
+              </head>
+              <body>
+                ${receiptContent}
+                <script>
+                  window.onload = function() {
+                    window.print();
+                    window.close();
+                  };
+                </script>
+              </body>
+            </html>
+          `);
+          printWin.document.close();
+        });
+      }
+    },
+  });
+}
+
+// --- RENDER DASHBOARD & MOBILE CARDS (PESANAN TERBARU DI PALING ATAS) ---
 function renderDashboard() {
   const tableBody = document.getElementById("order-table-body");
   const mobileCards = document.getElementById("order-cards-mobile");
@@ -629,12 +922,18 @@ function renderDashboard() {
     totalOmzet = 0;
   let productSalesCount = {};
 
-  let filteredOrders = orders.filter(
-    (o) =>
-      o.id.toLowerCase().includes(searchQuery) ||
-      o.customer.toLowerCase().includes(searchQuery) ||
-      (o.phone && o.phone.toLowerCase().includes(searchQuery)),
-  );
+  let filteredOrders = orders
+    .filter(
+      (o) =>
+        o.id.toLowerCase().includes(searchQuery) ||
+        o.customer.toLowerCase().includes(searchQuery) ||
+        (o.phone && o.phone.toLowerCase().includes(searchQuery)),
+    )
+    .sort((a, b) => {
+      const numA = parseInt((a.id || "").replace("ORD-", ""), 10) || 0;
+      const numB = parseInt((b.id || "").replace("ORD-", ""), 10) || 0;
+      return numB - numA;
+    });
 
   filteredOrders.forEach((o) => {
     if (o.status === "Baru") newOrders++;
@@ -661,17 +960,32 @@ function renderDashboard() {
           ? "badge-proses"
           : "badge-selesai";
 
+    const paymentMethodLabel = escapeHTML(o.paymentMethod || "Tunai (Cash)");
+    const safeId = escapeHTML(o.id);
+    const safeDate = escapeHTML(o.date ? o.date.split(",")[0] : "");
+    const safeCust = escapeHTML(o.customer);
+    const safePhone = escapeHTML(o.phone || "-");
+    const safeProd = escapeHTML(o.product);
+    const safeChannel = escapeHTML(o.channel);
+    const safeStatus = escapeHTML(o.status);
+
     tableBody.innerHTML += `
             <tr>
-                <td><b>${o.id}</b></td>
-                <td>${o.customer}</td>
-                <td><span class="channel-tag">${o.phone || "-"}</span></td>
-                <td>${o.product}</td>
-                <td><span class="channel-tag">${o.channel}</span></td>
-                <td><span class="badge ${badgeClass}">${o.status}</span></td>
+                <td><b>${safeId}</b><br><small style="color:#64748b;">${safeDate}</small></td>
+                <td>${safeCust}</td>
+                <td><span class="channel-tag">${safePhone}</span></td>
+                <td>${safeProd}</td>
                 <td>
-                    ${o.status !== "Selesai" ? `<button type="button" class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold;">Selesai</span>'}
-                    <button type="button" class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
+                  <span class="channel-tag">${safeChannel}</span>
+                  <div style="margin-top:4px;"><span class="payment-tag">${paymentMethodLabel}</span></div>
+                </td>
+                <td><span class="badge ${badgeClass}">${safeStatus}</span></td>
+                <td>
+                    <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                      ${o.status !== "Selesai" ? `<button type="button" class="btn-sm btn-status" onclick="nextStatus('${safeId}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold; font-size:12px; margin-right:4px;">Selesai</span>'}
+                      <button type="button" class="btn-sm" style="background-color:#059669; color:white;" onclick="openReceiptModal('${safeId}')" title="Lihat / Cetak Struk"><i class="fa-solid fa-receipt"></i> Struk</button>
+                      <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${safeId}')"><i class="fa-solid fa-trash"></i> Batal</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -680,17 +994,19 @@ function renderDashboard() {
       mobileCards.innerHTML += `
                 <div class="mobile-card">
                     <div class="mobile-card-header">
-                        <span class="mobile-card-title">${o.id} - ${o.customer}</span>
-                        <span class="badge ${badgeClass}">${o.status}</span>
+                        <span class="mobile-card-title">${safeId} - ${safeCust}</span>
+                        <span class="badge ${badgeClass}">${safeStatus}</span>
                     </div>
                     <div class="mobile-card-body">
-                        <div><b>Produk:</b> ${o.product}</div>
-                        <div><b>Channel:</b> ${o.channel} | <b>Ref/Meja:</b> ${o.phone || "-"}</div>
+                        <div><b>Tanggal:</b> ${safeDate || "-"} | <b>Ref/Meja:</b> ${safePhone}</div>
+                        <div><b>Produk:</b> ${safeProd}</div>
+                        <div><b>Channel:</b> ${safeChannel} | <b>Bayar:</b> <span class="payment-tag">${paymentMethodLabel}</span></div>
                         <div><b>Total:</b> Rp ${o.price.toLocaleString("id-ID")}</div>
                     </div>
                     <div class="mobile-card-footer">
-                        ${o.status !== "Selesai" ? `<button type="button" class="btn-sm btn-status" onclick="nextStatus('${o.id}')"><i class="fa-solid fa-arrows-rotate"></i> Ubah Status</button>` : '<span style="color:#059669; font-weight:bold; text-align:center; flex:1;">Selesai</span>'}
-                        <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${o.id}')"><i class="fa-solid fa-trash"></i> Batal</button>
+                        ${o.status !== "Selesai" ? `<button type="button" class="btn-sm btn-status" onclick="nextStatus('${safeId}')"><i class="fa-solid fa-arrows-rotate"></i> Status</button>` : '<span style="color:#059669; font-weight:bold; text-align:center; flex:1;">Selesai</span>'}
+                        <button type="button" class="btn-sm" style="background-color:#059669; color:white;" onclick="openReceiptModal('${safeId}')"><i class="fa-solid fa-receipt"></i> Struk</button>
+                        <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="cancelOrder('${safeId}')"><i class="fa-solid fa-trash"></i> Batal</button>
                     </div>
                 </div>
             `;
@@ -721,12 +1037,13 @@ function renderDashboard() {
     document.getElementById("dashboard-top-product").innerText = topProduct;
 }
 
-// --- FORM SUBMIT PESANAN ---
+// --- FORM SUBMIT PESANAN (TERBARU LANGSUNG DI ATAS) ---
 const orderForm = document.getElementById("order-form");
 if (orderForm) {
   orderForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
+    const orderDateVal = document.getElementById("order-date").value;
     const custNameInput = document.getElementById("cust-name").value.trim();
     const rawPhoneInput = document.getElementById("cust-phone").value;
     const custPhoneInput = resolveCustomerId(rawPhoneInput, custNameInput);
@@ -735,6 +1052,8 @@ if (orderForm) {
     const orderType = orderTypeSelect ? orderTypeSelect.value : "Dine-In";
     const channelSelect = document.getElementById("cust-channel");
     const channel = channelSelect ? channelSelect.value : "Kasir";
+    const paymentSelect = document.getElementById("payment-method");
+    const paymentMethod = paymentSelect ? paymentSelect.value : "Tunai (Cash)";
 
     const itemRows = document.querySelectorAll(".order-item-row");
     let orderItems = [];
@@ -748,22 +1067,24 @@ if (orderForm) {
       const noteInput = row.querySelector(".item-note-input");
 
       if (select && select.value) {
-        const selectedOption = select.options[select.selectedIndex];
         const productId = select.value;
-        const productName = selectedOption.getAttribute("data-name");
-        const price = parseInt(selectedOption.getAttribute("data-price")) || 0;
+        const product = products.find((p) => p.id === productId);
         const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
         const note = noteInput ? noteInput.value.trim() : "";
-
-        const product = products.find((p) => p.id === productId);
 
         if (product) {
           if (product.stock < qty) {
             isStockEnough = false;
             errorMessage = `Stok "${product.name}" kurang! Tersisa ${product.stock} pcs. Silakan tambah stok terlebih dahulu.`;
           } else {
-            orderItems.push({ productId, productName, price, qty, note });
-            totalOrderPrice += price * qty;
+            orderItems.push({
+              productId: product.id,
+              productName: product.name,
+              price: product.price,
+              qty,
+              note,
+            });
+            totalOrderPrice += product.price * qty;
           }
         }
       }
@@ -793,15 +1114,14 @@ if (orderForm) {
       if (product) product.stock -= item.qty;
     });
 
-    const now = new Date();
-    const formattedDate = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, "0")}.${String(now.getMinutes()).padStart(2, "0")}.${String(now.getSeconds()).padStart(2, "0")}`;
+    const formattedDate = formatTransactionDateFromInput(orderDateVal);
     const newOrderId = generateNextOrderId();
 
     const summaryProductText = orderItems
       .map((i) => `${i.productName} (${i.qty}x)${i.note ? ` [${i.note}]` : ""}`)
       .join(", ");
 
-    orders.push({
+    orders.unshift({
       id: newOrderId,
       customer: `${custNameInput} (${orderType})`,
       phone: custPhoneInput,
@@ -809,6 +1129,7 @@ if (orderForm) {
       items: orderItems,
       qty: orderItems.reduce((acc, curr) => acc + curr.qty, 0),
       channel,
+      paymentMethod,
       status: "Baru",
       price: totalOrderPrice,
       date: formattedDate,
@@ -837,11 +1158,13 @@ if (orderForm) {
     Swal.fire({
       icon: "success",
       title: "Pesanan Diproses!",
-      html: `No Order: <b>${newOrderId}</b><br>ID / Meja: <b>${custPhoneInput}</b><br>Total Pembayaran: <b>Rp ${totalOrderPrice.toLocaleString("id-ID")}</b>`,
+      html: `No Order: <b>${escapeHTML(newOrderId)}</b><br>ID / Meja: <b>${escapeHTML(custPhoneInput)}</b><br>Pembayaran: <b>${escapeHTML(paymentMethod)}</b><br>Total: <b>Rp ${totalOrderPrice.toLocaleString("id-ID")}</b>`,
       confirmButtonColor: "#059669",
     });
 
     document.getElementById("order-form").reset();
+    document.getElementById("order-date").value = getTodayISOString();
+
     const container = document.getElementById("order-items-container");
     if (container) {
       container.innerHTML = `
@@ -872,6 +1195,7 @@ if (orderForm) {
     renderDashboard();
     renderCustomers();
     renderStock();
+    renderLaporan();
   });
 }
 
@@ -928,7 +1252,7 @@ function cancelOrder(orderId) {
   });
 }
 
-// --- PENGELUARAN OPERASIONAL + FILTER PERIODE & KATEGORI ---
+// --- PENGELUARAN OPERASIONAL + BACKDATE + HAPUS PENGELUARAN (TERBARU DI ATAS) ---
 function toggleExpenseDateFilter() {
   const periodeSelect = document.getElementById("filter-exp-periode");
   const datePickerWrapper = document.getElementById("exp-date-picker-wrapper");
@@ -939,9 +1263,17 @@ function toggleExpenseDateFilter() {
   if (periodeSelect && periodeSelect.value === "harian") {
     if (datePickerWrapper) datePickerWrapper.style.display = "inline-block";
     if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
+    const tanggalInput = document.getElementById("filter-exp-tanggal");
+    if (tanggalInput && !tanggalInput.value) {
+      tanggalInput.value = getTodayISOString();
+    }
   } else if (periodeSelect && periodeSelect.value === "bulanan") {
     if (datePickerWrapper) datePickerWrapper.style.display = "none";
     if (monthPickerWrapper) monthPickerWrapper.style.display = "inline-block";
+    const bulanInput = document.getElementById("filter-exp-bulan");
+    if (bulanInput && !bulanInput.value) {
+      bulanInput.value = getTodayISOString().slice(0, 7);
+    }
   } else {
     if (datePickerWrapper) datePickerWrapper.style.display = "none";
     if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
@@ -951,15 +1283,21 @@ function toggleExpenseDateFilter() {
 
 async function tambahPengeluaran(e) {
   e.preventDefault();
+  const expenseDateVal = document.getElementById("expense-date").value;
   const name = document.getElementById("expense-name").value.trim();
   const category = document.getElementById("expense-category").value;
   const amount = parseInt(document.getElementById("expense-amount").value);
 
-  const now = new Date();
-  const formattedDate = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, "0")}.${String(now.getMinutes()).padStart(2, "0")}.${String(now.getSeconds()).padStart(2, "0")}`;
+  const formattedDate = formatTransactionDateFromInput(expenseDateVal);
   const newExpId = generateNextExpenseId();
 
-  expenses.push({ id: newExpId, name, category, amount, date: formattedDate });
+  expenses.unshift({
+    id: newExpId,
+    name,
+    category,
+    amount,
+    date: formattedDate,
+  });
   await saveData();
 
   Swal.fire({
@@ -968,8 +1306,47 @@ async function tambahPengeluaran(e) {
     confirmButtonColor: "#ef4444",
   });
   document.getElementById("expense-form").reset();
+  document.getElementById("expense-date").value = getTodayISOString();
+
   renderPengeluaran();
   renderLaporan();
+}
+
+function deleteExpense(expenseId) {
+  const exp = expenses.find((item) => item.id === expenseId);
+  if (!exp) return;
+
+  Swal.fire({
+    title: "Hapus Pengeluaran?",
+    text: `Catatan "${exp.name}" (Rp ${Number(exp.amount).toLocaleString("id-ID")}) akan dihapus permanen.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#ef4444",
+    cancelButtonColor: "#64748b",
+    confirmButtonText: "Ya, Hapus",
+    cancelButtonText: "Batal",
+    customClass: {
+      popup: "swal2-popup-modern",
+    },
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      expenses = expenses.filter((item) => item.id !== expenseId);
+      await saveData();
+      renderPengeluaran();
+      renderLaporan();
+
+      Swal.fire({
+        icon: "success",
+        title: "Terhapus!",
+        text: "Data pengeluaran berhasil dihapus.",
+        timer: 1400,
+        showConfirmButton: false,
+        customClass: {
+          popup: "swal2-popup-modern",
+        },
+      });
+    }
+  });
 }
 
 function renderPengeluaran() {
@@ -979,10 +1356,10 @@ function renderPengeluaran() {
 
   const periodeVal = document.getElementById("filter-exp-periode")
     ? document.getElementById("filter-exp-periode").value
-    : "semua";
+    : "harian";
   const tanggalVal = document.getElementById("filter-exp-tanggal")
     ? document.getElementById("filter-exp-tanggal").value
-    : "";
+    : getTodayISOString();
   const bulanVal = document.getElementById("filter-exp-bulan")
     ? document.getElementById("filter-exp-bulan").value
     : "";
@@ -994,37 +1371,58 @@ function renderPengeluaran() {
   if (mobileCards) mobileCards.innerHTML = "";
   let totalExp = 0;
 
-  const filteredExpenses = expenses.filter((exp) => {
-    const dateMatch = isReportDateMatch(
-      exp.date,
-      periodeVal,
-      tanggalVal,
-      bulanVal,
-    );
-    const catMatch = kategoriVal === "semua" || exp.category === kategoriVal;
-    return dateMatch && catMatch;
-  });
+  const filteredExpenses = expenses
+    .filter((exp) => {
+      const dateMatch = isReportDateMatch(
+        exp.date,
+        periodeVal,
+        tanggalVal,
+        bulanVal,
+      );
+      const catMatch = kategoriVal === "semua" || exp.category === kategoriVal;
+      return dateMatch && catMatch;
+    })
+    .sort((a, b) => {
+      const numA = parseInt((a.id || "").replace("EXP-", ""), 10) || 0;
+      const numB = parseInt((b.id || "").replace("EXP-", ""), 10) || 0;
+      return numB - numA;
+    });
 
   filteredExpenses.forEach((exp) => {
     totalExp += exp.amount;
+    const safeExpId = escapeHTML(exp.id);
+    const safeExpDate = escapeHTML(exp.date || "-");
+    const safeExpName = escapeHTML(exp.name);
+    const safeExpCat = escapeHTML(exp.category);
+
     expenseBody.innerHTML += `
             <tr>
-                <td>${exp.date || "-"}</td>
-                <td>${exp.name}</td>
-                <td><span class="channel-tag">${exp.category}</span></td>
+                <td>${safeExpDate}</td>
+                <td><b>${safeExpName}</b></td>
+                <td><span class="channel-tag">${safeExpCat}</span></td>
                 <td style="color:#ef4444; font-weight:bold;">Rp ${exp.amount.toLocaleString("id-ID")}</td>
+                <td>
+                    <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="deleteExpense('${safeExpId}')">
+                        <i class="fa-solid fa-trash"></i> Hapus
+                    </button>
+                </td>
             </tr>
         `;
     if (mobileCards) {
       mobileCards.innerHTML += `
                 <div class="mobile-card">
                     <div class="mobile-card-header">
-                        <span class="mobile-card-title">${exp.name}</span>
-                        <span class="badge badge-baru">${exp.category}</span>
+                        <span class="mobile-card-title">${safeExpName}</span>
+                        <span class="badge badge-baru">${safeExpCat}</span>
                     </div>
                     <div class="mobile-card-body">
-                        <div><b>Tanggal:</b> ${exp.date || "-"}</div>
+                        <div><b>Tanggal:</b> ${safeExpDate}</div>
                         <div style="color:#ef4444; font-weight:bold;"><b>Nominal:</b> Rp ${exp.amount.toLocaleString("id-ID")}</div>
+                    </div>
+                    <div class="mobile-card-footer">
+                        <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="deleteExpense('${safeExpId}')">
+                            <i class="fa-solid fa-trash"></i> Hapus Pengeluaran
+                        </button>
                     </div>
                 </div>
             `;
@@ -1038,8 +1436,8 @@ function renderPengeluaran() {
   checkEmptyTable(
     expenseBody,
     filteredExpenses.length,
-    4,
-    "Belum ada pengeluaran pada filter ini.",
+    5,
+    "Belum ada pengeluaran pada tanggal/filter ini.",
   );
 }
 
@@ -1081,11 +1479,15 @@ function renderCustomers() {
     c.history = custOrders.length;
     c.totalSpent = custOrders.reduce((total, o) => total + o.price, 0);
 
+    const safePhone = escapeHTML(c.phone);
+    const safeName = escapeHTML(c.name);
+    const safeAddr = escapeHTML(c.address || "-");
+
     tableBody.innerHTML += `
             <tr>
-                <td><b>${c.phone}</b></td>
-                <td>${c.name}</td>
-                <td>${c.address || "-"}</td>
+                <td><b>${safePhone}</b></td>
+                <td>${safeName}</td>
+                <td>${safeAddr}</td>
                 <td>${c.history} Kali Pemesanan</td>
                 <td>Rp ${c.totalSpent.toLocaleString("id-ID")}</td>
             </tr>
@@ -1095,11 +1497,11 @@ function renderCustomers() {
       mobileCards.innerHTML += `
                 <div class="mobile-card">
                     <div class="mobile-card-header">
-                        <span class="mobile-card-title">${c.name}</span>
-                        <span class="channel-tag">${c.phone}</span>
+                        <span class="mobile-card-title">${safeName}</span>
+                        <span class="channel-tag">${safePhone}</span>
                     </div>
                     <div class="mobile-card-body">
-                        <div><b>Tipe/Alamat:</b> ${c.address || "-"}</div>
+                        <div><b>Tipe/Alamat:</b> ${safeAddr}</div>
                         <div><b>Total Order:</b> ${c.history} Kali Pemesanan</div>
                         <div><b>Total Belanja:</b> Rp ${c.totalSpent.toLocaleString("id-ID")}</div>
                     </div>
@@ -1142,16 +1544,19 @@ function renderStock() {
           ? "badge-proses"
           : "badge-baru";
 
+    const safeProdId = escapeHTML(p.id);
+    const safeProdName = escapeHTML(p.name);
+
     tableBody.innerHTML += `
             <tr>
-                <td>${p.id}</td>
-                <td><b>${p.name}</b></td>
+                <td>${safeProdId}</td>
+                <td><b>${safeProdName}</b></td>
                 <td>Rp ${p.price.toLocaleString("id-ID")}</td>
                 <td><b>${p.stock} pcs</b></td>
                 <td><span class="badge ${badgeColorClass}">${statusStokText}</span></td>
                 <td>
-                    <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
-                    <button type="button" class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i> Hapus</button>
+                    <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${safeProdId}')"><i class="fa-solid fa-pen-to-square"></i> Edit / Stok</button>
+                    <button type="button" class="btn-sm" style="background-color:#ef4444; color:white; margin-left:5px;" onclick="deleteProduct('${safeProdId}')"><i class="fa-solid fa-trash"></i> Hapus</button>
                 </td>
             </tr>
         `;
@@ -1160,7 +1565,7 @@ function renderStock() {
       mobileCards.innerHTML += `
                 <div class="mobile-card">
                     <div class="mobile-card-header">
-                        <span class="mobile-card-title">${p.name}</span>
+                        <span class="mobile-card-title">${safeProdName}</span>
                         <span class="badge ${badgeColorClass}">${statusStokText}</span>
                     </div>
                     <div class="mobile-card-body">
@@ -1168,8 +1573,8 @@ function renderStock() {
                         <div><b>Sisa Stok:</b> ${p.stock} pcs</div>
                     </div>
                     <div class="mobile-card-footer">
-                        <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${p.id}')"><i class="fa-solid fa-pen-to-square"></i> Update Stok</button>
-                        <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i> Hapus</button>
+                        <button type="button" class="btn-sm btn-status" onclick="updateProductStock('${safeProdId}')"><i class="fa-solid fa-pen-to-square"></i> Edit / Stok</button>
+                        <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="deleteProduct('${safeProdId}')"><i class="fa-solid fa-trash"></i> Hapus</button>
                     </div>
                 </div>
             `;
@@ -1184,8 +1589,12 @@ async function updateProductStock(productId) {
   if (!product) return;
 
   const { value: formValues } = await Swal.fire({
-    title: `<div class="swal-custom-title"><i class="fa-solid fa-pen-to-square" style="color:#059669;"></i> Update "${product.name}"</div>`,
+    title: `<div class="swal-custom-title"><i class="fa-solid fa-pen-to-square" style="color:#059669;"></i> Edit Produk "${escapeHTML(product.name)}"</div>`,
     html:
+      `<div class="swal-form-group">` +
+      `  <label><i class="fa-solid fa-utensils"></i> Nama Produk:</label>` +
+      `  <input id="swal-input-name" type="text" class="swal2-input styled-swal-input" value="${escapeHTML(product.name)}" placeholder="Nama Produk">` +
+      `</div>` +
       `<div class="swal-form-group">` +
       `  <label><i class="fa-solid fa-boxes-stacked"></i> Sisa Stok Baru:</label>` +
       `  <input id="swal-input-stock" type="number" min="0" class="swal2-input styled-swal-input" value="${product.stock}" placeholder="Stok Pcs">` +
@@ -1203,23 +1612,54 @@ async function updateProductStock(productId) {
     customClass: {
       popup: "swal2-popup-modern",
     },
-    preConfirm: () => [
-      document.getElementById("swal-input-stock").value,
-      document.getElementById("swal-input-price").value,
-    ],
+    preConfirm: () => {
+      const newName = document.getElementById("swal-input-name").value.trim();
+      const newStock = parseInt(
+        document.getElementById("swal-input-stock").value,
+        10,
+      );
+      const newPrice = parseInt(
+        document.getElementById("swal-input-price").value,
+        10,
+      );
+
+      if (!newName) {
+        Swal.showValidationMessage("Nama produk tidak boleh kosong!");
+        return false;
+      }
+      if (isNaN(newStock) || newStock < 0) {
+        Swal.showValidationMessage("Stok tidak boleh kurang dari 0!");
+        return false;
+      }
+      if (isNaN(newPrice) || newPrice <= 0) {
+        Swal.showValidationMessage("Harga harus lebih dari Rp 0!");
+        return false;
+      }
+
+      return { newName, newStock, newPrice };
+    },
   });
 
   if (formValues) {
-    const newStock = parseInt(formValues[0]);
-    const newPrice = parseInt(formValues[1]);
-    if (isNaN(newStock) || newStock < 0 || isNaN(newPrice) || newPrice <= 0)
-      return;
+    product.name = formValues.newName;
+    product.stock = formValues.newStock;
+    product.price = formValues.newPrice;
 
-    product.stock = newStock;
-    product.price = newPrice;
     await saveData();
     renderStock();
     populateProductDropdown();
+    populateReportProductFilter();
+
+    Swal.fire({
+      icon: "success",
+      title: "Produk Diperbarui!",
+      text: `"${product.name}" berhasil disimpan.`,
+      timer: 1400,
+      showConfirmButton: false,
+      customClass: {
+        popup: "swal2-popup-modern",
+      },
+    });
   }
 }
 
@@ -1288,9 +1728,17 @@ function toggleDateFilter() {
   if (periodeSelect && periodeSelect.value === "harian") {
     if (datePickerWrapper) datePickerWrapper.style.display = "inline-block";
     if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
+    const tanggalInput = document.getElementById("filter-tanggal");
+    if (tanggalInput && !tanggalInput.value) {
+      tanggalInput.value = getTodayISOString();
+    }
   } else if (periodeSelect && periodeSelect.value === "bulanan") {
     if (datePickerWrapper) datePickerWrapper.style.display = "none";
     if (monthPickerWrapper) monthPickerWrapper.style.display = "inline-block";
+    const bulanInput = document.getElementById("filter-bulan");
+    if (bulanInput && !bulanInput.value) {
+      bulanInput.value = getTodayISOString().slice(0, 7);
+    }
   } else {
     if (datePickerWrapper) datePickerWrapper.style.display = "none";
     if (monthPickerWrapper) monthPickerWrapper.style.display = "none";
@@ -1326,10 +1774,10 @@ function renderLaporan() {
   const mobileCards = document.getElementById("report-cards-mobile");
   const periodeVal = document.getElementById("filter-periode")
     ? document.getElementById("filter-periode").value
-    : "semua";
+    : "harian";
   const tanggalVal = document.getElementById("filter-tanggal")
     ? document.getElementById("filter-tanggal").value
-    : "";
+    : getTodayISOString();
   const bulanVal = document.getElementById("filter-bulan")
     ? document.getElementById("filter-bulan").value
     : "";
@@ -1340,12 +1788,19 @@ function renderLaporan() {
   if (detailBody) detailBody.innerHTML = "";
   if (mobileCards) mobileCards.innerHTML = "";
 
-  let filteredOrders = orders.filter((o) =>
-    isReportDateMatch(o.date, periodeVal, tanggalVal, bulanVal),
-  );
+  let filteredOrders = orders
+    .filter((o) => isReportDateMatch(o.date, periodeVal, tanggalVal, bulanVal))
+    .sort((a, b) => {
+      const numA = parseInt((a.id || "").replace("ORD-", ""), 10) || 0;
+      const numB = parseInt((b.id || "").replace("ORD-", ""), 10) || 0;
+      return numB - numA;
+    });
 
   filteredOrders.forEach((o) => {
     channelCount[o.channel] = (channelCount[o.channel] || 0) + 1;
+    const payMethod = escapeHTML(o.paymentMethod || "Tunai (Cash)");
+    const safeOrderDate = escapeHTML(o.date || "-");
+    const safeOrderCust = escapeHTML(o.customer);
 
     if (o.items && Array.isArray(o.items)) {
       o.items.forEach((item) => {
@@ -1357,14 +1812,16 @@ function renderLaporan() {
         if (nameMatch) {
           const itemTotal = item.price * item.qty;
           totalOmzet += itemTotal;
+          const safeItemName = escapeHTML(item.productName);
+          const safeItemNote = item.note ? escapeHTML(item.note) : "";
 
           if (detailBody) {
             detailBody.innerHTML += `
                             <tr>
-                                <td>${o.date || "-"}</td>
-                                <td><b>${item.productName}</b> ${item.note ? `<br><small style="color:#64748b;">[${item.note}]</small>` : ""}</td>
+                                <td>${safeOrderDate}</td>
+                                <td><b>${safeItemName}</b> ${safeItemNote ? `<br><small style="color:#64748b;">[${safeItemNote}]</small>` : ""}</td>
                                 <td>${item.qty} pcs</td>
-                                <td>${o.customer}</td>
+                                <td>${safeOrderCust}<br><small style="color:#047857; font-weight:600;">${payMethod}</small></td>
                                 <td>Rp ${itemTotal.toLocaleString("id-ID")}</td>
                             </tr>
                         `;
@@ -1374,13 +1831,13 @@ function renderLaporan() {
             mobileCards.innerHTML += `
                             <div class="mobile-card">
                                 <div class="mobile-card-header">
-                                    <span class="mobile-card-title">${item.productName}</span>
+                                    <span class="mobile-card-title">${safeItemName}</span>
                                     <span class="badge badge-selesai">Rp ${itemTotal.toLocaleString("id-ID")}</span>
                                 </div>
                                 <div class="mobile-card-body">
-                                    <div><b>Tanggal:</b> ${o.date || "-"} | <b>Qty:</b> ${item.qty} pcs</div>
-                                    <div><b>Customer:</b> ${o.customer}</div>
-                                    ${item.note ? `<div><b>Catatan:</b> ${item.note}</div>` : ""}
+                                    <div><b>Tanggal:</b> ${safeOrderDate} | <b>Qty:</b> ${item.qty} pcs</div>
+                                    <div><b>Customer:</b> ${safeOrderCust} | <b>Bayar:</b> ${payMethod}</div>
+                                    ${safeItemNote ? `<div><b>Catatan:</b> ${safeItemNote}</div>` : ""}
                                 </div>
                             </div>
                         `;
@@ -1394,14 +1851,15 @@ function renderLaporan() {
         produkVal === "semua" || o.product.toLowerCase().includes(produkVal);
       if (nameMatch) {
         totalOmzet += o.price;
+        const safeProdText = escapeHTML(o.product);
 
         if (detailBody) {
           detailBody.innerHTML += `
                         <tr>
-                            <td>${o.date || "-"}</td>
-                            <td><b>${o.product}</b></td>
+                            <td>${safeOrderDate}</td>
+                            <td><b>${safeProdText}</b></td>
                             <td>${o.qty || 1} pcs</td>
-                            <td>${o.customer}</td>
+                            <td>${safeOrderCust}<br><small style="color:#047857; font-weight:600;">${payMethod}</small></td>
                             <td>Rp ${o.price.toLocaleString("id-ID")}</td>
                         </tr>
                     `;
@@ -1411,12 +1869,12 @@ function renderLaporan() {
           mobileCards.innerHTML += `
                         <div class="mobile-card">
                             <div class="mobile-card-header">
-                                <span class="mobile-card-title">${o.product}</span>
+                                <span class="mobile-card-title">${safeProdText}</span>
                                 <span class="badge badge-selesai">Rp ${o.price.toLocaleString("id-ID")}</span>
                             </div>
                             <div class="mobile-card-body">
-                                <div><b>Tanggal:</b> ${o.date || "-"} | <b>Qty:</b> ${o.qty || 1} pcs</div>
-                                <div><b>Customer:</b> ${o.customer}</div>
+                                <div><b>Tanggal:</b> ${safeOrderDate} | <b>Qty:</b> ${o.qty || 1} pcs</div>
+                                <div><b>Customer:</b> ${safeOrderCust} | <b>Bayar:</b> ${payMethod}</div>
                             </div>
                         </div>
                     `;
@@ -1424,6 +1882,10 @@ function renderLaporan() {
       }
     }
   });
+
+  if (detailBody && detailBody.innerHTML === "") {
+    detailBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 20px;">Belum ada transaksi penjualan pada tanggal/filter ini.</td></tr>`;
+  }
 
   let filteredExpenses = expenses.filter((exp) =>
     isReportDateMatch(exp.date, periodeVal, tanggalVal, bulanVal),
@@ -1475,7 +1937,7 @@ function checkEmptyTable(elem, length, colSpan, message) {
 function exportToExcel() {
   const periodeVal = document.getElementById("filter-periode")
     ? document.getElementById("filter-periode").value
-    : "semua";
+    : "harian";
   const tanggalVal = document.getElementById("filter-tanggal")
     ? document.getElementById("filter-tanggal").value
     : "";
@@ -1521,6 +1983,7 @@ function exportToExcel() {
 
   const salesRows = [];
   filteredOrders.forEach((o) => {
+    const payMethod = o.paymentMethod || "Tunai (Cash)";
     if (o.items && Array.isArray(o.items)) {
       const matchedItems =
         produkVal === "semua"
@@ -1542,6 +2005,7 @@ function exportToExcel() {
           o.phone || "-",
           detailText,
           o.channel,
+          payMethod,
           o.status,
           itemSubtotal,
         ]);
@@ -1559,6 +2023,7 @@ function exportToExcel() {
           o.phone || "-",
           o.product,
           o.channel,
+          payMethod,
           o.status,
           Number(o.price) || 0,
         ]);
@@ -1602,6 +2067,7 @@ function exportToExcel() {
       "ID / No. Meja",
       "Detail Produk",
       "Channel",
+      "Metode Bayar",
       "Status",
       "Total Penjualan (Rp)",
     ],
@@ -1618,8 +2084,9 @@ function exportToExcel() {
       "",
       "",
       "",
+      "",
       "TOTAL OMZET",
-      salesRows.length > 0 ? { t: "n", f: `SUM(I5:I${lastSalesRow})` } : 0,
+      salesRows.length > 0 ? { t: "n", f: `SUM(J5:J${lastSalesRow})` } : 0,
     ],
   ];
 
@@ -1629,9 +2096,9 @@ function exportToExcel() {
     ...salesFooter,
   ]);
   wsSales["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } },
   ];
   wsSales["!cols"] = [
     { wch: 6 },
@@ -1640,11 +2107,12 @@ function exportToExcel() {
     { wch: 24 },
     { wch: 16 },
     { wch: 36 },
-    { wch: 20 },
+    { wch: 18 },
+    { wch: 16 },
     { wch: 14 },
     { wch: 22 },
   ];
-  applyCurrencyFormat(wsSales, "I", 5, totalSalesRowIndex);
+  applyCurrencyFormat(wsSales, "J", 5, totalSalesRowIndex);
   XLSX.utils.book_append_sheet(wb, wsSales, "Laporan Penjualan");
 
   // 2. SHEET LAPORAN PENGELUARAN
@@ -1714,7 +2182,7 @@ function exportToExcel() {
     [
       1,
       "Total Pendapatan (Omzet Penjualan)",
-      { t: "n", f: `'Laporan Penjualan'!I${totalSalesRowIndex}` },
+      { t: "n", f: `'Laporan Penjualan'!J${totalSalesRowIndex}` },
     ],
     [
       2,
@@ -1757,6 +2225,7 @@ window.changeQty = changeQty;
 window.addOrderItemRow = addOrderItemRow;
 window.removeOrderItemRow = removeOrderItemRow;
 window.calculateTotalOrder = calculateTotalOrder;
+window.openReceiptModal = openReceiptModal;
 window.nextStatus = nextStatus;
 window.cancelOrder = cancelOrder;
 window.renderDashboard = renderDashboard;
@@ -1765,6 +2234,7 @@ window.renderStock = renderStock;
 window.updateProductStock = updateProductStock;
 window.deleteProduct = deleteProduct;
 window.tambahPengeluaran = tambahPengeluaran;
+window.deleteExpense = deleteExpense;
 window.toggleExpenseDateFilter = toggleExpenseDateFilter;
 window.renderPengeluaran = renderPengeluaran;
 window.toggleDateFilter = toggleDateFilter;

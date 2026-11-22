@@ -21,7 +21,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=8" />
+    <link rel="stylesheet" href="style.css?v=9" />
     <style>
       body.auth-body {
         display: flex !important;
@@ -101,6 +101,38 @@
         background-color: rgba(255, 255, 255, 0.92) !important;
       }
 
+      /* Wrapper & Tombol Ikon Mata Password */
+      .password-field-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .password-field-wrapper input {
+        padding-right: 44px !important;
+      }
+
+      .btn-toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+        z-index: 3;
+      }
+
+      .btn-toggle-password:hover {
+        color: #059669;
+      }
+
       .forgot-pass-row {
         text-align: right;
         margin-top: -6px;
@@ -154,13 +186,23 @@
           </div>
           <div class="form-group" style="margin-bottom: 12px">
             <label for="login-password">Password</label>
-            <input
-              type="password"
-              id="login-password"
-              class="styled-input"
-              placeholder="Password"
-              required
-            />
+            <div class="password-field-wrapper">
+              <input
+                type="password"
+                id="login-password"
+                class="styled-input"
+                placeholder="Password"
+                required
+              />
+              <button
+                type="button"
+                class="btn-toggle-password"
+                onclick="togglePasswordVisibility('login-password', this)"
+                title="Lihat / Sembunyikan Password"
+              >
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
           <div class="forgot-pass-row">
             <a
@@ -222,23 +264,43 @@
           </div>
           <div class="form-group" style="margin-bottom: 12px">
             <label for="reg-password">Password:</label>
-            <input
-              type="password"
-              id="reg-password"
-              class="styled-input"
-              placeholder="Buat Password"
-              required
-            />
+            <div class="password-field-wrapper">
+              <input
+                type="password"
+                id="reg-password"
+                class="styled-input"
+                placeholder="Buat Password"
+                required
+              />
+              <button
+                type="button"
+                class="btn-toggle-password"
+                onclick="togglePasswordVisibility('reg-password', this)"
+                title="Lihat / Sembunyikan Password"
+              >
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom: 18px">
             <label for="reg-confirm-password">Konfirmasi Password:</label>
-            <input
-              type="password"
-              id="reg-confirm-password"
-              class="styled-input"
-              placeholder="Ulangi Password"
-              required
-            />
+            <div class="password-field-wrapper">
+              <input
+                type="password"
+                id="reg-confirm-password"
+                class="styled-input"
+                placeholder="Ulangi Password"
+                required
+              />
+              <button
+                type="button"
+                class="btn-toggle-password"
+                onclick="togglePasswordVisibility('reg-confirm-password', this)"
+                title="Lihat / Sembunyikan Password"
+              >
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
           <button type="submit" id="btn-register-submit" class="btn-auth-green">
             Daftar Sekarang
@@ -266,6 +328,22 @@
           loginBox.style.display = "block";
         }
       };
+
+      window.togglePasswordVisibility = function (inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector("i");
+        if (!input || !icon) return;
+
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      };
     </script>
 
     <script type="module">
@@ -290,19 +368,32 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
 
-      // Pastikan akun default 'admin' tersedia di Firestore jika belum ada
+      // --- HELPER HASHING SHA-256 ---
+      async function hashPasswordSHA256(plainText) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(plainText);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      function isAlreadyHashed(str) {
+        return typeof str === "string" && /^[a-f0-9]{64}$/i.test(str);
+      }
+
       async function ensureDefaultAdmin() {
         const defaultRef = doc(db, "umkm_tenants", "admin");
         const snap = await getDoc(defaultRef);
         if (!snap.exists()) {
+          const defaultHashedPass = await hashPasswordSHA256("123");
           await setDoc(defaultRef, {
             account: {
               storeName: "UMKM Digital Kuliner",
               ownerName: "Administrator Utama",
               username: "admin",
-              password: "123",
+              password: defaultHashedPass,
               phone: "081234567890",
-              address: "",
+              address: "Kota Medan",
               logoData: "",
             },
             products: [],
@@ -313,7 +404,7 @@
         }
       }
 
-      // HANDLER LOGIN CLOUD
+      // HANDLER LOGIN CLOUD (DENGAN SHA-256 + AUTO-UPGRADE AKUN LAMA)
       document
         .getElementById("login-form")
         .addEventListener("submit", async function (e) {
@@ -339,7 +430,19 @@
             if (docSnap.exists()) {
               const data = docSnap.data();
               const acc = data.account || {};
-              if (acc.password === password) {
+              const storedPassword = acc.password || "";
+              const hashedInput = await hashPasswordSHA256(password);
+
+              const isMatchHash = storedPassword === hashedInput;
+              const isMatchLegacyPlain =
+                !isAlreadyHashed(storedPassword) && storedPassword === password;
+
+              if (isMatchHash || isMatchLegacyPlain) {
+                if (isMatchLegacyPlain) {
+                  await updateDoc(tenantRef, {
+                    "account.password": hashedInput,
+                  });
+                }
                 sessionStorage.setItem("umkm_active_tenant", usernameKey);
                 window.location.href = "dashboard.html";
                 return;
@@ -366,7 +469,7 @@
           }
         });
 
-      // HANDLER REGISTER CLOUD
+      // HANDLER REGISTER CLOUD (PASSWORD TERENKRIPSI SHA-256)
       document
         .getElementById("register-form")
         .addEventListener("submit", async function (e) {
@@ -412,14 +515,16 @@
               return;
             }
 
+            const hashedPassword = await hashPasswordSHA256(password);
+
             await setDoc(tenantRef, {
               account: {
                 storeName: storeName,
                 ownerName: storeName,
                 username: rawUsername,
-                password: password,
+                password: hashedPassword,
                 phone: phone || "-",
-                address: "",
+                address: "Kota Medan",
                 logoData: "",
               },
               products: [],
@@ -453,7 +558,7 @@
           }
         });
 
-      // FITUR LUPA PASSWORD (VERIFIKASI USERNAME + NO HP TERDAFTAR)
+      // FITUR LUPA PASSWORD (DENGAN IKON MATA & HASHING SHA-256)
       async function openForgotPasswordModal() {
         const { value: verifyData } = await Swal.fire({
           title:
@@ -550,10 +655,20 @@
                 Halo <b>${accountData.ownerName || verifyData.username}</b> (${accountData.storeName || "UMKM"}), silakan buat password baru:
               </p>
               <div class="swal-form-group">
-                <input id="fp-new-pass" type="password" class="swal2-input styled-swal-input" placeholder="Masukkan Password Baru">
+                <div class="password-field-wrapper">
+                  <input id="fp-new-pass" type="password" class="swal2-input styled-swal-input" placeholder="Masukkan Password Baru">
+                  <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('fp-new-pass', this)">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
               </div>
               <div class="swal-form-group">
-                <input id="fp-confirm-pass" type="password" class="swal2-input styled-swal-input" placeholder="Ulangi Password Baru">
+                <div class="password-field-wrapper">
+                  <input id="fp-confirm-pass" type="password" class="swal2-input styled-swal-input" placeholder="Ulangi Password Baru">
+                  <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('fp-confirm-pass', this)">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
               </div>
             `,
             showCancelButton: true,
@@ -579,14 +694,16 @@
 
           if (!newPassword) return;
 
+          const hashedNewPassword = await hashPasswordSHA256(newPassword);
+
           await updateDoc(tenantRef, {
-            "account.password": newPassword,
+            "account.password": hashedNewPassword,
           });
 
           Swal.fire({
             icon: "success",
             title: "Password Berhasil Direset!",
-            text: "Silakan login menggunakan password baru Anda.",
+            text: "Password baru sudah dienkripsi. Silakan login menggunakan password baru Anda.",
             confirmButtonColor: "#059669",
             customClass: { popup: "swal2-popup-modern" },
           });
