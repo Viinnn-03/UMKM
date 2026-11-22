@@ -21,7 +21,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=11" />
+    <link rel="stylesheet" href="style.css?v=12" />
     <style>
       body.auth-body {
         display: flex !important;
@@ -229,17 +229,27 @@
         </div>
         <form id="register-form">
           <div class="form-group" style="margin-bottom: 12px">
-            <label for="reg-store-name">Nama Pemilik / Usaha:</label>
+            <label for="reg-store-name">Nama Usaha / Toko:</label>
             <input
               type="text"
               id="reg-store-name"
               class="styled-input"
-              placeholder="Contoh: Mie Sop Kampung Medan / Budi"
+              placeholder="Contoh: Mie Sop Kampung Medan"
               required
             />
           </div>
           <div class="form-group" style="margin-bottom: 12px">
-            <label for="reg-phone">No. HP / WhatsApp (Untuk Reset Password):</label>
+            <label for="reg-owner-name">Nama Pemilik:</label>
+            <input
+              type="text"
+              id="reg-owner-name"
+              class="styled-input"
+              placeholder="Contoh: Budi Santoso"
+              required
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px">
+            <label for="reg-phone">No. WhatsApp / Kontak Toko:</label>
             <input
               type="tel"
               id="reg-phone"
@@ -376,6 +386,10 @@
         return typeof str === "string" && /^[a-f0-9]{64}$/i.test(str);
       }
 
+      function formatPhoneClean(rawPhone) {
+        return rawPhone.trim().replace(/\s+/g, "");
+      }
+
       async function ensureDefaultAdmin() {
         const defaultRef = doc(db, "umkm_tenants", "admin");
         const snap = await getDoc(defaultRef);
@@ -471,7 +485,12 @@
           const storeName = document
             .getElementById("reg-store-name")
             .value.trim();
-          const phone = document.getElementById("reg-phone").value.trim();
+          const ownerName = document
+            .getElementById("reg-owner-name")
+            .value.trim();
+          const phone = formatPhoneClean(
+            document.getElementById("reg-phone").value,
+          );
           const rawUsername = document
             .getElementById("reg-username")
             .value.trim();
@@ -513,10 +532,10 @@
             await setDoc(tenantRef, {
               account: {
                 storeName: storeName,
-                ownerName: storeName,
+                ownerName: ownerName || storeName,
                 username: rawUsername,
                 password: hashedPassword,
-                phone: phone || "-",
+                phone: phone,
                 address: "Kota Medan",
                 logoData: "",
               },
@@ -529,7 +548,7 @@
             Swal.fire({
               icon: "success",
               title: "Akun Berhasil Dibuat!",
-              text: "Silahkan Login",
+              text: "Nomor WhatsApp & profil usaha Anda otomatis tersimpan. Silakan Login.",
               confirmButtonColor: "#16a34a",
             }).then(() => {
               document.getElementById("register-form").reset();
@@ -541,8 +560,7 @@
             Swal.fire({
               icon: "error",
               title: "Gagal Mendaftar",
-              text:
-                "Terjadi kesalahan saat menyimpan Akun: " + error.message,
+              text: "Terjadi kesalahan saat menyimpan Akun: " + error.message,
               confirmButtonColor: "#ef4444",
             });
           } finally {

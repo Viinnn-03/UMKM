@@ -63,7 +63,7 @@ let ownerAccount = {
   ownerName: "Administrator Utama",
   username: activeTenantId || "admin",
   password: "",
-  phone: "-",
+  phone: "",
   address: "Kota Medan",
   logoData: "",
 };
@@ -390,8 +390,13 @@ function loadAccountSettingsUI() {
   if (document.getElementById("acc-owner-name"))
     document.getElementById("acc-owner-name").value =
       ownerAccount.ownerName || "";
-  if (document.getElementById("acc-phone"))
-    document.getElementById("acc-phone").value = ownerAccount.phone || "";
+  if (document.getElementById("acc-phone")) {
+    const cleanPhone =
+      ownerAccount.phone && ownerAccount.phone !== "-"
+        ? ownerAccount.phone
+        : "";
+    document.getElementById("acc-phone").value = cleanPhone;
+  }
   if (document.getElementById("acc-address"))
     document.getElementById("acc-address").value = ownerAccount.address || "";
   if (document.getElementById("acc-username")) {
