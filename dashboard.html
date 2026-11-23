@@ -21,7 +21,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
-    <link rel="stylesheet" href="style.css?v=12" />
+    <link rel="stylesheet" href="style.css?v=13" />
     <style>
       .password-field-wrapper {
         position: relative;
@@ -254,6 +254,57 @@
       .btn-detail-cust:hover {
         background: #334155;
         color: #ffffff;
+      }
+
+      /* Styling Kalkulator HPP Bahan Baku & Kartu Metode Pembayaran */
+      .hpp-calculator-box {
+        border-top: 4px solid #d97706 !important;
+        background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+      }
+      .hpp-ingredient-row {
+        display: grid;
+        grid-template-columns: 2fr 1.2fr 1.5fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .hpp-summary-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+        background: #ffffff;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1.5px solid #fde68a;
+        margin-top: 10px;
+      }
+      .payment-breakdown-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+        margin-bottom: 22px;
+      }
+      .card-pay-tunai {
+        border-left: 4px solid #059669 !important;
+        background: #f0fdf4;
+      }
+      .card-pay-qris {
+        border-left: 4px solid #2563eb !important;
+        background: #eff6ff;
+      }
+      .card-pay-transfer {
+        border-left: 4px solid #7c3aed !important;
+        background: #f5f3ff;
+      }
+      @media (max-width: 640px) {
+        .hpp-ingredient-row {
+          grid-template-columns: 1fr 1fr;
+        }
+        .hpp-ingredient-row .hpp-ing-name {
+          grid-column: 1 / -1;
+        }
       }
     </style>
   </head>
@@ -807,14 +858,172 @@
         <div id="stock-cards-mobile" class="mobile-cards-container"></div>
       </section>
 
-      <!-- SECTION 4: LAPORAN PENGELUARAN -->
+      <!-- SECTION 4: LAPORAN PENGELUARAN & KALKULATOR HPP -->
       <section id="pengeluaran" class="page-section">
-        <h1>Laporan Pengeluaran</h1>
-        <p>Pencatatan dan pemantauan pengeluaran operasional usaha Anda.</p>
+        <h1>Laporan Pengeluaran & HPP Bahan</h1>
+        <p>
+          Hitung rincian Harga Pokok Penjualan (HPP) bahan baku produk serta
+          catat pengeluaran operasional usaha Anda.
+        </p>
 
+        <!-- KALKULATOR & PENCATAT HPP BAHAN BAKU PRODUK -->
+        <div class="form-container hpp-calculator-box">
+          <h2 style="color: #92400e; margin-bottom: 4px">
+            <i class="fa-solid fa-calculator"></i> Hitung & Catat HPP Bahan
+            Baku Produk
+          </h2>
+          <p style="font-size: 13px; color: #78350f; margin-bottom: 16px">
+            Masukkan rincian bahan baku pembuatan produk untuk mengetahui total
+            modal HPP serta estimasi HPP per porsi/pcs.
+          </p>
+
+          <form
+            id="hpp-calculator-form"
+            onsubmit="simpanPengeluaranHPP(event)"
+          >
+            <div class="form-grid-3" style="margin-bottom: 14px">
+              <div class="form-group">
+                <label for="hpp-date">Tanggal Belanja Bahan:</label>
+                <input
+                  type="date"
+                  id="hpp-date"
+                  required
+                  class="styled-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="hpp-product-name">Untuk Produk / Menu:</label>
+                <input
+                  type="text"
+                  id="hpp-product-name"
+                  required
+                  placeholder="Contoh: Mie Sop Kampung (1 Batch)"
+                  class="styled-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="hpp-yield-qty"
+                  >Target Hasil Jadi (Porsi / Pcs):</label
+                >
+                <input
+                  type="number"
+                  id="hpp-yield-qty"
+                  min="1"
+                  value="1"
+                  required
+                  placeholder="Contoh: 20"
+                  oninput="calculateHPPTotal()"
+                  class="styled-input"
+                />
+              </div>
+            </div>
+
+            <div
+              style="
+                font-weight: 700;
+                font-size: 13px;
+                color: #92400e;
+                margin-bottom: 8px;
+              "
+            >
+              <i class="fa-solid fa-basket-shopping"></i> Rincian Bahan Baku
+              yang Digunakan:
+            </div>
+
+            <div
+              id="hpp-ingredients-container"
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 12px;
+              "
+            >
+              <div class="hpp-ingredient-row">
+                <input
+                  type="text"
+                  class="hpp-ing-name styled-input"
+                  placeholder="Nama Bahan (ex: Ayam Dada)"
+                  required
+                />
+                <input
+                  type="text"
+                  class="hpp-ing-qty styled-input"
+                  placeholder="Takaran (ex: 2 kg)"
+                  required
+                />
+                <input
+                  type="number"
+                  class="hpp-ing-cost styled-input"
+                  min="0"
+                  placeholder="Biaya (Rp)"
+                  oninput="calculateHPPTotal()"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-sm"
+                  style="background: #ef4444; color: #fff; padding: 10px 12px"
+                  onclick="removeHPPIngredientRow(this)"
+                  title="Hapus Bahan"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn-sm"
+              style="
+                background: #f59e0b;
+                color: #ffffff;
+                padding: 8px 14px;
+                margin-bottom: 6px;
+              "
+              onclick="addHPPIngredientRow()"
+            >
+              <i class="fa-solid fa-plus"></i> Tambah Bahan Baku Lain
+            </button>
+
+            <div class="hpp-summary-bar">
+              <div>
+                <span style="font-size: 12px; color: #64748b; display: block"
+                  >Total Modal Bahan (Total HPP):</span
+                >
+                <strong
+                  id="hpp-total-preview"
+                  style="font-size: 18px; color: #b45309"
+                  >Rp 0</strong
+                >
+              </div>
+              <div>
+                <span style="font-size: 12px; color: #64748b; display: block"
+                  >Estimasi HPP per Porsi / Pcs:</span
+                >
+                <strong
+                  id="hpp-per-unit-preview"
+                  style="font-size: 18px; color: #059669"
+                  >Rp 0 / porsi</strong
+                >
+              </div>
+              <button
+                type="submit"
+                class="btn-primary"
+                style="background-color: #d97706"
+              >
+                <i class="fa-solid fa-floppy-disk"></i> Simpan HPP ke
+                Pengeluaran
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- FORM PENGELUARAN OPERASIONAL UMUM -->
         <div class="form-container form-accent-danger">
           <h2>
             <i class="fa-solid fa-wallet"></i> Input Pengeluaran Operasional
+            Lainnya
           </h2>
           <form id="expense-form" onsubmit="tambahPengeluaran(event)">
             <div class="form-grid-4">
@@ -833,13 +1042,14 @@
                   type="text"
                   id="expense-name"
                   required
-                  placeholder="Contoh: Beli Bahan Baku / Listrik"
+                  placeholder="Contoh: Token Listrik / Gas Elpiji"
                   class="styled-input"
                 />
               </div>
               <div class="form-group">
                 <label for="expense-category">Kategori:</label>
                 <select id="expense-category" required class="styled-input">
+                  <option value="Bahan Baku & HPP">Bahan Baku & HPP</option>
                   <option value="Bahan Baku">Bahan Baku</option>
                   <option value="Operasional">
                     Operasional / Keperluan Toko
@@ -910,7 +1120,7 @@
         </div>
 
         <div class="table-header-flex">
-          <h2>Detail Pengeluaran Operasional</h2>
+          <h2>Detail Pengeluaran & HPP Bahan Baku</h2>
           <div class="filter-inline">
             <label for="filter-exp-kategori">Pilih Jenis Pengeluaran:</label>
             <select
@@ -919,6 +1129,7 @@
               class="styled-input"
             >
               <option value="semua">Semua Pengeluaran</option>
+              <option value="Bahan Baku & HPP">Bahan Baku & HPP</option>
               <option value="Bahan Baku">Bahan Baku</option>
               <option value="Operasional">Operasional / Keperluan Toko</option>
               <option value="Gaji">Gaji Karyawan</option>
@@ -933,7 +1144,7 @@
             <thead>
               <tr>
                 <th>Tanggal</th>
-                <th>Deskripsi</th>
+                <th>Deskripsi / Rincian Bahan HPP</th>
                 <th>Kategori</th>
                 <th>Nominal</th>
                 <th>Aksi</th>
@@ -949,8 +1160,8 @@
       <section id="laporan" class="page-section">
         <h1>Laporan Penjualan & Keuangan</h1>
         <p>
-          Pantau omzet, pengeluaran operasional, dan kalkulasi laba bersih usaha
-          Anda.
+          Pantau omzet keseluruhan, rincian pembayaran Tunai/QRIS/Transfer,
+          pengeluaran operasional, dan kalkulasi laba bersih usaha Anda.
         </p>
 
         <div class="form-container form-accent-info">
@@ -959,8 +1170,8 @@
             Laporan Keuangan
           </h3>
           <p style="margin-bottom: 14px; font-size: 13px">
-            Unduh file Excel (.xlsx) rapi di semua sheet lengkap dengan format
-            Rupiah & rumus total otomatis.
+            Unduh file Excel (.xlsx) rapi di semua sheet lengkap dengan rincian
+            Tunai, QRIS, Transfer Bank & rumus total otomatis.
           </p>
           <div class="backup-btn-group">
             <button
@@ -1007,13 +1218,14 @@
           </div>
         </div>
 
+        <!-- Ringkasan Keseluruhan -->
         <div class="cards-grid">
           <div class="card card-success">
-            <h3>Total Omzet (Pendapatan)</h3>
+            <h3>Total Omzet Keseluruhan</h3>
             <p class="stat-number" id="report-omzet">Rp 0</p>
           </div>
           <div class="card card-danger">
-            <h3>Total Pengeluaran</h3>
+            <h3>Total Pengeluaran & HPP</h3>
             <p class="stat-number stat-danger" id="report-pengeluaran">Rp 0</p>
           </div>
           <div class="card card-emerald">
@@ -1027,6 +1239,52 @@
           <div class="card">
             <h3>Produk Terlaris</h3>
             <p class="stat-text" id="report-top-product">-</p>
+          </div>
+        </div>
+
+        <!-- Rincian Pendapatan per Metode Pembayaran -->
+        <div class="payment-breakdown-grid">
+          <div class="card card-pay-tunai">
+            <h3>
+              <i class="fa-solid fa-money-bill-wave" style="color: #059669"></i>
+              Pendapatan Tunai (Cash)
+            </h3>
+            <p
+              class="stat-number"
+              id="report-omzet-tunai"
+              style="color: #059669"
+            >
+              Rp 0
+            </p>
+          </div>
+          <div class="card card-pay-qris">
+            <h3>
+              <i class="fa-solid fa-qrcode" style="color: #2563eb"></i>
+              Pendapatan QRIS
+            </h3>
+            <p
+              class="stat-number"
+              id="report-omzet-qris"
+              style="color: #2563eb"
+            >
+              Rp 0
+            </p>
+          </div>
+          <div class="card card-pay-transfer">
+            <h3>
+              <i
+                class="fa-solid fa-building-columns"
+                style="color: #7c3aed"
+              ></i>
+              Pendapatan Transfer Bank
+            </h3>
+            <p
+              class="stat-number"
+              id="report-omzet-transfer"
+              style="color: #7c3aed"
+            >
+              Rp 0
+            </p>
           </div>
         </div>
 
@@ -1052,7 +1310,7 @@
                   <th>Tanggal</th>
                   <th>Produk</th>
                   <th>PCS</th>
-                  <th>Customer / Ref</th>
+                  <th>Customer / Metode Bayar</th>
                   <th>Total</th>
                 </tr>
               </thead>
@@ -1347,6 +1605,6 @@
         }
       };
     </script>
-    <script type="module" src="script.js?v=4"></script>
+    <script type="module" src="script.js?v=5"></script>
   </body>
 </html>

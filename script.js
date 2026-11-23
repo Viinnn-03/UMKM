@@ -118,6 +118,9 @@ function initDefaultDates() {
   if (expenseDateInput && !expenseDateInput.value)
     expenseDateInput.value = todayISO;
 
+  const hppDateInput = document.getElementById("hpp-date");
+  if (hppDateInput && !hppDateInput.value) hppDateInput.value = todayISO;
+
   const filterDashPeriode = document.getElementById("filter-dash-periode");
   const filterDashTanggal = document.getElementById("filter-dash-tanggal");
   const dashDateWrapper = document.getElementById("dash-date-picker-wrapper");
@@ -1378,6 +1381,140 @@ function cancelOrder(orderId) {
   });
 }
 
+// --- FITUR KALKULATOR & PENCATAT HPP BAHAN BAKU ---
+function addHPPIngredientRow() {
+  const container = document.getElementById("hpp-ingredients-container");
+  if (!container) return;
+
+  const row = document.createElement("div");
+  row.className = "hpp-ingredient-row";
+  row.style.cssText =
+    "display: grid; grid-template-columns: 2fr 1.2fr 1.5fr auto; gap: 8px; align-items: center;";
+  row.innerHTML = `
+    <input type="text" class="hpp-ing-name styled-input" placeholder="Nama Bahan (ex: Minyak Goreng)" required />
+    <input type="text" class="hpp-ing-qty styled-input" placeholder="Takaran (ex: 1 liter)" required />
+    <input type="number" class="hpp-ing-cost styled-input" min="0" placeholder="Biaya (Rp)" oninput="calculateHPPTotal()" required />
+    <button type="button" class="btn-sm" style="background:#ef4444; color:#fff; padding: 10px 12px;" onclick="removeHPPIngredientRow(this)" title="Hapus Bahan">
+      <i class="fa-solid fa-trash"></i>
+    </button>
+  `;
+  container.appendChild(row);
+}
+
+function removeHPPIngredientRow(btn) {
+  const rows = document.querySelectorAll(".hpp-ingredient-row");
+  if (rows.length > 1) {
+    btn.closest(".hpp-ingredient-row").remove();
+    calculateHPPTotal();
+  } else {
+    Swal.fire({
+      icon: "warning",
+      title: "Minimal 1 Bahan",
+      text: "Perhitungan HPP minimal berisi satu bahan baku.",
+    });
+  }
+}
+
+function calculateHPPTotal() {
+  let totalHPP = 0;
+  document.querySelectorAll(".hpp-ingredient-row").forEach((row) => {
+    const costInput = row.querySelector(".hpp-ing-cost");
+    const val = parseInt(costInput ? costInput.value : 0, 10) || 0;
+    totalHPP += val;
+  });
+
+  const yieldInput = document.getElementById("hpp-yield-qty");
+  const yieldQty = Math.max(1, parseInt(yieldInput ? yieldInput.value : 1, 10) || 1);
+  const hppPerUnit = Math.round(totalHPP / yieldQty);
+
+  const totalPreview = document.getElementById("hpp-total-preview");
+  const unitPreview = document.getElementById("hpp-per-unit-preview");
+  if (totalPreview)
+    totalPreview.innerText = "Rp " + totalHPP.toLocaleString("id-ID");
+  if (unitPreview)
+    unitPreview.innerText = `Rp ${hppPerUnit.toLocaleString("id-ID")} / porsi`;
+
+  return { totalHPP, yieldQty, hppPerUnit };
+}
+
+async function simpanPengeluaranHPP(e) {
+  e.preventDefault();
+  const hppDateVal = document.getElementById("hpp-date").value;
+  const productName = document.getElementById("hpp-product-name").value.trim();
+  const { totalHPP, yieldQty, hppPerUnit } = calculateHPPTotal();
+
+  if (totalHPP <= 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Nominal Kosong",
+      text: "Masukkan biaya bahan baku lebih dari Rp 0.",
+    });
+    return;
+  }
+
+  const ingredients = [];
+  document.querySelectorAll(".hpp-ingredient-row").forEach((row) => {
+    const ingName = row.querySelector(".hpp-ing-name")?.value.trim() || "";
+    const ingQty = row.querySelector(".hpp-ing-qty")?.value.trim() || "";
+    const ingCost =
+      parseInt(row.querySelector(".hpp-ing-cost")?.value || 0, 10) || 0;
+    if (ingName && ingCost > 0) {
+      ingredients.push({ name: ingName, qty: ingQty, cost: ingCost });
+    }
+  });
+
+  const detailBahanStr = ingredients
+    .map((i) => `${i.name} (${i.qty}: Rp ${i.cost.toLocaleString("id-ID")})`)
+    .join(", ");
+
+  const formattedDate = formatTransactionDateFromInput(hppDateVal);
+  const newExpId = generateNextExpenseId();
+
+  expenses.unshift({
+    id: newExpId,
+    name: `HPP ${productName} (${yieldQty} porsi • Rp ${hppPerUnit.toLocaleString("id-ID")}/porsi) — Bahan: ${detailBahanStr}`,
+    category: "Bahan Baku & HPP",
+    amount: totalHPP,
+    date: formattedDate,
+    hppDetail: {
+      productName,
+      yieldQty,
+      hppPerUnit,
+      ingredients,
+    },
+  });
+
+  await saveData();
+
+  Swal.fire({
+    icon: "success",
+    title: "HPP Bahan Baku Tercatat!",
+    html: `Produk: <b>${escapeHTML(productName)}</b><br>Total HPP: <b>Rp ${totalHPP.toLocaleString("id-ID")}</b><br>HPP per Porsi: <b style="color:#059669;">Rp ${hppPerUnit.toLocaleString("id-ID")} / porsi</b>`,
+    confirmButtonColor: "#d97706",
+  });
+
+  document.getElementById("hpp-calculator-form").reset();
+  document.getElementById("hpp-date").value = getTodayISOString();
+  document.getElementById("hpp-yield-qty").value = 1;
+
+  const container = document.getElementById("hpp-ingredients-container");
+  if (container) {
+    container.innerHTML = `
+      <div class="hpp-ingredient-row" style="display: grid; grid-template-columns: 2fr 1.2fr 1.5fr auto; gap: 8px; align-items: center;">
+        <input type="text" class="hpp-ing-name styled-input" placeholder="Nama Bahan (ex: Ayam Dada)" required />
+        <input type="text" class="hpp-ing-qty styled-input" placeholder="Takaran (ex: 2 kg)" required />
+        <input type="number" class="hpp-ing-cost styled-input" min="0" placeholder="Biaya (Rp)" oninput="calculateHPPTotal()" required />
+        <button type="button" class="btn-sm" style="background:#ef4444; color:#fff; padding: 10px 12px;" onclick="removeHPPIngredientRow(this)" title="Hapus Bahan">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+    `;
+  }
+  calculateHPPTotal();
+  renderPengeluaran();
+  renderLaporan();
+}
+
 // --- PENGELUARAN OPERASIONAL + BACKDATE + HAPUS PENGELUARAN ---
 function toggleExpenseDateFilter() {
   const periodeSelect = document.getElementById("filter-exp-periode");
@@ -1722,7 +1859,6 @@ function renderCustomers() {
 
   const mergedList = Array.from(customerMap.values());
 
-  // Update 3 Kartu Ringkasan Pelanggan
   const totalCust = mergedList.length;
   const loyalCust = mergedList.filter((c) => c.txCount >= 2).length;
   let topCustText = "-";
@@ -1739,7 +1875,6 @@ function renderCustomers() {
   if (elStatLoyal) elStatLoyal.innerText = loyalCust;
   if (elStatTop) elStatTop.innerText = topCustText;
 
-  // Filter berdasarkan tab Loyal/Baru dan pencarian
   const filteredCust = mergedList.filter((c) => {
     const isLoyal = c.txCount >= 2;
     if (currentCustomerFilter === "loyal" && !isLoyal) return false;
@@ -2076,7 +2211,7 @@ function toggleDateFilter() {
   renderLaporan();
 }
 
-// --- HELPER PENCOCOKAN TANGGAL LAPORAN ---
+// --- HELPER PENCOCOKAN TANGGAL & KLASIFIKASI METODE BAYAR ---
 function isReportDateMatch(dateStr, periodeVal, tanggalVal, bulanVal) {
   if (periodeVal === "semua") return true;
   if (!dateStr) return false;
@@ -2093,9 +2228,19 @@ function isReportDateMatch(dateStr, periodeVal, tanggalVal, bulanVal) {
   return false;
 }
 
+function classifyPaymentChannel(paymentMethodStr) {
+  const lower = (paymentMethodStr || "tunai").toLowerCase();
+  if (lower.includes("qris")) return "qris";
+  if (lower.includes("transfer")) return "transfer";
+  return "tunai";
+}
+
 function renderLaporan() {
   populateReportProductFilter();
   let totalOmzet = 0,
+    totalOmzetTunai = 0,
+    totalOmzetQris = 0,
+    totalOmzetTransfer = 0,
     totalPengeluaran = 0,
     channelCount = {},
     productSalesCount = {};
@@ -2128,7 +2273,9 @@ function renderLaporan() {
 
   filteredOrders.forEach((o) => {
     channelCount[o.channel] = (channelCount[o.channel] || 0) + 1;
-    const payMethod = escapeHTML(o.paymentMethod || "Tunai (Cash)");
+    const rawPayMethod = o.paymentMethod || "Tunai (Cash)";
+    const payCategory = classifyPaymentChannel(rawPayMethod);
+    const payMethod = escapeHTML(rawPayMethod);
     const safeOrderDate = escapeHTML(o.date || "-");
     const safeOrderCust = escapeHTML(o.customer);
 
@@ -2142,6 +2289,10 @@ function renderLaporan() {
         if (nameMatch) {
           const itemTotal = item.price * item.qty;
           totalOmzet += itemTotal;
+          if (payCategory === "qris") totalOmzetQris += itemTotal;
+          else if (payCategory === "transfer") totalOmzetTransfer += itemTotal;
+          else totalOmzetTunai += itemTotal;
+
           const safeItemName = escapeHTML(item.productName);
           const safeItemNote = item.note ? escapeHTML(item.note) : "";
 
@@ -2180,7 +2331,12 @@ function renderLaporan() {
       const nameMatch =
         produkVal === "semua" || o.product.toLowerCase().includes(produkVal);
       if (nameMatch) {
-        totalOmzet += o.price;
+        const orderPrice = Number(o.price) || 0;
+        totalOmzet += orderPrice;
+        if (payCategory === "qris") totalOmzetQris += orderPrice;
+        else if (payCategory === "transfer") totalOmzetTransfer += orderPrice;
+        else totalOmzetTunai += orderPrice;
+
         const safeProdText = escapeHTML(o.product);
 
         if (detailBody) {
@@ -2190,7 +2346,7 @@ function renderLaporan() {
                             <td><b>${safeProdText}</b></td>
                             <td>${o.qty || 1} pcs</td>
                             <td>${safeOrderCust}<br><small style="color:#047857; font-weight:600;">${payMethod}</small></td>
-                            <td>Rp ${o.price.toLocaleString("id-ID")}</td>
+                            <td>Rp ${orderPrice.toLocaleString("id-ID")}</td>
                         </tr>
                     `;
         }
@@ -2200,7 +2356,7 @@ function renderLaporan() {
                         <div class="mobile-card">
                             <div class="mobile-card-header">
                                 <span class="mobile-card-title">${safeProdText}</span>
-                                <span class="badge badge-selesai">Rp ${o.price.toLocaleString("id-ID")}</span>
+                                <span class="badge badge-selesai">Rp ${orderPrice.toLocaleString("id-ID")}</span>
                             </div>
                             <div class="mobile-card-body">
                                 <div><b>Tanggal:</b> ${safeOrderDate} | <b>Qty:</b> ${o.qty || 1} pcs</div>
@@ -2241,6 +2397,15 @@ function renderLaporan() {
   if (document.getElementById("report-omzet"))
     document.getElementById("report-omzet").innerText =
       "Rp " + totalOmzet.toLocaleString("id-ID");
+  if (document.getElementById("report-omzet-tunai"))
+    document.getElementById("report-omzet-tunai").innerText =
+      "Rp " + totalOmzetTunai.toLocaleString("id-ID");
+  if (document.getElementById("report-omzet-qris"))
+    document.getElementById("report-omzet-qris").innerText =
+      "Rp " + totalOmzetQris.toLocaleString("id-ID");
+  if (document.getElementById("report-omzet-transfer"))
+    document.getElementById("report-omzet-transfer").innerText =
+      "Rp " + totalOmzetTransfer.toLocaleString("id-ID");
   if (document.getElementById("report-pengeluaran"))
     document.getElementById("report-pengeluaran").innerText =
       "Rp " + totalPengeluaran.toLocaleString("id-ID");
@@ -2263,7 +2428,7 @@ function checkEmptyTable(elem, length, colSpan, message) {
   return false;
 }
 
-// --- EXPORT EXCEL (.XLSX) SESUAI PERIODE & JENIS PRODUK YANG DIPILIH ---
+// --- EXPORT EXCEL (.XLSX) DENGAN RINCIAN TUNAI, QRIS, TRANSFER & HPP ---
 function exportToExcel() {
   const periodeVal = document.getElementById("filter-periode")
     ? document.getElementById("filter-periode").value
@@ -2312,8 +2477,14 @@ function exportToExcel() {
   );
 
   const salesRows = [];
+  let sumTunai = 0,
+    sumQris = 0,
+    sumTransfer = 0;
+
   filteredOrders.forEach((o) => {
     const payMethod = o.paymentMethod || "Tunai (Cash)";
+    const payCat = classifyPaymentChannel(payMethod);
+
     if (o.items && Array.isArray(o.items)) {
       const matchedItems =
         produkVal === "semua"
@@ -2326,6 +2497,10 @@ function exportToExcel() {
         const detailText = `${item.productName} (${item.qty}x)${item.note ? ` [${item.note}]` : ""}`;
         const itemSubtotal =
           (Number(item.price) || 0) * (Number(item.qty) || 0);
+
+        if (payCat === "qris") sumQris += itemSubtotal;
+        else if (payCat === "transfer") sumTransfer += itemSubtotal;
+        else sumTunai += itemSubtotal;
 
         salesRows.push([
           salesRows.length + 1,
@@ -2345,6 +2520,11 @@ function exportToExcel() {
         produkVal === "semua" ||
         (o.product && o.product.toLowerCase().includes(produkVal));
       if (nameMatch) {
+        const val = Number(o.price) || 0;
+        if (payCat === "qris") sumQris += val;
+        else if (payCat === "transfer") sumTransfer += val;
+        else sumTunai += val;
+
         salesRows.push([
           salesRows.length + 1,
           o.id,
@@ -2355,7 +2535,7 @@ function exportToExcel() {
           o.channel,
           payMethod,
           o.status,
-          Number(o.price) || 0,
+          val,
         ]);
       }
     }
@@ -2445,16 +2625,16 @@ function exportToExcel() {
   applyCurrencyFormat(wsSales, "J", 5, totalSalesRowIndex);
   XLSX.utils.book_append_sheet(wb, wsSales, "Laporan Penjualan");
 
-  // 2. SHEET LAPORAN PENGELUARAN
+  // 2. SHEET LAPORAN PENGELUARAN & HPP
   const expHeader = [
-    [`LAPORAN PENGELUARAN ${storeTitle}`],
+    [`LAPORAN PENGELUARAN & HPP ${storeTitle}`],
     [`Periode: ${periodeLabel}`],
     [`Tanggal Cetak: ${todayStr}`],
     [
       "No",
       "ID Pengeluaran",
       "Tanggal",
-      "Deskripsi Pengeluaran",
+      "Deskripsi Pengeluaran / Rincian Bahan HPP",
       "Kategori",
       "Nominal (Rp)",
     ],
@@ -2496,30 +2676,33 @@ function exportToExcel() {
     { wch: 6 },
     { wch: 18 },
     { wch: 22 },
-    { wch: 34 },
+    { wch: 44 },
     { wch: 24 },
     { wch: 22 },
   ];
   applyCurrencyFormat(wsExp, "F", 5, totalExpRowIndex);
   XLSX.utils.book_append_sheet(wb, wsExp, "Laporan Pengeluaran");
 
-  // 3. SHEET RINGKASAN LABA BERSIH
+  // 3. SHEET RINGKASAN LABA BERSIH & RINCIAN METODE BAYAR
   const summaryData = [
     [`RINGKASAN KEUANGAN & LABA BERSIH ${storeTitle}`],
     [`Periode: ${periodeLabel} | Filter Produk: ${produkLabel}`],
     [`Tanggal Cetak: ${todayStr}`],
     ["No", "Keterangan Komponen Keuangan", "Jumlah (Rp)"],
+    [1, "Pendapatan Tunai (Cash)", sumTunai],
+    [2, "Pendapatan Non-Tunai (QRIS)", sumQris],
+    [3, "Pendapatan Non-Tunai (Transfer Bank)", sumTransfer],
     [
-      1,
-      "Total Pendapatan (Omzet Penjualan)",
+      4,
+      "Total Pendapatan Keseluruhan (Omzet Penjualan)",
       { t: "n", f: `'Laporan Penjualan'!J${totalSalesRowIndex}` },
     ],
     [
-      2,
-      "Total Pengeluaran Operasional",
+      5,
+      "Total Pengeluaran Operasional & HPP Bahan",
       { t: "n", f: `'Laporan Pengeluaran'!F${totalExpRowIndex}` },
     ],
-    ["", "LABA BERSIH (OMZET - PENGELUARAN)", { t: "n", f: "C5-C6" }],
+    ["", "LABA BERSIH (OMZET - PENGELUARAN)", { t: "n", f: "C8-C9" }],
   ];
 
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
@@ -2528,8 +2711,8 @@ function exportToExcel() {
     { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
   ];
-  wsSummary["!cols"] = [{ wch: 6 }, { wch: 42 }, { wch: 24 }];
-  applyCurrencyFormat(wsSummary, "C", 5, 7);
+  wsSummary["!cols"] = [{ wch: 6 }, { wch: 46 }, { wch: 24 }];
+  applyCurrencyFormat(wsSummary, "C", 5, 10);
   XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Laba Bersih");
 
   const fileSuffixPeriode =
@@ -2568,6 +2751,10 @@ window.renderCustomers = renderCustomers;
 window.renderStock = renderStock;
 window.updateProductStock = updateProductStock;
 window.deleteProduct = deleteProduct;
+window.addHPPIngredientRow = addHPPIngredientRow;
+window.removeHPPIngredientRow = removeHPPIngredientRow;
+window.calculateHPPTotal = calculateHPPTotal;
+window.simpanPengeluaranHPP = simpanPengeluaranHPP;
 window.tambahPengeluaran = tambahPengeluaran;
 window.deleteExpense = deleteExpense;
 window.toggleExpenseDateFilter = toggleExpenseDateFilter;
