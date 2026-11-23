@@ -98,7 +98,13 @@ function renderLiveDateBadge() {
     month: "long",
     year: "numeric",
   });
-  badgeElem.innerHTML = `<i class="fa-regular fa-calendar-check"></i> <span>${formatted}</span>`;
+
+  const spanElem = badgeElem.querySelector("span");
+  if (spanElem) {
+    spanElem.textContent = formatted;
+  } else {
+    badgeElem.innerHTML = `<span>${formatted}</span>`;
+  }
 }
 
 function initDefaultDates() {
