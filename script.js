@@ -99,12 +99,7 @@ function renderLiveDateBadge() {
     year: "numeric",
   });
 
-  const spanElem = badgeElem.querySelector("span");
-  if (spanElem) {
-    spanElem.textContent = formatted;
-  } else {
-    badgeElem.innerHTML = `<span>${formatted}</span>`;
-  }
+  badgeElem.textContent = formatted;
 }
 
 function initDefaultDates() {
@@ -1381,15 +1376,40 @@ function cancelOrder(orderId) {
   });
 }
 
-// --- FITUR KALKULATOR & PENCATAT HPP BAHAN BAKU ---
+// --- FITUR KALKULATOR & PENCATAT HPP BAHAN BAKU (ACCORDION / COLLAPSIBLE) ---
+function toggleHPPCalculatorPanel() {
+  const body = document.getElementById("hpp-calculator-body");
+  const pill = document.getElementById("hpp-toggle-label");
+  const btn = document.getElementById("hpp-accordion-btn");
+  if (!body) return;
+
+  const isHidden =
+    body.style.display === "none" ||
+    window.getComputedStyle(body).display === "none";
+
+  if (isHidden) {
+    body.style.display = "block";
+    if (btn) btn.setAttribute("aria-expanded", "true");
+    if (pill) {
+      pill.innerHTML =
+        '<i class="fa-solid fa-chevron-up" id="hpp-toggle-icon"></i> Tutup Kalkulator HPP';
+    }
+  } else {
+    body.style.display = "none";
+    if (btn) btn.setAttribute("aria-expanded", "false");
+    if (pill) {
+      pill.innerHTML =
+        '<i class="fa-solid fa-chevron-down" id="hpp-toggle-icon"></i> Buka Kalkulator HPP';
+    }
+  }
+}
+
 function addHPPIngredientRow() {
   const container = document.getElementById("hpp-ingredients-container");
   if (!container) return;
 
   const row = document.createElement("div");
   row.className = "hpp-ingredient-row";
-  row.style.cssText =
-    "display: grid; grid-template-columns: 2fr 1.2fr 1.5fr auto; gap: 8px; align-items: center;";
   row.innerHTML = `
     <input type="text" class="hpp-ing-name styled-input" placeholder="Nama Bahan (ex: Minyak Goreng)" required />
     <input type="text" class="hpp-ing-qty styled-input" placeholder="Takaran (ex: 1 liter)" required />
@@ -1424,7 +1444,10 @@ function calculateHPPTotal() {
   });
 
   const yieldInput = document.getElementById("hpp-yield-qty");
-  const yieldQty = Math.max(1, parseInt(yieldInput ? yieldInput.value : 1, 10) || 1);
+  const yieldQty = Math.max(
+    1,
+    parseInt(yieldInput ? yieldInput.value : 1, 10) || 1,
+  );
   const hppPerUnit = Math.round(totalHPP / yieldQty);
 
   const totalPreview = document.getElementById("hpp-total-preview");
@@ -1441,6 +1464,8 @@ async function simpanPengeluaranHPP(e) {
   e.preventDefault();
   const hppDateVal = document.getElementById("hpp-date").value;
   const productName = document.getElementById("hpp-product-name").value.trim();
+  const paymentMethod =
+    document.getElementById("hpp-payment-method")?.value || "Tunai (Cash)";
   const { totalHPP, yieldQty, hppPerUnit } = calculateHPPTotal();
 
   if (totalHPP <= 0) {
@@ -1474,6 +1499,7 @@ async function simpanPengeluaranHPP(e) {
     id: newExpId,
     name: `HPP ${productName} (${yieldQty} porsi • Rp ${hppPerUnit.toLocaleString("id-ID")}/porsi) — Bahan: ${detailBahanStr}`,
     category: "Bahan Baku & HPP",
+    paymentMethod,
     amount: totalHPP,
     date: formattedDate,
     hppDetail: {
@@ -1486,10 +1512,11 @@ async function simpanPengeluaranHPP(e) {
 
   await saveData();
 
+  const isCash = classifyPaymentChannel(paymentMethod) === "tunai";
   Swal.fire({
     icon: "success",
     title: "HPP Bahan Baku Tercatat!",
-    html: `Produk: <b>${escapeHTML(productName)}</b><br>Total HPP: <b>Rp ${totalHPP.toLocaleString("id-ID")}</b><br>HPP per Porsi: <b style="color:#059669;">Rp ${hppPerUnit.toLocaleString("id-ID")} / porsi</b>`,
+    html: `Produk: <b>${escapeHTML(productName)}</b><br>Total HPP: <b>Rp ${totalHPP.toLocaleString("id-ID")}</b> (${escapeHTML(paymentMethod)})<br>HPP per Porsi: <b style="color:#059669;">Rp ${hppPerUnit.toLocaleString("id-ID")} / porsi</b>${isCash ? '<br><small style="color:#b45309;">Otomatis memotong saldo Pendapatan Tunai (Cash).</small>' : ""}`,
     confirmButtonColor: "#d97706",
   });
 
@@ -1500,7 +1527,7 @@ async function simpanPengeluaranHPP(e) {
   const container = document.getElementById("hpp-ingredients-container");
   if (container) {
     container.innerHTML = `
-      <div class="hpp-ingredient-row" style="display: grid; grid-template-columns: 2fr 1.2fr 1.5fr auto; gap: 8px; align-items: center;">
+      <div class="hpp-ingredient-row">
         <input type="text" class="hpp-ing-name styled-input" placeholder="Nama Bahan (ex: Ayam Dada)" required />
         <input type="text" class="hpp-ing-qty styled-input" placeholder="Takaran (ex: 2 kg)" required />
         <input type="number" class="hpp-ing-cost styled-input" min="0" placeholder="Biaya (Rp)" oninput="calculateHPPTotal()" required />
@@ -1511,11 +1538,12 @@ async function simpanPengeluaranHPP(e) {
     `;
   }
   calculateHPPTotal();
+  toggleHPPCalculatorPanel();
   renderPengeluaran();
   renderLaporan();
 }
 
-// --- PENGELUARAN OPERASIONAL + BACKDATE + HAPUS PENGELUARAN ---
+// --- PENGELUARAN OPERASIONAL + SUMBER DANA + HAPUS PENGELUARAN ---
 function toggleExpenseDateFilter() {
   const periodeSelect = document.getElementById("filter-exp-periode");
   const datePickerWrapper = document.getElementById("exp-date-picker-wrapper");
@@ -1549,6 +1577,8 @@ async function tambahPengeluaran(e) {
   const expenseDateVal = document.getElementById("expense-date").value;
   const name = document.getElementById("expense-name").value.trim();
   const category = document.getElementById("expense-category").value;
+  const paymentMethod =
+    document.getElementById("expense-payment-method")?.value || "Tunai (Cash)";
   const amount = parseInt(document.getElementById("expense-amount").value);
 
   const formattedDate = formatTransactionDateFromInput(expenseDateVal);
@@ -1558,14 +1588,19 @@ async function tambahPengeluaran(e) {
     id: newExpId,
     name,
     category,
+    paymentMethod,
     amount,
     date: formattedDate,
   });
   await saveData();
 
+  const isCash = classifyPaymentChannel(paymentMethod) === "tunai";
   Swal.fire({
     icon: "success",
     title: "Pengeluaran Dicatat!",
+    html: isCash
+      ? `Pembayaran <b>Tunai (Cash)</b> sebesar <b>Rp ${amount.toLocaleString("id-ID")}</b> otomatis memotong Pendapatan Tunai.`
+      : `Pengeluaran via <b>${escapeHTML(paymentMethod)}</b> berhasil disimpan.`,
     confirmButtonColor: "#ef4444",
   });
   document.getElementById("expense-form").reset();
@@ -1633,6 +1668,7 @@ function renderPengeluaran() {
   expenseBody.innerHTML = "";
   if (mobileCards) mobileCards.innerHTML = "";
   let totalExp = 0;
+  let totalExpCash = 0;
 
   const filteredExpenses = expenses
     .filter((exp) => {
@@ -1652,18 +1688,34 @@ function renderPengeluaran() {
     });
 
   filteredExpenses.forEach((exp) => {
-    totalExp += exp.amount;
+    const amt = Number(exp.amount) || 0;
+    totalExp += amt;
+
     const safeExpId = escapeHTML(exp.id);
     const safeExpDate = escapeHTML(exp.date || "-");
     const safeExpName = escapeHTML(exp.name);
     const safeExpCat = escapeHTML(exp.category);
+    const rawPay = exp.paymentMethod || "Tunai (Cash)";
+    const safeExpPay = escapeHTML(rawPay);
+    const isCash = classifyPaymentChannel(rawPay) === "tunai";
+    if (isCash) totalExpCash += amt;
+
+    const payTagClass = isCash
+      ? "payment-tag-cash-out"
+      : "payment-tag-noncash-out";
+    const payIcon = isCash
+      ? '<i class="fa-solid fa-money-bill-wave"></i>'
+      : '<i class="fa-solid fa-building-columns"></i>';
 
     expenseBody.innerHTML += `
             <tr>
                 <td>${safeExpDate}</td>
                 <td><b>${safeExpName}</b></td>
-                <td><span class="channel-tag">${safeExpCat}</span></td>
-                <td style="color:#ef4444; font-weight:bold;">Rp ${exp.amount.toLocaleString("id-ID")}</td>
+                <td>
+                  <span class="channel-tag">${safeExpCat}</span>
+                  <div style="margin-top:5px;"><span class="${payTagClass}">${payIcon} ${safeExpPay}</span></div>
+                </td>
+                <td style="color:#ef4444; font-weight:bold;">Rp ${amt.toLocaleString("id-ID")}</td>
                 <td>
                     <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="deleteExpense('${safeExpId}')">
                         <i class="fa-solid fa-trash"></i> Hapus
@@ -1680,7 +1732,8 @@ function renderPengeluaran() {
                     </div>
                     <div class="mobile-card-body">
                         <div><b>Tanggal:</b> ${safeExpDate}</div>
-                        <div style="color:#ef4444; font-weight:bold;"><b>Nominal:</b> Rp ${exp.amount.toLocaleString("id-ID")}</div>
+                        <div style="margin-top:4px;"><b>Sumber Dana:</b> <span class="${payTagClass}">${payIcon} ${safeExpPay}</span></div>
+                        <div style="color:#ef4444; font-weight:bold; margin-top:4px;"><b>Nominal:</b> Rp ${amt.toLocaleString("id-ID")}</div>
                     </div>
                     <div class="mobile-card-footer">
                         <button type="button" class="btn-sm" style="background-color:#ef4444; color:white;" onclick="deleteExpense('${safeExpId}')">
@@ -1695,6 +1748,10 @@ function renderPengeluaran() {
   if (document.getElementById("total-pengeluaran-card")) {
     document.getElementById("total-pengeluaran-card").innerText =
       "Rp " + totalExp.toLocaleString("id-ID");
+  }
+  if (document.getElementById("total-pengeluaran-cash-card")) {
+    document.getElementById("total-pengeluaran-cash-card").innerText =
+      "Rp " + totalExpCash.toLocaleString("id-ID");
   }
   checkEmptyTable(
     expenseBody,
@@ -2238,10 +2295,11 @@ function classifyPaymentChannel(paymentMethodStr) {
 function renderLaporan() {
   populateReportProductFilter();
   let totalOmzet = 0,
-    totalOmzetTunai = 0,
+    totalOmzetTunaiKotor = 0,
     totalOmzetQris = 0,
     totalOmzetTransfer = 0,
     totalPengeluaran = 0,
+    totalPengeluaranTunai = 0,
     channelCount = {},
     productSalesCount = {};
 
@@ -2291,7 +2349,7 @@ function renderLaporan() {
           totalOmzet += itemTotal;
           if (payCategory === "qris") totalOmzetQris += itemTotal;
           else if (payCategory === "transfer") totalOmzetTransfer += itemTotal;
-          else totalOmzetTunai += itemTotal;
+          else totalOmzetTunaiKotor += itemTotal;
 
           const safeItemName = escapeHTML(item.productName);
           const safeItemNote = item.note ? escapeHTML(item.note) : "";
@@ -2335,7 +2393,7 @@ function renderLaporan() {
         totalOmzet += orderPrice;
         if (payCategory === "qris") totalOmzetQris += orderPrice;
         else if (payCategory === "transfer") totalOmzetTransfer += orderPrice;
-        else totalOmzetTunai += orderPrice;
+        else totalOmzetTunaiKotor += orderPrice;
 
         const safeProdText = escapeHTML(o.product);
 
@@ -2373,14 +2431,23 @@ function renderLaporan() {
     detailBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 20px;">Belum ada transaksi penjualan pada tanggal/filter ini.</td></tr>`;
   }
 
+  // Hitung total pengeluaran & potongan khusus pengeluaran Tunai (Cash)
   let filteredExpenses = expenses.filter((exp) =>
     isReportDateMatch(exp.date, periodeVal, tanggalVal, bulanVal),
   );
   filteredExpenses.forEach((exp) => {
-    totalPengeluaran += exp.amount;
+    const amt = Number(exp.amount) || 0;
+    totalPengeluaran += amt;
+    const expPayCat = classifyPaymentChannel(exp.paymentMethod || "Tunai (Cash)");
+    if (expPayCat === "tunai") {
+      totalPengeluaranTunai += amt;
+    }
   });
 
+  // Pendapatan Tunai (Cash) dipotong oleh pengeluaran Tunai (Cash)
+  let sisaOmzetTunaiBersih = totalOmzetTunaiKotor - totalPengeluaranTunai;
   let labaBersih = totalOmzet - totalPengeluaran;
+
   let topChannel =
     Object.keys(channelCount).length > 0
       ? Object.keys(channelCount).reduce((a, b) =>
@@ -2397,9 +2464,17 @@ function renderLaporan() {
   if (document.getElementById("report-omzet"))
     document.getElementById("report-omzet").innerText =
       "Rp " + totalOmzet.toLocaleString("id-ID");
-  if (document.getElementById("report-omzet-tunai"))
-    document.getElementById("report-omzet-tunai").innerText =
-      "Rp " + totalOmzetTunai.toLocaleString("id-ID");
+
+  if (document.getElementById("report-omzet-tunai")) {
+    const tunaiElem = document.getElementById("report-omzet-tunai");
+    tunaiElem.innerText = "Rp " + sisaOmzetTunaiBersih.toLocaleString("id-ID");
+    tunaiElem.style.color = sisaOmzetTunaiBersih >= 0 ? "#059669" : "#ef4444";
+  }
+  if (document.getElementById("report-tunai-deduction-detail")) {
+    document.getElementById("report-tunai-deduction-detail").innerText =
+      `Kotor: Rp ${totalOmzetTunaiKotor.toLocaleString("id-ID")} • Pengeluaran Cash: -Rp ${totalPengeluaranTunai.toLocaleString("id-ID")}`;
+  }
+
   if (document.getElementById("report-omzet-qris"))
     document.getElementById("report-omzet-qris").innerText =
       "Rp " + totalOmzetQris.toLocaleString("id-ID");
@@ -2428,7 +2503,7 @@ function checkEmptyTable(elem, length, colSpan, message) {
   return false;
 }
 
-// --- EXPORT EXCEL (.XLSX) DENGAN RINCIAN TUNAI, QRIS, TRANSFER & HPP ---
+// --- EXPORT EXCEL (.XLSX) DENGAN RINCIAN TUNAI BERSIH, QRIS, TRANSFER & HPP ---
 function exportToExcel() {
   const periodeVal = document.getElementById("filter-periode")
     ? document.getElementById("filter-periode").value
@@ -2477,9 +2552,10 @@ function exportToExcel() {
   );
 
   const salesRows = [];
-  let sumTunai = 0,
+  let sumTunaiKotor = 0,
     sumQris = 0,
-    sumTransfer = 0;
+    sumTransfer = 0,
+    sumExpTunai = 0;
 
   filteredOrders.forEach((o) => {
     const payMethod = o.paymentMethod || "Tunai (Cash)";
@@ -2500,7 +2576,7 @@ function exportToExcel() {
 
         if (payCat === "qris") sumQris += itemSubtotal;
         else if (payCat === "transfer") sumTransfer += itemSubtotal;
-        else sumTunai += itemSubtotal;
+        else sumTunaiKotor += itemSubtotal;
 
         salesRows.push([
           salesRows.length + 1,
@@ -2523,7 +2599,7 @@ function exportToExcel() {
         const val = Number(o.price) || 0;
         if (payCat === "qris") sumQris += val;
         else if (payCat === "transfer") sumTransfer += val;
-        else sumTunai += val;
+        else sumTunaiKotor += val;
 
         salesRows.push([
           salesRows.length + 1,
@@ -2636,18 +2712,19 @@ function exportToExcel() {
       "Tanggal",
       "Deskripsi Pengeluaran / Rincian Bahan HPP",
       "Kategori",
+      "Pembayaran",
       "Nominal (Rp)",
     ],
   ];
 
-  const expRows = filteredExpenses.map((e, idx) => [
-    idx + 1,
-    e.id,
-    e.date || "-",
-    e.name,
-    e.category,
-    Number(e.amount) || 0,
-  ]);
+  const expRows = filteredExpenses.map((e, idx) => {
+    const payLabel = e.paymentMethod || "Tunai (Cash)";
+    const amt = Number(e.amount) || 0;
+    if (classifyPaymentChannel(payLabel) === "tunai") {
+      sumExpTunai += amt;
+    }
+    return [idx + 1, e.id, e.date || "-", e.name, e.category, payLabel, amt];
+  });
 
   const lastExpRow = 4 + expRows.length;
   const totalExpRowIndex = lastExpRow + 1;
@@ -2657,8 +2734,9 @@ function exportToExcel() {
       "",
       "",
       "",
+      "",
       "TOTAL PENGELUARAN",
-      expRows.length > 0 ? { t: "n", f: `SUM(F5:F${lastExpRow})` } : 0,
+      expRows.length > 0 ? { t: "n", f: `SUM(G5:G${lastExpRow})` } : 0,
     ],
   ];
 
@@ -2668,19 +2746,20 @@ function exportToExcel() {
     ...expFooter,
   ]);
   wsExp["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } },
   ];
   wsExp["!cols"] = [
     { wch: 6 },
     { wch: 18 },
     { wch: 22 },
     { wch: 44 },
-    { wch: 24 },
+    { wch: 22 },
+    { wch: 18 },
     { wch: 22 },
   ];
-  applyCurrencyFormat(wsExp, "F", 5, totalExpRowIndex);
+  applyCurrencyFormat(wsExp, "G", 5, totalExpRowIndex);
   XLSX.utils.book_append_sheet(wb, wsExp, "Laporan Pengeluaran");
 
   // 3. SHEET RINGKASAN LABA BERSIH & RINCIAN METODE BAYAR
@@ -2689,20 +2768,22 @@ function exportToExcel() {
     [`Periode: ${periodeLabel} | Filter Produk: ${produkLabel}`],
     [`Tanggal Cetak: ${todayStr}`],
     ["No", "Keterangan Komponen Keuangan", "Jumlah (Rp)"],
-    [1, "Pendapatan Tunai (Cash)", sumTunai],
-    [2, "Pendapatan Non-Tunai (QRIS)", sumQris],
-    [3, "Pendapatan Non-Tunai (Transfer Bank)", sumTransfer],
+    [1, "Pendapatan Tunai Kotor (Cash Masuk)", sumTunaiKotor],
+    [2, "Pengeluaran Menggunakan Tunai (Cash Keluar)", sumExpTunai],
+    [3, "Sisa Pendapatan Tunai Bersih (Cash di Laci)", { t: "n", f: "C5-C6" }],
+    [4, "Pendapatan Non-Tunai (QRIS)", sumQris],
+    [5, "Pendapatan Non-Tunai (Transfer Bank)", sumTransfer],
     [
-      4,
+      6,
       "Total Pendapatan Keseluruhan (Omzet Penjualan)",
       { t: "n", f: `'Laporan Penjualan'!J${totalSalesRowIndex}` },
     ],
     [
-      5,
+      7,
       "Total Pengeluaran Operasional & HPP Bahan",
-      { t: "n", f: `'Laporan Pengeluaran'!F${totalExpRowIndex}` },
+      { t: "n", f: `'Laporan Pengeluaran'!G${totalExpRowIndex}` },
     ],
-    ["", "LABA BERSIH (OMZET - PENGELUARAN)", { t: "n", f: "C8-C9" }],
+    ["", "LABA BERSIH (OMZET - PENGELUARAN)", { t: "n", f: "C10-C11" }],
   ];
 
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
@@ -2711,8 +2792,8 @@ function exportToExcel() {
     { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
   ];
-  wsSummary["!cols"] = [{ wch: 6 }, { wch: 46 }, { wch: 24 }];
-  applyCurrencyFormat(wsSummary, "C", 5, 10);
+  wsSummary["!cols"] = [{ wch: 6 }, { wch: 48 }, { wch: 24 }];
+  applyCurrencyFormat(wsSummary, "C", 5, 12);
   XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Laba Bersih");
 
   const fileSuffixPeriode =
@@ -2751,6 +2832,8 @@ window.renderCustomers = renderCustomers;
 window.renderStock = renderStock;
 window.updateProductStock = updateProductStock;
 window.deleteProduct = deleteProduct;
+window.toggleHPPCalculatorPanel = toggleHPPCalculatorPanel;
+window.toggleHPPCalculator = toggleHPPCalculatorPanel;
 window.addHPPIngredientRow = addHPPIngredientRow;
 window.removeHPPIngredientRow = removeHPPIngredientRow;
 window.calculateHPPTotal = calculateHPPTotal;
